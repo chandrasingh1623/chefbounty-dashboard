@@ -1,0 +1,165 @@
+Create a fully functional ChefBounty Dashboard that is separate from the public landing page. This dashboard is the core application, where signed-in users (either Hosts or Chefs) manage everything. Use a unified layout at /dashboard, with all features conditionally rendered based on the user’s role, which is stored in Supabase metadata as either "host" or "chef".
+
+🧩 Tech Stack & Layout
+Route: /dashboard
+
+Layout: Sidebar + Top Header + Main Panel
+
+Styling: Tailwind CSS (modern, clean, light shadows, spacing)
+
+Conditional rendering based on user role
+
+Use Supabase Auth to determine role on login
+
+Apply the site's premium style theme (highlight color: #0a51be)
+
+👥 User Roles
+Check Supabase metadata field user.user_metadata.role.
+
+Render the correct dashboard content based on:
+
+"host" → Host dashboard
+
+"chef" → Chef dashboard
+
+🧭 Sidebar Navigation (Role-aware)
+Show the following links depending on role:
+
+For Hosts:
+
+Dashboard Overview
+
+Post New Event
+
+My Events
+
+View Bids
+
+Messages
+
+Settings
+
+For Chefs:
+
+Dashboard Overview
+
+My Profile
+
+Browse Events
+
+My Bids
+
+Messages
+
+Settings
+
+Shared:
+
+Payments
+
+Logout
+
+📌 Main Dashboard Functionality
+🔸 Host Dashboard
+Quick Actions:
+
+Button: “Post New Event”
+
+Event Management:
+
+List all posted events
+
+View all chef bids per event
+
+Accept or reject bids
+
+Chef Discovery:
+
+Browse chef profiles with filters: location, cuisine, rating
+
+View chef details (bio, pricing, availability, portfolio)
+
+Event Posting Form:
+
+Title, description, date, time, location, budget
+
+Cuisine preference
+
+Venue type (indoor/outdoor)
+
+Duration
+
+Optional image upload
+
+Messages and Notifications
+
+🔸 Chef Dashboard
+Event Feed:
+
+See all open events with filters
+
+View event details
+
+Submit bid (price + message)
+
+My Bids:
+
+Track bid status (Pending, Accepted, Rejected)
+
+Profile Management:
+
+Upload profile photo
+
+Set bio, specialties, hourly rate
+
+Upload portfolio photos
+
+Add sample menus (manually or AI-generated)
+
+Availability calendar
+
+Messages, Payments Summary
+
+🧠 Conditional Rendering Example
+In /dashboard/index.tsx:
+
+tsx
+Copy
+Edit
+const role = user.user_metadata.role;
+
+return (
+  <DashboardLayout>
+    {role === "chef" && <ChefDashboard />}
+    {role === "host" && <HostDashboard />}
+  </DashboardLayout>
+);
+In sidebar:
+
+tsx
+Copy
+Edit
+{role === "host" && <NavLink href="/dashboard/events" label="My Events" />}
+{role === "chef" && <NavLink href="/dashboard/bids" label="My Bids" />}
+🎨 Design & UX
+Match premium branding from landing page
+
+Use cards, badges, modals, smooth hover transitions
+
+Add visual hierarchy with spacing and padding
+
+Mobile responsive layout
+
+Consistent top header across all dashboard pages
+
+✅ Summary:
+/dashboard is the central app route
+
+Role-based rendering (no separate /chef or /host routes)
+
+All core functionality for hosts and chefs
+
+Shared layout, simple structure, scalable design
+
+Use Supabase role to dynamically render content
+
