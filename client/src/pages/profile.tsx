@@ -56,7 +56,7 @@ export default function Profile() {
   });
 
   // Update form when profile data loads
-  useState(() => {
+  React.useEffect(() => {
     if (profile) {
       form.reset({
         name: profile.name || "",
@@ -66,7 +66,7 @@ export default function Profile() {
         specialties: profile.specialties?.join(", ") || "",
       });
     }
-  });
+  }, [profile, form]);
 
   const updateProfileMutation = useMutation({
     mutationFn: async (data: ProfileFormData) => {
