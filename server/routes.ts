@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
@@ -8,8 +8,16 @@ import jwt from "jsonwebtoken";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
+interface AuthenticatedRequest extends Request {
+  user: {
+    id: number;
+    email: string;
+    role: string;
+  };
+}
+
 // Middleware to verify JWT token
-const authenticateToken = (req: any, res: any, next: any) => {
+const authenticateToken = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
@@ -105,7 +113,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // User routes
-  app.get("/api/user/profile", authenticateToken, async (req, res) => {
+  app.get("/api/user/profile", authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
     try {
       const user = await storage.getUser(req.user.id);
       if (!user) {
@@ -117,7 +125,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/user/profile", authenticateToken, async (req, res) => {
+  app.put("/api/user/profile", authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
     try {
       const updates = req.body;
       const user = await storage.updateUser(req.user.id, updates);
