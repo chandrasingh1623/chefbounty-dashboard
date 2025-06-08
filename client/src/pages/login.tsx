@@ -13,6 +13,7 @@ import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { UtensilsCrossed } from "lucide-react";
+import logoImage from "@assets/ChefBounty Lg (2)_1753288571802.png";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -97,11 +98,12 @@ export default function Login() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <div className="flex items-center justify-center space-x-3 mb-4">
-            <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-              <UtensilsCrossed className="text-white text-lg" />
-            </div>
-            <span className="text-2xl font-bold text-gray-900">ChefBounty</span>
+          <div className="flex items-center justify-center mb-6">
+            <img 
+              src={logoImage} 
+              alt="ChefBounty" 
+              className="h-12 w-auto object-contain"
+            />
           </div>
           <CardTitle>Welcome</CardTitle>
           <CardDescription>

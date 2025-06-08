@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import logoImage from "@assets/ChefBounty Lg (2)_1753288571802.png";
 
 interface SidebarProps {
   className?: string;
@@ -60,11 +61,12 @@ export function Sidebar({ className }: SidebarProps) {
     <div className={cn("w-64 bg-white shadow-sm border-r border-gray-200 flex flex-col", className)}>
       {/* Logo */}
       <div className="p-6 border-b border-gray-200">
-        <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-            <UtensilsCrossed className="text-white text-sm" />
-          </div>
-          <span className="text-xl font-bold text-gray-900">ChefBounty</span>
+        <div className="flex items-center justify-center">
+          <img 
+            src={logoImage} 
+            alt="ChefBounty" 
+            className="h-8 w-auto object-contain"
+          />
         </div>
       </div>
 
