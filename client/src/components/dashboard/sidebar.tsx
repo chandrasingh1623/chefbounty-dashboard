@@ -65,7 +65,7 @@ export function Sidebar({ className }: SidebarProps) {
           <img 
             src={logoImage} 
             alt="ChefBounty" 
-            className="h-8 w-auto object-contain"
+            className="h-12 w-auto object-contain"
           />
         </div>
       </div>
