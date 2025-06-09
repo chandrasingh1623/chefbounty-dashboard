@@ -2,18 +2,14 @@ import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { DashboardLayout } from "@/components/dashboard/layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
@@ -21,22 +17,16 @@ import { apiRequest } from "@/lib/queryClient";
 import { 
   Settings as SettingsIcon,
   User,
-  Camera,
   Shield,
   Bell,
-  Clock,
-  HelpCircle,
-  ChevronDown,
-  ChevronRight,
   Trash2,
-  LogOut,
   Eye,
   EyeOff,
   Phone,
   Mail,
-  Globe,
-  Lock,
-  UserCheck
+  Download,
+  MapPin,
+  LogOut
 } from "lucide-react";
 
 const accountSchema = z.object({
@@ -54,52 +44,39 @@ const passwordSchema = z.object({
   path: ["confirmPassword"],
 });
 
-const profileSchema = z.object({
+const privacySchema = z.object({
+  profileVisible: z.boolean(),
   location: z.string().optional(),
-  publicProfile: z.boolean(),
+  showLocationPublicly: z.boolean(),
+});
+
+const notificationSchema = z.object({
+  emailNewBids: z.boolean(),
+  emailBookings: z.boolean(),
+  emailMessages: z.boolean(),
+  smsAlerts: z.boolean(),
+  pushNotifications: z.boolean(),
 });
 
 type AccountFormData = z.infer<typeof accountSchema>;
 type PasswordFormData = z.infer<typeof passwordSchema>;
-type ProfileFormData = z.infer<typeof profileSchema>;
-
-interface SettingsSection {
-  id: string;
-  title: string;
-  icon: React.ReactNode;
-  isOpen: boolean;
-}
+type PrivacyFormData = z.infer<typeof privacySchema>;
+type NotificationFormData = z.infer<typeof notificationSchema>;
 
 export default function Settings() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
-  const [openSections, setOpenSections] = useState<Record<string, boolean>>({
-    account: true,
-    profile: false,
-    role: false,
-    availability: false,
-    notifications: false,
-    security: false,
-    legal: false,
-  });
-
   const [showPassword, setShowPassword] = useState(false);
   const [deleteAccountModal, setDeleteAccountModal] = useState(false);
-  const [contactSupportModal, setContactSupportModal] = useState(false);
-
-  const { data: settings, isLoading } = useQuery({
-    queryKey: ['/api/user/settings'],
-    queryFn: () => apiRequest('/api/user/settings'),
-  });
 
   const accountForm = useForm<AccountFormData>({
     resolver: zodResolver(accountSchema),
     defaultValues: {
       name: user?.name || "",
       email: user?.email || "",
-      phone: settings?.phone || "",
+      phone: "",
     },
   });
 
@@ -112,11 +89,23 @@ export default function Settings() {
     },
   });
 
-  const profileForm = useForm<ProfileFormData>({
-    resolver: zodResolver(profileSchema),
+  const privacyForm = useForm<PrivacyFormData>({
+    resolver: zodResolver(privacySchema),
     defaultValues: {
-      location: settings?.location || "",
-      publicProfile: settings?.publicProfile || false,
+      profileVisible: true,
+      location: "",
+      showLocationPublicly: false,
+    },
+  });
+
+  const notificationForm = useForm<NotificationFormData>({
+    resolver: zodResolver(notificationSchema),
+    defaultValues: {
+      emailNewBids: true,
+      emailBookings: true,
+      emailMessages: true,
+      smsAlerts: false,
+      pushNotifications: false,
     },
   });
 
@@ -127,16 +116,15 @@ export default function Settings() {
         body: JSON.stringify(data),
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/user/settings'] });
       toast({
         title: "Account updated",
-        description: "Your account settings have been saved.",
+        description: "Your account details have been saved.",
       });
     },
     onError: () => {
       toast({
         title: "Error",
-        description: "Failed to update account settings.",
+        description: "Failed to update account details.",
         variant: "destructive",
       });
     },
@@ -164,15 +152,49 @@ export default function Settings() {
     },
   });
 
-  const toggleSection = (sectionId: string) => {
-    setOpenSections(prev => ({
-      ...prev,
-      [sectionId]: !prev[sectionId]
-    }));
-  };
+  const updatePrivacyMutation = useMutation({
+    mutationFn: (data: PrivacyFormData) =>
+      apiRequest('/api/user/privacy', {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      }),
+    onSuccess: () => {
+      toast({
+        title: "Privacy settings updated",
+        description: "Your preferences have been saved.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update privacy settings.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateNotificationMutation = useMutation({
+    mutationFn: (data: NotificationFormData) =>
+      apiRequest('/api/user/notifications', {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      }),
+    onSuccess: () => {
+      toast({
+        title: "Notification preferences updated",
+        description: "Your settings have been saved.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update notification settings.",
+        variant: "destructive",
+      });
+    },
+  });
 
   const handleDeleteAccount = () => {
-    // Implementation for account deletion
     toast({
       title: "Account deletion requested",
       description: "Your account deletion request has been submitted.",
@@ -180,75 +202,45 @@ export default function Settings() {
     setDeleteAccountModal(false);
   };
 
-  const SettingsCard = ({ 
-    id, 
-    title, 
-    icon, 
-    children 
-  }: { 
-    id: string; 
-    title: string; 
-    icon: React.ReactNode; 
-    children: React.ReactNode;
-  }) => (
-    <Card className="shadow-sm border-0 ring-1 ring-gray-200">
-      <Collapsible open={openSections[id]} onOpenChange={() => toggleSection(id)}>
-        <CollapsibleTrigger asChild>
-          <CardHeader className="cursor-pointer hover:bg-gray-50 transition-colors">
-            <CardTitle className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="text-[#0a51be]">{icon}</div>
-                <span>{title}</span>
-              </div>
-              {openSections[id] ? (
-                <ChevronDown className="w-5 h-5 text-gray-400" />
-              ) : (
-                <ChevronRight className="w-5 h-5 text-gray-400" />
-              )}
-            </CardTitle>
-          </CardHeader>
-        </CollapsibleTrigger>
-        <CollapsibleContent>
-          <CardContent className="pt-0">
-            {children}
-          </CardContent>
-        </CollapsibleContent>
-      </Collapsible>
-    </Card>
-  );
+  const handleDataExport = () => {
+    toast({
+      title: "Data export requested",
+      description: "You will receive an email with your data within 24 hours.",
+    });
+  };
 
-  if (isLoading) {
-    return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0a51be] mx-auto"></div>
-            <p className="mt-2 text-gray-600">Loading settings...</p>
-          </div>
-        </div>
-      </DashboardLayout>
-    );
-  }
+  const handleClearSessions = () => {
+    toast({
+      title: "Sessions cleared",
+      description: "All saved sessions have been cleared.",
+    });
+  };
 
   return (
-    <DashboardLayout>
-      <div className="max-w-4xl mx-auto space-y-6">
+    <DashboardLayout
+      title="Settings"
+      subtitle="Manage your account, privacy, and notification preferences"
+    >
+      <div className="max-w-4xl mx-auto space-y-8">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 flex items-center">
             <SettingsIcon className="w-8 h-8 mr-3 text-[#0a51be]" />
             Settings
           </h1>
-          <p className="text-gray-600 mt-2">Manage your account, profile, and preferences</p>
+          <p className="text-gray-600 mt-2">Manage your account, privacy, and notification preferences</p>
         </div>
 
-        {/* Account Settings */}
-        <SettingsCard
-          id="account"
-          title="Account Settings"
-          icon={<User className="w-5 h-5" />}
-        >
-          <div className="space-y-6">
+        {/* Account Details Section */}
+        <Card className="shadow-sm border-0 ring-1 ring-gray-200">
+          <CardHeader>
+            <CardTitle className="flex items-center text-xl">
+              <User className="w-6 h-6 mr-3 text-[#0a51be]" />
+              Account Details
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Basic Account Info */}
             <Form {...accountForm}>
               <form onSubmit={accountForm.handleSubmit((data) => updateAccountMutation.mutate(data))} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -273,12 +265,7 @@ export default function Settings() {
                       <FormItem>
                         <FormLabel>Email Address</FormLabel>
                         <FormControl>
-                          <Input 
-                            placeholder="your@email.com" 
-                            {...field}
-                            className="bg-gray-50"
-                            readOnly
-                          />
+                          <Input placeholder="your@email.com" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -290,7 +277,7 @@ export default function Settings() {
                     name="phone"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Phone Number</FormLabel>
+                        <FormLabel>Phone Number (Optional)</FormLabel>
                         <FormControl>
                           <Input placeholder="(555) 123-4567" {...field} />
                         </FormControl>
@@ -312,9 +299,9 @@ export default function Settings() {
 
             <Separator />
 
-            {/* Password Update */}
+            {/* Password Management */}
             <div>
-              <h3 className="text-lg font-semibold mb-4">Change Password</h3>
+              <h3 className="text-lg font-semibold mb-4">Password Management</h3>
               <Form {...passwordForm}>
                 <form onSubmit={passwordForm.handleSubmit((data) => updatePasswordMutation.mutate(data))} className="space-y-4">
                   <FormField
@@ -347,7 +334,7 @@ export default function Settings() {
                               />
                               <button
                                 type="button"
-                                className="absolute right-3 top-1/2 transform -translate-y-1/2"
+                                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                                 onClick={() => setShowPassword(!showPassword)}
                               >
                                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -389,13 +376,13 @@ export default function Settings() {
 
             {/* Delete Account */}
             <div className="pt-4">
-              <h3 className="text-lg font-semibold mb-2 text-red-600">Danger Zone</h3>
+              <h3 className="text-lg font-semibold mb-2 text-red-600">Delete Account</h3>
               <p className="text-gray-600 mb-4">Once you delete your account, there is no going back. Please be certain.</p>
               <Dialog open={deleteAccountModal} onOpenChange={setDeleteAccountModal}>
                 <DialogTrigger asChild>
                   <Button variant="destructive">
                     <Trash2 className="w-4 h-4 mr-2" />
-                    Delete Account
+                    Delete my account
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
@@ -416,340 +403,277 @@ export default function Settings() {
                 </DialogContent>
               </Dialog>
             </div>
-          </div>
-        </SettingsCard>
+          </CardContent>
+        </Card>
 
-        {/* Profile Settings */}
-        <SettingsCard
-          id="profile"
-          title="Profile Settings"
-          icon={<User className="w-5 h-5" />}
-        >
-          <div className="space-y-6">
-            {/* Profile Photo */}
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Profile Photo</h3>
-              <div className="flex items-center space-x-4">
-                <Avatar className="w-20 h-20">
-                  <AvatarImage src={user?.profilePhoto} />
-                  <AvatarFallback className="bg-[#0a51be] text-white text-xl">
-                    {user?.name?.charAt(0)}
-                  </AvatarFallback>
-                </Avatar>
+        {/* Privacy Settings Section */}
+        <Card className="shadow-sm border-0 ring-1 ring-gray-200">
+          <CardHeader>
+            <CardTitle className="flex items-center text-xl">
+              <Shield className="w-6 h-6 mr-3 text-[#0a51be]" />
+              Privacy Settings
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <Form {...privacyForm}>
+              <form onSubmit={privacyForm.handleSubmit((data) => updatePrivacyMutation.mutate(data))} className="space-y-6">
+                {/* Profile Visibility */}
                 <div>
-                  <Button variant="outline" className="border-[#0a51be] text-[#0a51be] hover:bg-[#0a51be]/5">
-                    <Camera className="w-4 h-4 mr-2" />
-                    Change Photo
-                  </Button>
-                  <p className="text-sm text-gray-500 mt-1">JPG, PNG up to 5MB</p>
+                  <h3 className="text-lg font-semibold mb-4">Profile Visibility</h3>
+                  <FormField
+                    control={privacyForm.control}
+                    name="profileVisible"
+                    render={({ field }) => (
+                      <FormItem className="flex items-center justify-between p-4 border rounded-lg">
+                        <div>
+                          <FormLabel className="text-base font-medium">
+                            {user?.role === 'chef' ? 'Show my profile to hosts' : 'Make my events discoverable'}
+                          </FormLabel>
+                          <p className="text-sm text-gray-500 mt-1">
+                            {user?.role === 'chef' 
+                              ? 'Allow event hosts to find and view your chef profile'
+                              : 'Let chefs discover your posted events'
+                            }
+                          </p>
+                        </div>
+                        <FormControl>
+                          <Switch 
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
                 </div>
-              </div>
-            </div>
 
-            <Separator />
+                {/* Location Settings */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-4">Location Settings</h3>
+                  <div className="space-y-4">
+                    <FormField
+                      control={privacyForm.control}
+                      name="location"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Location</FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder="City, State, ZIP" 
+                              {...field} 
+                              className="max-w-md"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-            {/* Profile Information */}
-            <Form {...profileForm}>
-              <form className="space-y-4">
-                <FormField
-                  control={profileForm.control}
-                  name="location"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Location</FormLabel>
-                      <FormControl>
-                        <Input placeholder="City, State, ZIP" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                    <FormField
+                      control={privacyForm.control}
+                      name="showLocationPublicly"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center justify-between p-4 border rounded-lg">
+                          <div>
+                            <FormLabel className="text-base font-medium">Display my location publicly</FormLabel>
+                            <p className="text-sm text-gray-500 mt-1">Show your location on your public profile</p>
+                          </div>
+                          <FormControl>
+                            <Switch 
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
 
-                <FormField
-                  control={profileForm.control}
-                  name="publicProfile"
-                  render={({ field }) => (
-                    <FormItem className="flex items-center justify-between">
+                {/* Data Export */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-4">Data Export</h3>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between p-4 border rounded-lg">
                       <div>
-                        <FormLabel>Public Profile</FormLabel>
-                        <p className="text-sm text-gray-500">Show my profile to event hosts</p>
+                        <h4 className="font-medium">Request a copy of my data</h4>
+                        <p className="text-sm text-gray-500">Download all your data in a portable format</p>
                       </div>
-                      <FormControl>
-                        <Switch 
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
+                      <Button 
+                        variant="outline" 
+                        onClick={handleDataExport}
+                        className="border-[#0a51be] text-[#0a51be] hover:bg-[#0a51be]/5"
+                      >
+                        <Download className="w-4 h-4 mr-2" />
+                        Export Data
+                      </Button>
+                    </div>
 
-                <Button className="bg-[#0a51be] hover:bg-[#0a51be]/90">
-                  Save Profile Settings
+                    <div className="flex items-center justify-between p-4 border rounded-lg">
+                      <div>
+                        <h4 className="font-medium">Clear all saved sessions</h4>
+                        <p className="text-sm text-gray-500">Remove all stored session data and preferences</p>
+                      </div>
+                      <Button 
+                        variant="outline" 
+                        onClick={handleClearSessions}
+                      >
+                        <LogOut className="w-4 h-4 mr-2" />
+                        Clear Sessions
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                <Button
+                  type="submit"
+                  className="bg-[#0a51be] hover:bg-[#0a51be]/90"
+                  disabled={updatePrivacyMutation.isPending}
+                >
+                  {updatePrivacyMutation.isPending ? "Saving..." : "Save Privacy Settings"}
                 </Button>
               </form>
             </Form>
-          </div>
-        </SettingsCard>
+          </CardContent>
+        </Card>
 
-        {/* Role Settings */}
-        <SettingsCard
-          id="role"
-          title="Role Settings"
-          icon={<UserCheck className="w-5 h-5" />}
-        >
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-semibold">Current Role</h3>
-                <p className="text-gray-600">Your active role on ChefBounty</p>
-              </div>
-              <Badge className="bg-[#0a51be] text-white">
-                {user?.role === 'chef' ? 'Chef' : 'Host'}
-              </Badge>
-            </div>
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <p className="text-sm text-gray-600">
-                Role switching and dual-role access management will be available in a future update.
-              </p>
-            </div>
-          </div>
-        </SettingsCard>
-
-        {/* Availability (for Chefs) */}
-        {user?.role === 'chef' && (
-          <SettingsCard
-            id="availability"
-            title="Availability"
-            icon={<Clock className="w-5 h-5" />}
-          >
-            <div className="space-y-6">
-              {/* Weekly Availability */}
-              <div>
-                <h3 className="text-lg font-semibold mb-4">Weekly Availability</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day) => (
-                    <div key={day} className="flex items-center justify-between p-3 border rounded-lg">
-                      <span className="font-medium">{day}</span>
-                      <Switch />
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <Separator />
-
-              {/* Time Zone */}
-              <div>
-                <h3 className="text-lg font-semibold mb-4">Time Zone</h3>
-                <Select>
-                  <SelectTrigger className="w-full md:w-1/2">
-                    <SelectValue placeholder="Select your time zone" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="eastern">Eastern Time (ET)</SelectItem>
-                    <SelectItem value="central">Central Time (CT)</SelectItem>
-                    <SelectItem value="mountain">Mountain Time (MT)</SelectItem>
-                    <SelectItem value="pacific">Pacific Time (PT)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <Separator />
-
-              {/* Last-minute bookings */}
-              <div className="flex items-center justify-between">
+        {/* Notification Preferences Section */}
+        <Card className="shadow-sm border-0 ring-1 ring-gray-200">
+          <CardHeader>
+            <CardTitle className="flex items-center text-xl">
+              <Bell className="w-6 h-6 mr-3 text-[#0a51be]" />
+              Notification Preferences
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <Form {...notificationForm}>
+              <form onSubmit={notificationForm.handleSubmit((data) => updateNotificationMutation.mutate(data))} className="space-y-6">
+                {/* Email Notifications */}
                 <div>
-                  <h3 className="text-lg font-semibold">Last-minute Bookings</h3>
-                  <p className="text-gray-600">Accept bookings with less than 24 hours notice</p>
-                </div>
-                <Switch />
-              </div>
+                  <h3 className="text-lg font-semibold mb-4 flex items-center">
+                    <Mail className="w-5 h-5 mr-2 text-[#0a51be]" />
+                    Email Notifications
+                  </h3>
+                  <div className="space-y-4">
+                    <FormField
+                      control={notificationForm.control}
+                      name="emailNewBids"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center justify-between p-4 border rounded-lg">
+                          <div>
+                            <FormLabel className="text-base font-medium">New bids received</FormLabel>
+                            <p className="text-sm text-gray-500">Get notified when someone bids on your event</p>
+                          </div>
+                          <FormControl>
+                            <Switch 
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
 
-              <Button className="bg-[#0a51be] hover:bg-[#0a51be]/90">
-                Save Availability Settings
-              </Button>
-            </div>
-          </SettingsCard>
-        )}
+                    <FormField
+                      control={notificationForm.control}
+                      name="emailBookings"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center justify-between p-4 border rounded-lg">
+                          <div>
+                            <FormLabel className="text-base font-medium">Event booked or canceled</FormLabel>
+                            <p className="text-sm text-gray-500">Updates about booking confirmations and cancellations</p>
+                          </div>
+                          <FormControl>
+                            <Switch 
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
 
-        {/* Notification Preferences */}
-        <SettingsCard
-          id="notifications"
-          title="Notification Preferences"
-          icon={<Bell className="w-5 h-5" />}
-        >
-          <div className="space-y-6">
-            {/* Email Notifications */}
-            <div>
-              <h3 className="text-lg font-semibold mb-4 flex items-center">
-                <Mail className="w-5 h-5 mr-2 text-[#0a51be]" />
-                Email Notifications
-              </h3>
-              <div className="space-y-3">
-                {[
-                  { label: 'New bid received', description: 'Get notified when someone bids on your event' },
-                  { label: 'Event accepted', description: 'When your bid is accepted by a host' },
-                  { label: 'Booking status updates', description: 'Changes to your bookings and events' },
-                  { label: 'Marketing emails', description: 'Tips, updates, and promotional content' }
-                ].map((item, index) => (
-                  <div key={index} className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">{item.label}</p>
-                      <p className="text-sm text-gray-500">{item.description}</p>
-                    </div>
-                    <Switch defaultChecked={index < 3} />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* SMS Notifications */}
-            <div>
-              <h3 className="text-lg font-semibold mb-4 flex items-center">
-                <Phone className="w-5 h-5 mr-2 text-[#0a51be]" />
-                SMS Notifications
-              </h3>
-              <div className="space-y-3">
-                {[
-                  { label: 'Urgent booking updates', description: 'Critical updates about your bookings' },
-                  { label: 'Event reminders', description: '24-hour reminders for upcoming events' }
-                ].map((item, index) => (
-                  <div key={index} className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">{item.label}</p>
-                      <p className="text-sm text-gray-500">{item.description}</p>
-                    </div>
-                    <Switch />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <Button className="bg-[#0a51be] hover:bg-[#0a51be]/90">
-              Save Notification Settings
-            </Button>
-          </div>
-        </SettingsCard>
-
-        {/* Security */}
-        <SettingsCard
-          id="security"
-          title="Security"
-          icon={<Shield className="w-5 h-5" />}
-        >
-          <div className="space-y-6">
-            {/* Two-Factor Authentication */}
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Two-Factor Authentication</h3>
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">2FA Status</p>
-                    <p className="text-sm text-gray-600">Currently disabled</p>
-                  </div>
-                  <Button variant="outline" className="border-[#0a51be] text-[#0a51be] hover:bg-[#0a51be]/5">
-                    <Lock className="w-4 h-4 mr-2" />
-                    Enable 2FA
-                  </Button>
-                </div>
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* Active Sessions */}
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Active Sessions</h3>
-              <div className="space-y-3">
-                <div className="p-4 border rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">Current Session</p>
-                      <p className="text-sm text-gray-500">Chrome on MacOS • Current location</p>
-                      <p className="text-xs text-gray-400">Last active: Now</p>
-                    </div>
-                    <Badge variant="secondary">Current</Badge>
+                    <FormField
+                      control={notificationForm.control}
+                      name="emailMessages"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center justify-between p-4 border rounded-lg">
+                          <div>
+                            <FormLabel className="text-base font-medium">Messages from {user?.role === 'chef' ? 'hosts' : 'chefs'}</FormLabel>
+                            <p className="text-sm text-gray-500">New messages and communications</p>
+                          </div>
+                          <FormControl>
+                            <Switch 
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
                   </div>
                 </div>
-              </div>
-              <Button variant="outline" className="mt-4">
-                <LogOut className="w-4 h-4 mr-2" />
-                Log Out of All Devices
-              </Button>
-            </div>
-          </div>
-        </SettingsCard>
 
-        {/* Legal & Support */}
-        <SettingsCard
-          id="legal"
-          title="Legal & Support"
-          icon={<HelpCircle className="w-5 h-5" />}
-        >
-          <div className="space-y-6">
-            {/* Legal Links */}
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Legal Documents</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {[
-                  { label: 'Terms of Service', href: '#' },
-                  { label: 'Privacy Policy', href: '#' },
-                  { label: 'Refund Policy', href: '#' },
-                  { label: 'Help Center', href: '#' }
-                ].map((link, index) => (
-                  <Button
-                    key={index}
-                    variant="outline"
-                    className="justify-start"
-                    asChild
-                  >
-                    <a href={link.href}>
-                      <Globe className="w-4 h-4 mr-2" />
-                      {link.label}
-                    </a>
-                  </Button>
-                ))}
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* Support */}
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Support</h3>
-              <div className="flex items-center justify-between">
+                {/* SMS Alerts */}
                 <div>
-                  <p className="font-medium">Need help?</p>
-                  <p className="text-sm text-gray-600">Contact our support team for assistance</p>
+                  <h3 className="text-lg font-semibold mb-4 flex items-center">
+                    <Phone className="w-5 h-5 mr-2 text-[#0a51be]" />
+                    SMS Alerts
+                  </h3>
+                  <FormField
+                    control={notificationForm.control}
+                    name="smsAlerts"
+                    render={({ field }) => (
+                      <FormItem className="flex items-center justify-between p-4 border rounded-lg">
+                        <div>
+                          <FormLabel className="text-base font-medium">Send me SMS alerts for bookings or changes</FormLabel>
+                          <p className="text-sm text-gray-500">Receive text messages for urgent updates (requires phone number)</p>
+                        </div>
+                        <FormControl>
+                          <Switch 
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
                 </div>
-                <Dialog open={contactSupportModal} onOpenChange={setContactSupportModal}>
-                  <DialogTrigger asChild>
-                    <Button className="bg-[#0a51be] hover:bg-[#0a51be]/90">
-                      <HelpCircle className="w-4 h-4 mr-2" />
-                      Contact Support
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Contact Support</DialogTitle>
-                      <DialogDescription>
-                        Support contact form will be available soon. For immediate assistance, please email support@chefbounty.com
-                      </DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter>
-                      <Button onClick={() => setContactSupportModal(false)}>
-                        Close
-                      </Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
-              </div>
-            </div>
-          </div>
-        </SettingsCard>
+
+                {/* Push Notifications */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-4">Push Notifications</h3>
+                  <FormField
+                    control={notificationForm.control}
+                    name="pushNotifications"
+                    render={({ field }) => (
+                      <FormItem className="flex items-center justify-between p-4 border rounded-lg">
+                        <div>
+                          <FormLabel className="text-base font-medium">Enable browser notifications</FormLabel>
+                          <p className="text-sm text-gray-500">Get instant notifications in your browser</p>
+                        </div>
+                        <FormControl>
+                          <Switch 
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <Button
+                  type="submit"
+                  className="bg-[#0a51be] hover:bg-[#0a51be]/90"
+                  disabled={updateNotificationMutation.isPending}
+                >
+                  {updateNotificationMutation.isPending ? "Saving..." : "Save Notification Settings"}
+                </Button>
+              </form>
+            </Form>
+          </CardContent>
+        </Card>
       </div>
     </DashboardLayout>
   );
