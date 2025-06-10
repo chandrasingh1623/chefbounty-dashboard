@@ -112,6 +112,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Resend verification email
+  app.post('/api/auth/resend-verification', async (req, res) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ error: 'Email is required' });
+      }
+
+      // Check if user exists
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      // TODO: Send verification email here (placeholder for actual email service)
+      console.log(`Resend verification email would be sent to: ${email}`);
+
+      res.json({ message: 'Verification email sent successfully' });
+    } catch (error) {
+      console.error('Resend verification error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
   // User routes
   app.get("/api/user/profile", authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
     try {

@@ -31,6 +31,7 @@ export function Sidebar({ className }: SidebarProps) {
     { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard Overview" },
     { href: "/dashboard/post-event", icon: Plus, label: "Post New Event" },
     { href: "/dashboard/my-events", icon: Calendar, label: "My Events" },
+    { href: "/dashboard/browse-events", icon: Search, label: "Browse Events" },
     { href: "/dashboard/bids", icon: Gavel, label: "View Bids" },
     { href: "/dashboard/messages", icon: MessageCircle, label: "Messages" },
   ];
@@ -65,7 +66,7 @@ export function Sidebar({ className }: SidebarProps) {
           <img 
             src={logoImage} 
             alt="ChefBounty" 
-            className="h-12 w-auto object-contain"
+            className="h-16 w-auto object-contain"
           />
         </div>
       </div>

@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
-import { UtensilsCrossed } from "lucide-react";
+import { Mail, CheckCircle } from "lucide-react";
 import logoImage from "@assets/ChefBounty Lg (2)_1753288571802.png";
 
 const loginSchema = z.object({
@@ -32,6 +32,8 @@ type SignupFormData = z.infer<typeof signupSchema>;
 
 export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
+  const [signupEmail, setSignupEmail] = useState("");
   const { signIn, signUp } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
@@ -78,15 +80,45 @@ export default function Login() {
     setIsLoading(true);
     try {
       await signUp(data);
+      setSignupEmail(data.email);
+      setEmailSent(true);
       toast({
         title: "Account created!",
-        description: "Welcome to ChefBounty. You can now start using the platform.",
+        description: "Please check your email to verify your account.",
       });
-      setLocation("/dashboard");
     } catch (error) {
       toast({
         title: "Signup failed",
         description: error instanceof Error ? error.message : "An error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const resendVerificationEmail = async () => {
+    setIsLoading(true);
+    try {
+      // Make API call to resend verification email
+      const response = await fetch('/api/auth/resend-verification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: signupEmail }),
+      });
+
+      if (response.ok) {
+        toast({
+          title: "Email sent!",
+          description: "Verification email has been resent to your inbox.",
+        });
+      } else {
+        throw new Error('Failed to resend email');
+      }
+    } catch (error) {
+      toast({
+        title: "Failed to resend email",
+        description: "Please try again later.",
         variant: "destructive",
       });
     } finally {
@@ -102,7 +134,7 @@ export default function Login() {
             <img 
               src={logoImage} 
               alt="ChefBounty" 
-              className="h-16 w-auto object-contain"
+              className="h-20 w-auto object-contain"
             />
           </div>
           <CardTitle>Welcome</CardTitle>
@@ -166,8 +198,49 @@ export default function Login() {
             </TabsContent>
             
             <TabsContent value="signup">
-              <Form {...signupForm}>
-                <form onSubmit={signupForm.handleSubmit(onSignup)} className="space-y-4">
+              {emailSent ? (
+                <div className="space-y-4 text-center">
+                  <div className="flex justify-center">
+                    <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+                      <CheckCircle className="w-8 h-8 text-green-600" />
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">Check your email</h3>
+                    <p className="text-gray-600 mt-2">
+                      We've sent a verification link to <strong>{signupEmail}</strong>
+                    </p>
+                  </div>
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div className="flex items-start space-x-3">
+                      <Mail className="w-5 h-5 text-blue-600 mt-0.5" />
+                      <div className="text-left">
+                        <p className="text-sm font-medium text-blue-900">Didn't receive the email?</p>
+                        <p className="text-sm text-blue-700 mt-1">
+                          Check your spam folder or click the button below to resend.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <Button
+                    onClick={resendVerificationEmail}
+                    variant="outline"
+                    disabled={isLoading}
+                    className="w-full"
+                  >
+                    {isLoading ? "Sending..." : "Resend verification email"}
+                  </Button>
+                  <Button
+                    onClick={() => setEmailSent(false)}
+                    variant="ghost"
+                    className="w-full text-gray-500"
+                  >
+                    Back to signup
+                  </Button>
+                </div>
+              ) : (
+                <Form {...signupForm}>
+                  <form onSubmit={signupForm.handleSubmit(onSignup)} className="space-y-4">
                   <FormField
                     control={signupForm.control}
                     name="name"
@@ -244,15 +317,16 @@ export default function Login() {
                       </FormItem>
                     )}
                   />
-                  <Button
-                    type="submit"
-                    className="w-full bg-primary text-white hover:bg-primary/90"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? "Creating account..." : "Create Account"}
-                  </Button>
-                </form>
-              </Form>
+                    <Button
+                      type="submit"
+                      className="w-full bg-primary text-white hover:bg-primary/90"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? "Creating account..." : "Create Account"}
+                    </Button>
+                  </form>
+                </Form>
+              )}
             </TabsContent>
           </Tabs>
         </CardContent>

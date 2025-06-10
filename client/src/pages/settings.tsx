@@ -110,11 +110,15 @@ export default function Settings() {
   });
 
   const updateAccountMutation = useMutation({
-    mutationFn: (data: AccountFormData) =>
-      apiRequest('/api/user/account', {
+    mutationFn: async (data: AccountFormData) => {
+      const response = await fetch('/api/user/account', {
         method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
-      }),
+      });
+      if (!response.ok) throw new Error('Failed to update account');
+      return response.json();
+    },
     onSuccess: () => {
       toast({
         title: "Account updated",
@@ -131,11 +135,15 @@ export default function Settings() {
   });
 
   const updatePasswordMutation = useMutation({
-    mutationFn: (data: PasswordFormData) =>
-      apiRequest('/api/user/password', {
+    mutationFn: async (data: PasswordFormData) => {
+      const response = await fetch('/api/user/password', {
         method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
-      }),
+      });
+      if (!response.ok) throw new Error('Failed to update password');
+      return response.json();
+    },
     onSuccess: () => {
       passwordForm.reset();
       toast({
@@ -153,11 +161,15 @@ export default function Settings() {
   });
 
   const updatePrivacyMutation = useMutation({
-    mutationFn: (data: PrivacyFormData) =>
-      apiRequest('/api/user/privacy', {
+    mutationFn: async (data: PrivacyFormData) => {
+      const response = await fetch('/api/user/privacy', {
         method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
-      }),
+      });
+      if (!response.ok) throw new Error('Failed to update privacy settings');
+      return response.json();
+    },
     onSuccess: () => {
       toast({
         title: "Privacy settings updated",
@@ -174,11 +186,15 @@ export default function Settings() {
   });
 
   const updateNotificationMutation = useMutation({
-    mutationFn: (data: NotificationFormData) =>
-      apiRequest('/api/user/notifications', {
+    mutationFn: async (data: NotificationFormData) => {
+      const response = await fetch('/api/user/notifications', {
         method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
-      }),
+      });
+      if (!response.ok) throw new Error('Failed to update notification settings');
+      return response.json();
+    },
     onSuccess: () => {
       toast({
         title: "Notification preferences updated",
