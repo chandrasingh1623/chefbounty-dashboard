@@ -14,6 +14,10 @@ export const users = pgTable("users", {
   specialties: text("specialties").array(),
   hourlyRate: decimal("hourly_rate", { precision: 10, scale: 2 }),
   rating: decimal("rating", { precision: 3, scale: 2 }),
+  reviewCount: integer("review_count").default(0),
+  experience: integer("experience"), // years of experience
+  featured: boolean("featured").default(false),
+  availableNow: boolean("available_now").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

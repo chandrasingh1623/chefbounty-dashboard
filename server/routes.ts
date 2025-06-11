@@ -252,6 +252,109 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Chef routes
+  app.get("/api/chefs", authenticateToken, async (req, res) => {
+    try {
+      const { search, sort, location, available, cuisines, minRate, maxRate } = req.query;
+      
+      // Get all chef users
+      const allUsers = await storage.getUsers();
+      let chefs = allUsers.filter(user => user.role === 'chef');
+      
+      // Apply search filter
+      if (search) {
+        const searchTerm = (search as string).toLowerCase();
+        chefs = chefs.filter(chef => 
+          chef.name.toLowerCase().includes(searchTerm) ||
+          (chef.bio && chef.bio.toLowerCase().includes(searchTerm)) ||
+          (chef.specialties && chef.specialties.some((s: string) => s.toLowerCase().includes(searchTerm)))
+        );
+      }
+
+      // Apply location filter
+      if (location) {
+        const locationTerm = (location as string).toLowerCase();
+        chefs = chefs.filter(chef => 
+          chef.location && chef.location.toLowerCase().includes(locationTerm)
+        );
+      }
+
+      // Apply cuisine filter
+      if (cuisines) {
+        const selectedCuisines = (cuisines as string).split(',');
+        chefs = chefs.filter(chef => 
+          chef.specialties && chef.specialties.some((s: string) => selectedCuisines.includes(s))
+        );
+      }
+
+      // Apply budget filter
+      if (minRate || maxRate) {
+        const min = minRate ? parseInt(minRate as string) : 0;
+        const max = maxRate ? parseInt(maxRate as string) : 1000;
+        chefs = chefs.filter(chef => 
+          chef.hourlyRate && chef.hourlyRate >= min && chef.hourlyRate <= max
+        );
+      }
+
+      // Apply availability filter
+      if (available === 'true') {
+        chefs = chefs.filter(chef => chef.availableNow === true);
+      }
+
+      // Apply sort
+      switch (sort) {
+        case 'rating':
+          chefs.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+          break;
+        case 'price_low':
+          chefs.sort((a, b) => (a.hourlyRate || 0) - (b.hourlyRate || 0));
+          break;
+        case 'price_high':
+          chefs.sort((a, b) => (b.hourlyRate || 0) - (a.hourlyRate || 0));
+          break;
+        case 'experience':
+          chefs.sort((a, b) => (b.experience || 0) - (a.experience || 0));
+          break;
+        case 'name':
+          chefs.sort((a, b) => a.name.localeCompare(b.name));
+          break;
+        default:
+          // Featured chefs first, then by rating
+          chefs.sort((a, b) => {
+            if (a.featured && !b.featured) return -1;
+            if (!a.featured && b.featured) return 1;
+            return (b.rating || 0) - (a.rating || 0);
+          });
+      }
+
+      // Remove password field for security
+      const safeChefs = chefs.map(chef => ({ ...chef, password: undefined }));
+      
+      res.json(safeChefs);
+    } catch (error) {
+      console.error("Failed to get chefs:", error);
+      res.status(500).json({ message: "Failed to get chefs" });
+    }
+  });
+
+  app.get("/api/chefs/:id", authenticateToken, async (req, res) => {
+    try {
+      const chefId = parseInt(req.params.id);
+      const chef = await storage.getUser(chefId);
+      
+      if (!chef || chef.role !== 'chef') {
+        return res.status(404).json({ message: "Chef not found" });
+      }
+
+      // Remove password field for security
+      const safeChef = { ...chef, password: undefined };
+      res.json(safeChef);
+    } catch (error) {
+      console.error("Failed to get chef:", error);
+      res.status(500).json({ message: "Failed to get chef" });
+    }
+  });
+
   // Message routes
   app.get("/api/messages/:userId", authenticateToken, async (req, res) => {
     try {

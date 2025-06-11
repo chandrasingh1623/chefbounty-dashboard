@@ -13,6 +13,8 @@ import PostEvent from "@/pages/post-event";
 import MyEvents from "@/pages/my-events";
 import Bids from "@/pages/bids";
 import BrowseEvents from "@/pages/browse-events";
+import { BrowseChefs } from "@/pages/browse-chefs";
+import { ChefProfile } from "@/pages/chef-profile";
 import MyBids from "@/pages/my-bids";
 import Profile from "@/pages/profile";
 import Messages from "@/pages/messages";
@@ -105,6 +107,16 @@ function Router() {
       <Route path="/dashboard/browse-events">
         <ProtectedRoute>
           <BrowseEvents />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/dashboard/browse-chefs">
+        <ProtectedRoute>
+          <BrowseChefs />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/dashboard/chef/:id">
+        <ProtectedRoute>
+          <ChefProfile />
         </ProtectedRoute>
       </Route>
       <Route path="/dashboard/my-bids">

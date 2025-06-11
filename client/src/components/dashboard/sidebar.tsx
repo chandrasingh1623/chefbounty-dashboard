@@ -32,6 +32,7 @@ export function Sidebar({ className }: SidebarProps) {
     { href: "/dashboard/post-event", icon: Plus, label: "Post New Event" },
     { href: "/dashboard/my-events", icon: Calendar, label: "My Events" },
     { href: "/dashboard/browse-events", icon: Search, label: "Browse Events" },
+    { href: "/dashboard/browse-chefs", icon: UtensilsCrossed, label: "Browse Chefs" },
     { href: "/dashboard/bids", icon: Gavel, label: "View Bids" },
     { href: "/dashboard/messages", icon: MessageCircle, label: "Messages" },
   ];
@@ -40,6 +41,7 @@ export function Sidebar({ className }: SidebarProps) {
     { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard Overview" },
     { href: "/dashboard/profile", icon: User, label: "My Profile" },
     { href: "/dashboard/browse-events", icon: Search, label: "Browse Events" },
+    { href: "/dashboard/browse-chefs", icon: UtensilsCrossed, label: "Browse Chefs" },
     { href: "/dashboard/my-bids", icon: Hand, label: "My Bids" },
     { href: "/dashboard/messages", icon: MessageCircle, label: "Messages" },
   ];
@@ -79,9 +81,9 @@ export function Sidebar({ className }: SidebarProps) {
             const Icon = item.icon;
             return (
               <Link key={item.href} href={item.href}>
-                <a
+                <div
                   className={cn(
-                    "flex items-center space-x-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors",
+                    "flex items-center space-x-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors cursor-pointer",
                     isActive(item.href)
                       ? "text-primary bg-blue-50"
                       : "text-gray-700 hover:bg-gray-100"
@@ -89,7 +91,7 @@ export function Sidebar({ className }: SidebarProps) {
                 >
                   <Icon className="w-5 h-5" />
                   <span>{item.label}</span>
-                </a>
+                </div>
               </Link>
             );
           })}
@@ -101,9 +103,9 @@ export function Sidebar({ className }: SidebarProps) {
             const Icon = item.icon;
             return (
               <Link key={item.href} href={item.href}>
-                <a
+                <div
                   className={cn(
-                    "flex items-center space-x-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors",
+                    "flex items-center space-x-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors cursor-pointer",
                     isActive(item.href)
                       ? "text-primary bg-blue-50"
                       : "text-gray-700 hover:bg-gray-100"
@@ -111,7 +113,7 @@ export function Sidebar({ className }: SidebarProps) {
                 >
                   <Icon className="w-5 h-5" />
                   <span>{item.label}</span>
-                </a>
+                </div>
               </Link>
             );
           })}

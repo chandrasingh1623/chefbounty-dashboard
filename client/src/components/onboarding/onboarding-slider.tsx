@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { useAuth } from "@/lib/auth";
 import { ChevronLeft, ChevronRight, X, Users, Calendar, MessageSquare, Star } from "lucide-react";
 import logoImage from "@assets/ChefBounty Lg (2)_1753288571802.png";
@@ -143,6 +144,10 @@ export function OnboardingSlider({ isOpen, onClose }: OnboardingSliderProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl p-0 gap-0 overflow-hidden">
+        <VisuallyHidden>
+          <DialogTitle>ChefBounty Onboarding</DialogTitle>
+          <DialogDescription>Welcome to ChefBounty - Get started with our platform</DialogDescription>
+        </VisuallyHidden>
         <div className="relative min-h-[500px] bg-gradient-to-br from-blue-50 to-indigo-50">
           {/* Skip button */}
           <button
