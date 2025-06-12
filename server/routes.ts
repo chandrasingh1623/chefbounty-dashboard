@@ -5,6 +5,7 @@ import { storage } from "./storage";
 import { insertUserSchema, insertEventSchema, insertBidSchema, insertMessageSchema } from "@shared/schema";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { EmailService } from "./email";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
@@ -65,21 +66,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "User already exists" });
       }
 
-      // Hash password
+      // Hash password and generate email verification token
       const hashedPassword = await bcrypt.hash(userData.password, 10);
+      const emailVerificationToken = EmailService.generateVerificationToken(0, userData.email);
+      
       const user = await storage.createUser({
         ...userData,
         password: hashedPassword,
+        emailVerified: false,
+        emailVerificationToken,
       });
 
-      // Generate JWT token
-      const token = jwt.sign(
-        { id: user.id, email: user.email, role: user.role },
-        JWT_SECRET,
-        { expiresIn: '24h' }
+      // Send verification email
+      const baseUrl = process.env.NODE_ENV === 'production' ? 
+        `https://${req.get('host')}` : 
+        `http://${req.get('host')}`;
+        
+      const emailSent = await EmailService.sendVerificationEmail(
+        user.email,
+        user.name,
+        emailVerificationToken,
+        baseUrl
       );
 
-      res.json({ user: { ...user, password: undefined }, token });
+      if (!emailSent) {
+        console.warn('Failed to send verification email, but user created successfully');
+      }
+
+      res.json({ 
+        user: { ...user, password: undefined },
+        message: "Registration successful! Please check your email to verify your account before signing in."
+      });
     } catch (error) {
       console.log("Registration error:", error);
       res.status(400).json({ message: "Invalid user data", error: error instanceof Error ? error.message : "Unknown error" });
@@ -100,6 +117,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Invalid credentials" });
       }
 
+      // Check if email is verified
+      if (!user.emailVerified) {
+        return res.status(403).json({ 
+          message: "Please verify your email address before signing in. Check your inbox for the verification link.",
+          needsEmailVerification: true
+        });
+      }
+
       const token = jwt.sign(
         { id: user.id, email: user.email, role: user.role },
         JWT_SECRET,
@@ -112,28 +137,108 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Email verification route
+  app.get('/api/auth/verify-email', async (req, res) => {
+    try {
+      const { token } = req.query;
+      
+      if (!token) {
+        return res.status(400).json({ message: 'Verification token is required' });
+      }
+
+      // Verify the token
+      const verificationData = EmailService.verifyEmailToken(token as string);
+      if (!verificationData) {
+        return res.status(400).json({ message: 'Invalid or expired verification token' });
+      }
+
+      // Find user by email
+      const user = await storage.getUserByEmail(verificationData.email);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      // Check if already verified
+      if (user.emailVerified) {
+        return res.redirect('/login?message=already-verified');
+      }
+
+      // Update user as verified
+      const updatedUser = await storage.updateUser(user.id, {
+        emailVerified: true,
+        emailVerificationToken: null,
+      });
+
+      if (!updatedUser) {
+        return res.status(500).json({ message: 'Failed to verify email' });
+      }
+
+      // Send welcome email
+      const baseUrl = process.env.NODE_ENV === 'production' ? 
+        `https://${req.get('host')}` : 
+        `http://${req.get('host')}`;
+        
+      await EmailService.sendWelcomeEmail(
+        user.email,
+        user.name,
+        user.role,
+        baseUrl
+      );
+
+      // Redirect to login with success message
+      res.redirect('/login?message=verified');
+    } catch (error) {
+      console.error('Email verification error:', error);
+      res.status(500).json({ message: 'Email verification failed' });
+    }
+  });
+
   // Resend verification email
   app.post('/api/auth/resend-verification', async (req, res) => {
     try {
       const { email } = req.body;
       
       if (!email) {
-        return res.status(400).json({ error: 'Email is required' });
+        return res.status(400).json({ message: 'Email is required' });
       }
 
       // Check if user exists
       const user = await storage.getUserByEmail(email);
       if (!user) {
-        return res.status(404).json({ error: 'User not found' });
+        return res.status(404).json({ message: 'User not found' });
       }
 
-      // TODO: Send verification email here (placeholder for actual email service)
-      console.log(`Resend verification email would be sent to: ${email}`);
+      // Check if already verified
+      if (user.emailVerified) {
+        return res.status(400).json({ message: 'Email is already verified' });
+      }
+
+      // Generate new verification token
+      const emailVerificationToken = EmailService.generateVerificationToken(user.id, user.email);
+      
+      // Update user with new token
+      await storage.updateUser(user.id, { emailVerificationToken });
+
+      // Send verification email
+      const baseUrl = process.env.NODE_ENV === 'production' ? 
+        `https://${req.get('host')}` : 
+        `http://${req.get('host')}`;
+        
+      const emailSent = await EmailService.sendVerificationEmail(
+        user.email,
+        user.name,
+        emailVerificationToken,
+        baseUrl
+      );
+
+      if (!emailSent) {
+        return res.status(500).json({ message: 'Failed to send verification email' });
+      }
 
       res.json({ message: 'Verification email sent successfully' });
     } catch (error) {
       console.error('Resend verification error:', error);
-      res.status(500).json({ error: 'Internal server error' });
+      res.status(500).json({ message: 'Failed to resend verification email' });
     }
   });
 

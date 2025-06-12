@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { Mail, CheckCircle } from "lucide-react";
 import logoImage from "@assets/ChefBounty Lg (2)_1753288571802.png";
+import { EmailVerificationBanner, VerificationStatus } from "@/components/auth/email-verification-banner";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -34,9 +35,25 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [signupEmail, setSignupEmail] = useState("");
+  const [needsVerification, setNeedsVerification] = useState(false);
+  const [verificationEmail, setVerificationEmail] = useState("");
   const { signIn, signUp } = useAuth();
   const { toast } = useToast();
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
+
+  // Check for verification status from URL params
+  const urlParams = new URLSearchParams(window.location.search);
+  const verificationMessage = urlParams.get('message');
+  
+  const getVerificationStatus = (): 'verified' | 'already-verified' | 'invalid' | 'expired' | null => {
+    switch (verificationMessage) {
+      case 'verified': return 'verified';
+      case 'already-verified': return 'already-verified';
+      case 'invalid': return 'invalid';
+      case 'expired': return 'expired';
+      default: return null;
+    }
+  };
 
   const loginForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -65,12 +82,24 @@ export default function Login() {
         description: "You have been signed in successfully.",
       });
       setLocation("/dashboard");
-    } catch (error) {
-      toast({
-        title: "Login failed",
-        description: error instanceof Error ? error.message : "An error occurred",
-        variant: "destructive",
-      });
+    } catch (error: any) {
+      // Check if it's an email verification error
+      if (error.message.includes('verify your email') || 
+          (error.response && error.response.needsEmailVerification)) {
+        setNeedsVerification(true);
+        setVerificationEmail(data.email);
+        toast({
+          title: "Email verification required",
+          description: "Please check your email and verify your account before signing in.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Login failed",
+          description: error instanceof Error ? error.message : "An error occurred",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -82,9 +111,11 @@ export default function Login() {
       await signUp(data);
       setSignupEmail(data.email);
       setEmailSent(true);
+      setNeedsVerification(true);
+      setVerificationEmail(data.email);
       toast({
         title: "Account created!",
-        description: "Please check your email to verify your account.",
+        description: "Please check your email to verify your account before signing in.",
       });
     } catch (error) {
       toast({
@@ -143,13 +174,47 @@ export default function Login() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="login" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">Sign In</TabsTrigger>
-              <TabsTrigger value="signup">Sign Up</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="login">
+          {/* Show verification status messages */}
+          <VerificationStatus status={getVerificationStatus()} />
+          
+          {/* Show email verification banner if needed */}
+          {needsVerification && verificationEmail && (
+            <EmailVerificationBanner 
+              email={verificationEmail}
+              onClose={() => setNeedsVerification(false)}
+            />
+          )}
+
+          {emailSent ? (
+            <div className="text-center space-y-4">
+              <CheckCircle className="h-16 w-16 text-green-600 mx-auto" />
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  Check Your Email
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  We've sent a verification email to <strong>{signupEmail}</strong>.
+                  Please check your inbox and click the verification link to complete your registration.
+                </p>
+                <Button 
+                  onClick={resendVerificationEmail}
+                  disabled={isLoading}
+                  variant="outline"
+                  className="w-full"
+                >
+                  <Mail className="h-4 w-4 mr-2" />
+                  {isLoading ? "Sending..." : "Resend Verification Email"}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <Tabs defaultValue="login" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="login">Sign In</TabsTrigger>
+                <TabsTrigger value="signup">Sign Up</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="login">
               <Form {...loginForm}>
                 <form onSubmit={loginForm.handleSubmit(onLogin)} className="space-y-4">
                   <FormField

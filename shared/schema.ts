@@ -18,6 +18,8 @@ export const users = pgTable("users", {
   experience: integer("experience"), // years of experience
   featured: boolean("featured").default(false),
   availableNow: boolean("available_now").default(false),
+  emailVerified: boolean("email_verified").default(false),
+  emailVerificationToken: text("email_verification_token"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
