@@ -394,6 +394,7 @@ export default function Login() {
               )}
             </TabsContent>
           </Tabs>
+          )}
         </CardContent>
       </Card>
     </div>
