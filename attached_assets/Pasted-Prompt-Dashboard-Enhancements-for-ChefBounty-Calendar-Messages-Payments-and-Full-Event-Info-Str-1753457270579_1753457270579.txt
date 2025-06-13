@@ -1,0 +1,93 @@
+Prompt: Dashboard Enhancements for ChefBounty (Calendar, Messages, Payments, and Full Event Info Structure)
+
+1. Calendar Integration for Chef Accounts in My Profile
+
+Add a "Calendar" under Availability in My Profile for chef accounts
+
+Integrate a calendar UI that allows chefs to click on dates they are allowing bookings for
+
+Allow chefs to block off availability or mark time slots as “Booked.”
+
+
+2. Messages Page
+
+Complete the messages tab
+
+Display conversation threads, real-time updates using Supabase or similar, and typing indicators.
+
+Chat should support:
+
+Role-based filtering (Chef ↔ Host)
+
+Message timestamps
+
+Smart filters (Unread, Starred, Archived)
+
+3. Payments Page
+
+Add a "Payments" tab to the dashboard for both Hosts and Chefs.
+
+Section 1: Past Invoices
+
+Downloadable PDF invoices
+
+Event names, fees, tax, platform charge breakdown
+
+Section 2: Upcoming Payments
+
+Pending deposits, expected payouts
+
+Section 3: Saved Payment Methods
+
+Add/remove cards (use Stripe Elements or tokenized gateway)
+
+Secure by default
+
+Section 4 (Chefs only): Withdrawals
+
+Manual payout request (optional), or linked to Stripe Connect
+
+4. Enhanced Event Details Structure
+When Hosts create or view events, add the following new sections under “Full Event Info.” Organize using clean collapsible tabs, accordion sections, or grouped card layouts for clarity:
+
+🥘 To Help Chefs Tailor Proposals (Cuisine & Meal Info)
+Preferred Cuisine Type(s): Multi-select (e.g., Italian, Vegan, French)
+
+Allergies / Dietary Restrictions: Free-text or multi-select
+
+Meal Type: Dropdown (Brunch, Dinner, Buffet, etc.)
+
+Beverage Service Needed: Toggle (Yes/No), and if Alcohol is Included
+
+🧑‍🍳 Chef Requirements
+Set expectations clearly:
+
+Chef Attire: Radio (Casual, Formal, Uniform)
+
+On-site Cooking Required?: Toggle
+
+Serving Staff Needed?: Toggle
+
+Setup & Cleanup Required?: Toggle
+
+Special Equipment Needed: Free-text or multi-select
+
+🏠 Venue Details
+Plan for logistics:
+
+Venue Type: Dropdown (Home, Commercial Kitchen, Yacht, etc.)
+
+Kitchen Availability: Dropdown (Full kitchen, Limited, None)
+
+Parking Accessibility: Toggle or text
+
+Indoor/Outdoor Setting: Toggle or select
+
+🎭 Experience & Style
+Add personalization:
+
+Event Theme or Mood: Free-text (Elegant, Rustic, etc.)
+
+Live Cooking or Interaction Expected?: Toggle
+
+Guest Dress Code: Free-text
