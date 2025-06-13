@@ -28,14 +28,38 @@ export const events = pgTable("events", {
   hostId: integer("host_id").references(() => users.id).notNull(),
   title: text("title").notNull(),
   description: text("description").notNull(),
-  cuisineType: text("cuisine_type").notNull(),
+  cuisineType: text("cuisine_type").array(), // Multi-select cuisines
   eventDate: timestamp("event_date").notNull(),
   duration: integer("duration").notNull(),
   location: text("location").notNull(),
   budget: decimal("budget", { precision: 10, scale: 2 }).notNull(),
-  venueType: text("venue_type").notNull(), // 'indoor' or 'outdoor'
+  venueType: text("venue_type").notNull(), // 'home', 'commercial_kitchen', 'yacht', etc.
   eventImage: text("event_image"),
   status: text("status").notNull().default("open"), // 'open', 'closed', 'completed'
+  
+  // 🥘 Cuisine & Meal Info
+  allergies: text("allergies").array(),
+  mealType: text("meal_type"), // 'brunch', 'dinner', 'buffet', etc.
+  beverageService: boolean("beverage_service").default(false),
+  alcoholIncluded: boolean("alcohol_included").default(false),
+  
+  // 🧑‍🍳 Chef Requirements
+  chefAttire: text("chef_attire"), // 'casual', 'formal', 'uniform'
+  onsiteCooking: boolean("onsite_cooking").default(true),
+  servingStaff: boolean("serving_staff").default(false),
+  setupCleanup: boolean("setup_cleanup").default(true),
+  specialEquipment: text("special_equipment").array(),
+  
+  // 🏠 Venue Details
+  kitchenAvailability: text("kitchen_availability"), // 'full', 'limited', 'none'
+  parkingAccessibility: text("parking_accessibility"),
+  indoorOutdoor: text("indoor_outdoor"), // 'indoor', 'outdoor', 'both'
+  
+  // 🎭 Experience & Style
+  eventTheme: text("event_theme"),
+  liveCooking: boolean("live_cooking").default(false),
+  guestDressCode: text("guest_dress_code"),
+  
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -56,6 +80,44 @@ export const messages = pgTable("messages", {
   eventId: integer("event_id").references(() => events.id),
   content: text("content").notNull(),
   isRead: boolean("is_read").default(false),
+  isStarred: boolean("is_starred").default(false),
+  isArchived: boolean("is_archived").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// New tables for enhanced features
+export const chefAvailability = pgTable("chef_availability", {
+  id: serial("id").primaryKey(),
+  chefId: integer("chef_id").references(() => users.id).notNull(),
+  date: timestamp("date").notNull(),
+  isAvailable: boolean("is_available").default(true),
+  isBooked: boolean("is_booked").default(false),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const payments = pgTable("payments", {
+  id: serial("id").primaryKey(),
+  eventId: integer("event_id").references(() => events.id).notNull(),
+  hostId: integer("host_id").references(() => users.id).notNull(),
+  chefId: integer("chef_id").references(() => users.id).notNull(),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  platformFee: decimal("platform_fee", { precision: 10, scale: 2 }).notNull(),
+  tax: decimal("tax", { precision: 10, scale: 2 }).notNull(),
+  status: text("status").notNull().default("pending"), // 'pending', 'completed', 'failed', 'refunded'
+  stripePaymentIntentId: text("stripe_payment_intent_id"),
+  invoiceUrl: text("invoice_url"),
+  createdAt: timestamp("created_at").defaultNow(),
+  completedAt: timestamp("completed_at"),
+});
+
+export const paymentMethods = pgTable("payment_methods", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  stripePaymentMethodId: text("stripe_payment_method_id").notNull(),
+  cardBrand: text("card_brand").notNull(),
+  cardLast4: text("card_last4").notNull(),
+  isDefault: boolean("is_default").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -80,6 +142,24 @@ export const insertMessageSchema = createInsertSchema(messages).omit({
   id: true,
   createdAt: true,
   isRead: true,
+  isStarred: true,
+  isArchived: true,
+});
+
+export const insertChefAvailabilitySchema = createInsertSchema(chefAvailability).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertPaymentSchema = createInsertSchema(payments).omit({
+  id: true,
+  createdAt: true,
+  completedAt: true,
+});
+
+export const insertPaymentMethodSchema = createInsertSchema(paymentMethods).omit({
+  id: true,
+  createdAt: true,
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -90,3 +170,9 @@ export type InsertBid = z.infer<typeof insertBidSchema>;
 export type Bid = typeof bids.$inferSelect;
 export type InsertMessage = z.infer<typeof insertMessageSchema>;
 export type Message = typeof messages.$inferSelect;
+export type InsertChefAvailability = z.infer<typeof insertChefAvailabilitySchema>;
+export type ChefAvailability = typeof chefAvailability.$inferSelect;
+export type InsertPayment = z.infer<typeof insertPaymentSchema>;
+export type Payment = typeof payments.$inferSelect;
+export type InsertPaymentMethod = z.infer<typeof insertPaymentMethodSchema>;
+export type PaymentMethod = typeof paymentMethods.$inferSelect;

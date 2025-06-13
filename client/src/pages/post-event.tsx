@@ -1,5 +1,5 @@
 import { DashboardLayout } from "@/components/dashboard/layout";
-import { EventForm } from "@/components/dashboard/event-form";
+import { EnhancedEventForm } from "@/components/dashboard/enhanced-event-form";
 import { useLocation } from "wouter";
 
 export default function PostEvent() {
@@ -19,7 +19,7 @@ export default function PostEvent() {
       subtitle="Create a new event and start receiving bids from talented chefs"
     >
       <div className="max-w-4xl mx-auto">
-        <EventForm onSuccess={handleSuccess} onCancel={handleCancel} />
+        <EnhancedEventForm onSuccess={handleSuccess} onCancel={handleCancel} />
       </div>
     </DashboardLayout>
   );

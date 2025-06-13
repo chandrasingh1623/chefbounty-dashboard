@@ -1,5 +1,27 @@
-import { users, events, bids, messages, type User, type InsertUser, type Event, type InsertEvent, type Bid, type InsertBid, type Message, type InsertMessage } from "@shared/schema";
-import { eq, desc, and } from "drizzle-orm";
+import { 
+  users, 
+  events, 
+  bids, 
+  messages, 
+  chefAvailability,
+  payments,
+  paymentMethods,
+  type User, 
+  type InsertUser, 
+  type Event, 
+  type InsertEvent, 
+  type Bid, 
+  type InsertBid, 
+  type Message, 
+  type InsertMessage,
+  type ChefAvailability,
+  type InsertChefAvailability,
+  type Payment,
+  type InsertPayment,
+  type PaymentMethod,
+  type InsertPaymentMethod
+} from "@shared/schema";
+import { eq, desc, and, between, or } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
 
@@ -30,8 +52,25 @@ export interface IStorage {
 
   // Message operations
   getMessagesBetweenUsers(userId1: number, userId2: number): Promise<Message[]>;
+  getConversationsForUser(userId: number): Promise<any[]>;
   createMessage(message: InsertMessage): Promise<Message>;
   markMessageAsRead(id: number): Promise<Message | undefined>;
+  markConversationAsRead(userId: number, otherUserId: number): Promise<void>;
+  toggleMessageStar(id: number): Promise<Message | undefined>;
+
+  // Chef Availability operations
+  getChefAvailability(chefId: number, startDate: string, endDate: string): Promise<ChefAvailability[]>;
+  createOrUpdateAvailability(availability: InsertChefAvailability): Promise<ChefAvailability>;
+
+  // Payment operations
+  getPaymentsByUserId(userId: number): Promise<Payment[]>;
+  createPayment(payment: InsertPayment): Promise<Payment>;
+  updatePayment(id: number, updates: Partial<InsertPayment>): Promise<Payment | undefined>;
+
+  // Payment Method operations
+  getPaymentMethodsByUserId(userId: number): Promise<PaymentMethod[]>;
+  createPaymentMethod(paymentMethod: InsertPaymentMethod): Promise<PaymentMethod>;
+  removePaymentMethod(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -124,6 +163,117 @@ export class DatabaseStorage implements IStorage {
   async markMessageAsRead(id: number): Promise<Message | undefined> {
     const result = await db.update(messages).set({ isRead: true }).where(eq(messages.id, id)).returning();
     return result[0];
+  }
+
+  async getConversationsForUser(userId: number): Promise<any[]> {
+    // This would need a more complex query in production
+    // For now, return a simplified structure
+    return [];
+  }
+
+  async markConversationAsRead(userId: number, otherUserId: number): Promise<void> {
+    await db.update(messages)
+      .set({ isRead: true })
+      .where(
+        and(
+          eq(messages.receiverId, userId),
+          eq(messages.senderId, otherUserId)
+        )
+      );
+  }
+
+  async toggleMessageStar(id: number): Promise<Message | undefined> {
+    const message = await db.select().from(messages).where(eq(messages.id, id)).limit(1);
+    if (message[0]) {
+      const result = await db.update(messages)
+        .set({ isStarred: !message[0].isStarred })
+        .where(eq(messages.id, id))
+        .returning();
+      return result[0];
+    }
+    return undefined;
+  }
+
+  // Chef Availability operations
+  async getChefAvailability(chefId: number, startDate: string, endDate: string): Promise<ChefAvailability[]> {
+    return await db.select()
+      .from(chefAvailability)
+      .where(
+        and(
+          eq(chefAvailability.chefId, chefId),
+          between(chefAvailability.date, new Date(startDate), new Date(endDate))
+        )
+      );
+  }
+
+  async createOrUpdateAvailability(availability: InsertChefAvailability): Promise<ChefAvailability> {
+    // Try to find existing availability for this date
+    const existing = await db.select()
+      .from(chefAvailability)
+      .where(
+        and(
+          eq(chefAvailability.chefId, availability.chefId),
+          eq(chefAvailability.date, availability.date)
+        )
+      )
+      .limit(1);
+
+    if (existing[0]) {
+      // Update existing
+      const result = await db.update(chefAvailability)
+        .set({
+          isAvailable: availability.isAvailable,
+          isBooked: availability.isBooked,
+          notes: availability.notes,
+        })
+        .where(eq(chefAvailability.id, existing[0].id))
+        .returning();
+      return result[0];
+    } else {
+      // Create new
+      const result = await db.insert(chefAvailability).values(availability).returning();
+      return result[0];
+    }
+  }
+
+  // Payment operations
+  async getPaymentsByUserId(userId: number): Promise<Payment[]> {
+    return await db.select()
+      .from(payments)
+      .where(
+        or(
+          eq(payments.hostId, userId),
+          eq(payments.chefId, userId)
+        )
+      )
+      .orderBy(desc(payments.createdAt));
+  }
+
+  async createPayment(payment: InsertPayment): Promise<Payment> {
+    const result = await db.insert(payments).values(payment).returning();
+    return result[0];
+  }
+
+  async updatePayment(id: number, updates: Partial<InsertPayment>): Promise<Payment | undefined> {
+    const result = await db.update(payments).set(updates).where(eq(payments.id, id)).returning();
+    return result[0];
+  }
+
+  // Payment Method operations
+  async getPaymentMethodsByUserId(userId: number): Promise<PaymentMethod[]> {
+    return await db.select()
+      .from(paymentMethods)
+      .where(eq(paymentMethods.userId, userId))
+      .orderBy(desc(paymentMethods.createdAt));
+  }
+
+  async createPaymentMethod(paymentMethod: InsertPaymentMethod): Promise<PaymentMethod> {
+    const result = await db.insert(paymentMethods).values(paymentMethod).returning();
+    return result[0];
+  }
+
+  async removePaymentMethod(id: number): Promise<void> {
+    await db.delete(paymentMethods).where(eq(paymentMethods.id, id));
   }
 }
 

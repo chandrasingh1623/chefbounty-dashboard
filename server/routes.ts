@@ -496,5 +496,174 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Mark message as read
+  app.put("/api/messages/:id/read", authenticateToken, async (req, res) => {
+    try {
+      const messageId = parseInt(req.params.id);
+      const message = await storage.markMessageAsRead(messageId);
+      
+      if (!message) {
+        return res.status(404).json({ message: "Message not found" });
+      }
+      
+      res.json(message);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to mark message as read" });
+    }
+  });
+
+  // Get conversations for user
+  app.get("/api/conversations", authenticateToken, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const conversations = await storage.getConversationsForUser(userId);
+      res.json(conversations);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch conversations" });
+    }
+  });
+
+  // Mark conversation as read
+  app.put("/api/messages/mark-read/:userId", authenticateToken, async (req, res) => {
+    try {
+      const currentUserId = req.user!.id;
+      const otherUserId = parseInt(req.params.userId);
+      
+      await storage.markConversationAsRead(currentUserId, otherUserId);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to mark conversation as read" });
+    }
+  });
+
+  // Toggle message star
+  app.put("/api/messages/:id/star", authenticateToken, async (req, res) => {
+    try {
+      const messageId = parseInt(req.params.id);
+      const message = await storage.toggleMessageStar(messageId);
+      
+      if (!message) {
+        return res.status(404).json({ message: "Message not found" });
+      }
+      
+      res.json(message);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to toggle star" });
+    }
+  });
+
+  // Chef Availability Routes
+  app.get("/api/chef-availability/:chefId", authenticateToken, async (req, res) => {
+    try {
+      const chefId = parseInt(req.params.chefId);
+      const { start, end } = req.query;
+      
+      if (!start || !end) {
+        return res.status(400).json({ message: "Start and end dates are required" });
+      }
+      
+      const availability = await storage.getChefAvailability(chefId, start as string, end as string);
+      res.json(availability);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch availability" });
+    }
+  });
+
+  app.post("/api/chef-availability", authenticateToken, async (req, res) => {
+    try {
+      const { chefId, date, isAvailable, notes } = req.body;
+      
+      const availability = await storage.createOrUpdateAvailability({
+        chefId,
+        date: new Date(date),
+        isAvailable,
+        isBooked: false,
+        notes,
+      });
+      
+      res.json(availability);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update availability" });
+    }
+  });
+
+  // Payment Routes
+  app.get("/api/payments", authenticateToken, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const payments = await storage.getPaymentsByUserId(userId);
+      res.json(payments);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch payments" });
+    }
+  });
+
+  app.post("/api/payments", authenticateToken, async (req, res) => {
+    try {
+      const payment = await storage.createPayment(req.body);
+      res.json(payment);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create payment" });
+    }
+  });
+
+  // Payment Methods Routes
+  app.get("/api/payment-methods", authenticateToken, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const paymentMethods = await storage.getPaymentMethodsByUserId(userId);
+      res.json(paymentMethods);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch payment methods" });
+    }
+  });
+
+  app.post("/api/payment-methods", authenticateToken, async (req, res) => {
+    try {
+      const { cardNumber, expiryMonth, expiryYear, cvc } = req.body;
+      const userId = req.user!.id;
+      
+      // In real implementation, this would integrate with Stripe
+      const paymentMethod = await storage.createPaymentMethod({
+        userId,
+        stripePaymentMethodId: `pm_${Date.now()}`, // Mock Stripe ID
+        cardBrand: "visa", // Would be determined by Stripe
+        cardLast4: cardNumber.slice(-4),
+        isDefault: false,
+      });
+      
+      res.json(paymentMethod);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to add payment method" });
+    }
+  });
+
+  app.delete("/api/payment-methods/:id", authenticateToken, async (req, res) => {
+    try {
+      const paymentMethodId = parseInt(req.params.id);
+      await storage.removePaymentMethod(paymentMethodId);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to remove payment method" });
+    }
+  });
+
+  // Withdrawals (for chefs)
+  app.post("/api/withdrawals", authenticateToken, async (req, res) => {
+    try {
+      const { amount } = req.body;
+      const userId = req.user!.id;
+      
+      // In real implementation, this would process the withdrawal
+      // For now, just return success
+      res.json({ 
+        success: true, 
+        message: `Withdrawal of $${amount} has been requested and will be processed within 2-3 business days.` 
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to request withdrawal" });
+    }
+  });
+
   return httpServer;
 }
