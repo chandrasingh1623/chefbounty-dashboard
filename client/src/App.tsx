@@ -13,7 +13,7 @@ import PostEvent from "@/pages/post-event";
 import MyEvents from "@/pages/my-events";
 import Bids from "@/pages/bids";
 import BrowseEvents from "@/pages/browse-events";
-import { BrowseChefs } from "@/pages/browse-chefs";
+import BrowseChefs from "@/pages/browse-chefs";
 import { ChefProfile } from "@/pages/chef-profile";
 import MyBids from "@/pages/my-bids";
 import Profile from "@/pages/profile";
