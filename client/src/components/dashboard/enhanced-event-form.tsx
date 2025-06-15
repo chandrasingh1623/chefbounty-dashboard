@@ -30,6 +30,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { insertEventSchema } from "@/../../shared/schema";
 
 const cuisineTypes = [
   "Italian", "French", "Asian", "Mexican", "Mediterranean", 
@@ -48,40 +49,19 @@ const equipmentOptions = [
   "Grill", "Smoker", "Pizza Oven", "Ice Cream Maker"
 ];
 
-const eventFormSchema = z.object({
-  title: z.string().min(1, "Event title is required"),
-  description: z.string().min(10, "Description must be at least 10 characters"),
-  location: z.string().min(1, "Location is required"),
+// Use the actual database schema for validation
+const eventFormSchema = insertEventSchema.extend({
   eventDate: z.date({
     required_error: "Event date is required",
   }),
-  duration: z.number().min(1, "Duration must be at least 1 hour"),
   budget: z.number().min(1, "Budget must be greater than 0"),
-  
-  // Cuisine & Meal Info
+  duration: z.number().min(1, "Duration must be at least 1 hour"),
+  title: z.string().min(1, "Event title is required"),
+  description: z.string().min(10, "Description must be at least 10 characters"),
+  location: z.string().min(1, "Location is required"),
   cuisineType: z.array(z.string()).min(1, "Select at least one cuisine type"),
-  allergies: z.array(z.string()).optional(),
   mealType: z.string().min(1, "Meal type is required"),
-  beverageService: z.boolean().default(false),
-  alcoholIncluded: z.boolean().default(false),
-  
-  // Chef Requirements
-  chefAttire: z.string().min(1, "Chef attire preference is required"),
-  onsiteCooking: z.boolean().default(true),
-  servingStaff: z.boolean().default(false),
-  setupCleanup: z.boolean().default(true),
-  specialEquipment: z.array(z.string()).optional(),
-  
-  // Venue Details
   venueType: z.string().min(1, "Venue type is required"),
-  kitchenAvailability: z.string().min(1, "Kitchen availability is required"),
-  parkingAccessibility: z.string().optional(),
-  indoorOutdoor: z.string().min(1, "Indoor/outdoor setting is required"),
-  
-  // Experience & Style
-  eventTheme: z.string().optional(),
-  liveCooking: z.boolean().default(false),
-  guestDressCode: z.string().optional(),
 });
 
 type EventFormData = z.infer<typeof eventFormSchema>;
@@ -200,7 +180,11 @@ export function EnhancedEventForm({ onSuccess, onCancel }: EnhancedEventFormProp
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={(e) => {
+        console.log('Form onSubmit event triggered');
+        e.preventDefault();
+        form.handleSubmit(onSubmit)(e);
+      }} className="space-y-6">
         {/* Basic Event Information */}
         <Card>
           <CardHeader>
@@ -477,7 +461,7 @@ export function EnhancedEventForm({ onSuccess, onCancel }: EnhancedEventFormProp
                           </FormDescription>
                         </div>
                         <FormControl>
-                          <Switch checked={field.value} onCheckedChange={field.onChange} />
+                          <Switch checked={field.value || false} onCheckedChange={field.onChange} />
                         </FormControl>
                       </FormItem>
                     )}
@@ -495,7 +479,7 @@ export function EnhancedEventForm({ onSuccess, onCancel }: EnhancedEventFormProp
                           </FormDescription>
                         </div>
                         <FormControl>
-                          <Switch checked={field.value} onCheckedChange={field.onChange} />
+                          <Switch checked={field.value || false} onCheckedChange={field.onChange} />
                         </FormControl>
                       </FormItem>
                     )}
@@ -511,7 +495,16 @@ export function EnhancedEventForm({ onSuccess, onCancel }: EnhancedEventFormProp
           <Button type="button" variant="outline" onClick={onCancel}>
             Cancel
           </Button>
-          <Button type="submit" disabled={createEventMutation.isPending}>
+          <Button 
+            type="submit" 
+            disabled={createEventMutation.isPending}
+            onClick={(e) => {
+              console.log('Button clicked');
+              console.log('Form valid:', form.formState.isValid);
+              console.log('Form errors:', form.formState.errors);
+              console.log('Form values:', form.getValues());
+            }}
+          >
             {createEventMutation.isPending ? "Creating..." : "Create Event"}
           </Button>
         </div>
