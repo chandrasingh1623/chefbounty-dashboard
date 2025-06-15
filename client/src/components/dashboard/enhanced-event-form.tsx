@@ -94,9 +94,9 @@ interface EnhancedEventFormProps {
 export function EnhancedEventForm({ onSuccess, onCancel }: EnhancedEventFormProps) {
   const [sectionsOpen, setSectionsOpen] = useState({
     cuisine: true,
-    chef: false,
-    venue: false,
-    experience: false,
+    chef: true,
+    venue: true,
+    experience: true,
   });
   const [customEquipment, setCustomEquipment] = useState("");
   const { toast } = useToast();
@@ -132,12 +132,21 @@ export function EnhancedEventForm({ onSuccess, onCancel }: EnhancedEventFormProp
 
   const createEventMutation = useMutation({
     mutationFn: async (data: EventFormData) => {
-      return apiRequest('POST', '/api/events', {
-        ...data,
-        eventDate: data.eventDate.toISOString(),
-      });
+      console.log('Mutation starting with data:', data);
+      try {
+        const result = await apiRequest('POST', '/api/events', {
+          ...data,
+          eventDate: data.eventDate.toISOString(),
+        });
+        console.log('Mutation success:', result);
+        return result;
+      } catch (error) {
+        console.error('Mutation error:', error);
+        throw error;
+      }
     },
     onSuccess: () => {
+      console.log('onSuccess called');
       queryClient.invalidateQueries({ queryKey: ['/api/events'] });
       toast({
         title: "Event Created",
@@ -145,7 +154,8 @@ export function EnhancedEventForm({ onSuccess, onCancel }: EnhancedEventFormProp
       });
       onSuccess();
     },
-    onError: () => {
+    onError: (error) => {
+      console.error('onError called:', error);
       toast({
         title: "Error",
         description: "Failed to create event. Please try again.",
@@ -155,6 +165,19 @@ export function EnhancedEventForm({ onSuccess, onCancel }: EnhancedEventFormProp
   });
 
   const onSubmit = (data: EventFormData) => {
+    console.log('Form submitted with data:', data);
+    console.log('Form errors:', form.formState.errors);
+    
+    // Check if there are validation errors
+    if (Object.keys(form.formState.errors).length > 0) {
+      toast({
+        title: "Form Validation Error",
+        description: "Please fill out all required fields before submitting.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     createEventMutation.mutate(data);
   };
 
