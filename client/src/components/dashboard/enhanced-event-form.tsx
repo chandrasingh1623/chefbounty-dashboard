@@ -58,27 +58,27 @@ const eventFormSchema = z.object({
   duration: z.number().min(1, "Duration must be at least 1 hour"),
   budget: z.number().min(1, "Budget must be greater than 0"),
   
-  // 🥘 Cuisine & Meal Info
+  // Cuisine & Meal Info
   cuisineType: z.array(z.string()).min(1, "Select at least one cuisine type"),
   allergies: z.array(z.string()).optional(),
   mealType: z.string().min(1, "Meal type is required"),
   beverageService: z.boolean().default(false),
   alcoholIncluded: z.boolean().default(false),
   
-  // 🧑‍🍳 Chef Requirements
+  // Chef Requirements
   chefAttire: z.string().min(1, "Chef attire preference is required"),
   onsiteCooking: z.boolean().default(true),
   servingStaff: z.boolean().default(false),
   setupCleanup: z.boolean().default(true),
   specialEquipment: z.array(z.string()).optional(),
   
-  // 🏠 Venue Details
+  // Venue Details
   venueType: z.string().min(1, "Venue type is required"),
   kitchenAvailability: z.string().min(1, "Kitchen availability is required"),
   parkingAccessibility: z.string().optional(),
   indoorOutdoor: z.string().min(1, "Indoor/outdoor setting is required"),
   
-  // 🎭 Experience & Style
+  // Experience & Style
   eventTheme: z.string().optional(),
   liveCooking: z.boolean().default(false),
   guestDressCode: z.string().optional(),
@@ -322,7 +322,7 @@ export function EnhancedEventForm({ onSuccess, onCancel }: EnhancedEventFormProp
           </CardContent>
         </Card>
 
-        {/* 🥘 Cuisine & Meal Info */}
+        {/* Cuisine & Meal Info */}
         <Card>
           <Collapsible open={sectionsOpen.cuisine} onOpenChange={() => toggleSection('cuisine')}>
             <CollapsibleTrigger asChild>
@@ -330,7 +330,7 @@ export function EnhancedEventForm({ onSuccess, onCancel }: EnhancedEventFormProp
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <UtensilsCrossed className="w-5 h-5 text-orange-500" />
-                    <CardTitle>🥘 Cuisine & Meal Information</CardTitle>
+                    <CardTitle>Cuisine & Meal Information</CardTitle>
                   </div>
                   <ChevronDown className={`w-5 h-5 transition-transform ${sectionsOpen.cuisine ? 'rotate-180' : ''}`} />
                 </div>
