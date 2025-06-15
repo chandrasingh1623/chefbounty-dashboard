@@ -329,7 +329,6 @@ export function EnhancedEventForm({ onSuccess, onCancel }: EnhancedEventFormProp
               <CardHeader className="cursor-pointer hover:bg-gray-50 transition-colors">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <UtensilsCrossed className="w-5 h-5 text-orange-500" />
                     <CardTitle>Cuisine & Meal Information</CardTitle>
                   </div>
                   <ChevronDown className={`w-5 h-5 transition-transform ${sectionsOpen.cuisine ? 'rotate-180' : ''}`} />
