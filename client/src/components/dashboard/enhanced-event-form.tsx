@@ -132,12 +132,9 @@ export function EnhancedEventForm({ onSuccess, onCancel }: EnhancedEventFormProp
 
   const createEventMutation = useMutation({
     mutationFn: async (data: EventFormData) => {
-      return apiRequest('/api/events', {
-        method: 'POST',
-        body: JSON.stringify({
-          ...data,
-          eventDate: data.eventDate.toISOString(),
-        }),
+      return apiRequest('POST', '/api/events', {
+        ...data,
+        eventDate: data.eventDate.toISOString(),
       });
     },
     onSuccess: () => {
