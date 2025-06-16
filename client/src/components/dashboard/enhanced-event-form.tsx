@@ -50,8 +50,10 @@ const equipmentOptions = [
   "Grill", "Smoker", "Pizza Oven", "Ice Cream Maker"
 ];
 
-// Use the actual database schema for validation but make optional fields truly optional
-const eventFormSchema = insertEventSchema.extend({
+// Use the actual database schema for validation but exclude hostId (we'll add it in mutation)
+const eventFormSchema = insertEventSchema.omit({ 
+  hostId: true // Remove hostId from validation - we'll add it in the mutation
+}).extend({
   eventDate: z.date({
     required_error: "Event date is required",
   }),
@@ -63,12 +65,6 @@ const eventFormSchema = insertEventSchema.extend({
   cuisineType: z.array(z.string()).min(1, "Select at least one cuisine type"),
   mealType: z.string().min(1, "Meal type is required"),
   venueType: z.string().min(1, "Venue type is required"),
-  chefAttire: z.string().optional(),
-  kitchenAvailability: z.string().optional(),
-  indoorOutdoor: z.string().optional(),
-  parkingAccessibility: z.string().optional(),
-  eventTheme: z.string().optional(),
-  guestDressCode: z.string().optional(),
 });
 
 type EventFormData = z.infer<typeof eventFormSchema>;
@@ -135,7 +131,9 @@ export function EnhancedEventForm({ onSuccess, onCancel }: EnhancedEventFormProp
     },
     onSuccess: () => {
       console.log('onSuccess called');
+      // Invalidate multiple relevant queries to refresh all event lists
       queryClient.invalidateQueries({ queryKey: ['/api/events'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/events/host'] });
       toast({
         title: "Event Created",
         description: "Your event has been posted successfully. Chefs can now submit bids!",
@@ -167,9 +165,18 @@ export function EnhancedEventForm({ onSuccess, onCancel }: EnhancedEventFormProp
     }
     
     // Add hostId from current user
+    if (!user?.id) {
+      toast({
+        title: "Authentication Error",
+        description: "Please log in to create an event.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     const eventData = {
       ...data,
-      hostId: user?.id,
+      hostId: user.id as number, // TypeScript cast - we already validated user.id exists above
     };
     
     console.log('Submitting event data with hostId:', eventData);
