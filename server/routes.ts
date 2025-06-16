@@ -299,16 +299,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/events", authenticateToken, async (req, res) => {
+  app.post("/api/events", authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
     try {
+      console.log('POST /api/events - Request body:', JSON.stringify(req.body, null, 2));
+      console.log('POST /api/events - User ID:', req.user.id);
+      
       const eventData = insertEventSchema.parse({
         ...req.body,
-        hostId: req.user.id,
+        hostId: req.user.id, // Use authenticated user's ID as hostId
       });
+      
+      console.log('POST /api/events - Parsed event data:', JSON.stringify(eventData, null, 2));
+      
       const event = await storage.createEvent(eventData);
+      console.log('POST /api/events - Created event:', JSON.stringify(event, null, 2));
+      
       res.json(event);
     } catch (error) {
-      res.status(400).json({ message: "Invalid event data" });
+      console.error('POST /api/events - Error:', error);
+      if (error instanceof Error) {
+        res.status(400).json({ message: `Invalid event data: ${error.message}` });
+      } else {
+        res.status(400).json({ message: "Invalid event data" });
+      }
     }
   });
 
