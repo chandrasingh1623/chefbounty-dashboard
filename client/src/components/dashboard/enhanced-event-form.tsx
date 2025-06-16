@@ -31,6 +31,7 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { insertEventSchema } from "@/../../shared/schema";
+import { useAuth } from "@/lib/auth";
 
 const cuisineTypes = [
   "Italian", "French", "Asian", "Mexican", "Mediterranean", 
@@ -49,7 +50,7 @@ const equipmentOptions = [
   "Grill", "Smoker", "Pizza Oven", "Ice Cream Maker"
 ];
 
-// Use the actual database schema for validation
+// Use the actual database schema for validation but make optional fields truly optional
 const eventFormSchema = insertEventSchema.extend({
   eventDate: z.date({
     required_error: "Event date is required",
@@ -62,6 +63,12 @@ const eventFormSchema = insertEventSchema.extend({
   cuisineType: z.array(z.string()).min(1, "Select at least one cuisine type"),
   mealType: z.string().min(1, "Meal type is required"),
   venueType: z.string().min(1, "Venue type is required"),
+  chefAttire: z.string().optional(),
+  kitchenAvailability: z.string().optional(),
+  indoorOutdoor: z.string().optional(),
+  parkingAccessibility: z.string().optional(),
+  eventTheme: z.string().optional(),
+  guestDressCode: z.string().optional(),
 });
 
 type EventFormData = z.infer<typeof eventFormSchema>;
@@ -81,6 +88,7 @@ export function EnhancedEventForm({ onSuccess, onCancel }: EnhancedEventFormProp
   const [customEquipment, setCustomEquipment] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   const form = useForm<EventFormData>({
     resolver: zodResolver(eventFormSchema),
@@ -92,18 +100,18 @@ export function EnhancedEventForm({ onSuccess, onCancel }: EnhancedEventFormProp
       budget: 500,
       cuisineType: [],
       allergies: [],
-      mealType: "",
+      mealType: "dinner", // Set default value
       beverageService: false,
       alcoholIncluded: false,
-      chefAttire: "",
+      chefAttire: "casual", // Set default value
       onsiteCooking: true,
       servingStaff: false,
       setupCleanup: true,
       specialEquipment: [],
-      venueType: "",
-      kitchenAvailability: "",
+      venueType: "home", // Set default value
+      kitchenAvailability: "full", // Set default value
       parkingAccessibility: "",
-      indoorOutdoor: "",
+      indoorOutdoor: "indoor", // Set default value
       eventTheme: "",
       liveCooking: false,
       guestDressCode: "",
@@ -111,7 +119,7 @@ export function EnhancedEventForm({ onSuccess, onCancel }: EnhancedEventFormProp
   });
 
   const createEventMutation = useMutation({
-    mutationFn: async (data: EventFormData) => {
+    mutationFn: async (data: EventFormData & { hostId: number }) => {
       console.log('Mutation starting with data:', data);
       try {
         const result = await apiRequest('POST', '/api/events', {
@@ -158,7 +166,14 @@ export function EnhancedEventForm({ onSuccess, onCancel }: EnhancedEventFormProp
       return;
     }
     
-    createEventMutation.mutate(data);
+    // Add hostId from current user
+    const eventData = {
+      ...data,
+      hostId: user?.id,
+    };
+    
+    console.log('Submitting event data with hostId:', eventData);
+    createEventMutation.mutate(eventData);
   };
 
   const toggleSection = (section: keyof typeof sectionsOpen) => {
