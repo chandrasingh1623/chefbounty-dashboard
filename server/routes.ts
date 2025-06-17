@@ -345,8 +345,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/bids", authenticateToken, async (req, res) => {
+  app.post("/api/bids", authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
     try {
+      // Only chefs can submit bids
+      if (req.user.role !== 'chef') {
+        return res.status(403).json({ message: "Only chefs can submit bids" });
+      }
+      
       const bidData = insertBidSchema.parse({
         ...req.body,
         chefId: req.user.id,
@@ -354,7 +359,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const bid = await storage.createBid(bidData);
       res.json(bid);
     } catch (error) {
-      res.status(400).json({ message: "Invalid bid data" });
+      console.error('POST /api/bids - Error:', error);
+      if (error instanceof Error) {
+        res.status(400).json({ message: `Invalid bid data: ${error.message}` });
+      } else {
+        res.status(400).json({ message: "Invalid bid data" });
+      }
     }
   });
 

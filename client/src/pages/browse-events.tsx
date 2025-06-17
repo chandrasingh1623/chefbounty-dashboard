@@ -55,7 +55,7 @@ export default function BrowseEvents() {
 
   const { data: myBids = [] } = useQuery({
     queryKey: ['/api/bids/chef', user?.id],
-    enabled: !!user?.id,
+    enabled: !!user?.id && user?.role === 'chef',
     queryFn: async () => {
       const response = await fetch(`/api/bids/chef/${user?.id}`, {
         headers: authService.getAuthHeaders(),
@@ -74,7 +74,8 @@ export default function BrowseEvents() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to submit bid');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to submit bid');
       }
 
       return response.json();
@@ -98,12 +99,18 @@ export default function BrowseEvents() {
     },
   });
 
-  // Filter out events where user has already bid and events that are not open
+  // Filter events based on user role and bidding status
   const availableEvents = events.filter((event: any) => {
-    const hasAlreadyBid = myBids.some((bid: any) => bid.eventId === event.id);
     const isEventOpen = event.status === 'open';
     const isUpcoming = new Date(event.eventDate) > new Date();
-    return !hasAlreadyBid && isEventOpen && isUpcoming;
+    
+    if (user?.role === 'chef') {
+      const hasAlreadyBid = myBids.some((bid: any) => bid.eventId === event.id);
+      return !hasAlreadyBid && isEventOpen && isUpcoming;
+    }
+    
+    // For hosts, show all open upcoming events (they can't bid anyway)
+    return isEventOpen && isUpcoming;
   });
 
   const filteredEvents = availableEvents.filter((event: any) => {
@@ -153,7 +160,10 @@ export default function BrowseEvents() {
   }
 
   return (
-    <DashboardLayout title="Browse Events" subtitle="Find exciting cooking opportunities and submit your bids">
+    <DashboardLayout 
+      title="Browse Events" 
+      subtitle={user?.role === 'chef' ? "Find exciting cooking opportunities and submit your bids" : "Browse available events and see what chefs are offering"}
+    >
       <div className="space-y-6">
         {/* Filters */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -208,6 +218,25 @@ export default function BrowseEvents() {
           </Select>
         </div>
 
+        {/* Role-based messaging for hosts */}
+        {user?.role === 'host' && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <Search className="h-5 w-5 text-blue-400" />
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-blue-800">
+                  Browsing as Host
+                </h3>
+                <div className="mt-1 text-sm text-blue-700">
+                  <p>You're viewing available events as a host. Only chefs can submit bids on events. To post your own event, visit the "Post New Event" section.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Events Grid */}
         {filteredEvents.length > 0 ? (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -215,8 +244,8 @@ export default function BrowseEvents() {
               <EventCard
                 key={event.id}
                 event={event}
-                showBidButton={true}
-                onBid={handleBid}
+                showBidButton={user?.role === 'chef'}
+                onBid={user?.role === 'chef' ? handleBid : undefined}
               />
             ))}
           </div>
