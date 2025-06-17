@@ -120,7 +120,7 @@ export function EnhancedEventForm({ onSuccess, onCancel }: EnhancedEventFormProp
       try {
         const result = await apiRequest('POST', '/api/events', {
           ...data,
-          eventDate: new Date(data.eventDate), // Send as Date object, not string
+          eventDate: data.eventDate.toISOString(), // Send as ISO string for JSON serialization
           budget: data.budget.toString(), // Convert number to string for decimal field
         });
         console.log('Mutation success:', result);

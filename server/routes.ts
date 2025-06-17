@@ -306,6 +306,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const eventData = insertEventSchema.parse({
         ...req.body,
+        eventDate: new Date(req.body.eventDate), // Convert ISO string to Date object
         hostId: req.user.id, // Use authenticated user's ID as hostId
       });
       
