@@ -231,11 +231,11 @@ export function MessageCenter() {
 
         {/* Filter Tabs */}
         <Tabs value={activeFilter} onValueChange={(value) => setActiveFilter(value as any)} className="flex-1 flex flex-col">
-          <TabsList className="grid w-full grid-cols-4 mx-2 mt-2 h-9">
-            <TabsTrigger value="all" className="text-xs px-1 min-w-0">All</TabsTrigger>
-            <TabsTrigger value="unread" className="text-xs px-1 min-w-0">Unread</TabsTrigger>
-            <TabsTrigger value="starred" className="text-xs px-1 min-w-0">Starred</TabsTrigger>
-            <TabsTrigger value="archived" className="text-xs px-1 min-w-0">Archived</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-4 mx-3 mt-2 h-8 gap-0 p-0">
+            <TabsTrigger value="all" className="text-xs px-0.5 py-1 h-7 min-w-0 flex-shrink truncate">All</TabsTrigger>
+            <TabsTrigger value="unread" className="text-xs px-0.5 py-1 h-7 min-w-0 flex-shrink truncate">Unread</TabsTrigger>
+            <TabsTrigger value="starred" className="text-xs px-0.5 py-1 h-7 min-w-0 flex-shrink truncate">Starred</TabsTrigger>
+            <TabsTrigger value="archived" className="text-xs px-0.5 py-1 h-7 min-w-0 flex-shrink truncate">Archived</TabsTrigger>
           </TabsList>
 
           {/* Conversations List */}
