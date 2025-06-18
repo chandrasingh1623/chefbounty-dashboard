@@ -106,9 +106,9 @@ export function ChefDashboard() {
             <div className="flex items-center justify-between">
               <CardTitle>Available Events</CardTitle>
               <Link href="/dashboard/browse-events">
-                <a className="text-sm text-primary hover:text-primary/80 font-medium">
+                <span className="text-sm text-primary hover:text-primary/80 font-medium cursor-pointer">
                   Browse All
-                </a>
+                </span>
               </Link>
             </div>
           </CardHeader>
@@ -154,9 +154,9 @@ export function ChefDashboard() {
             <div className="flex items-center justify-between">
               <CardTitle>My Bids</CardTitle>
               <Link href="/dashboard/my-bids">
-                <a className="text-sm text-primary hover:text-primary/80 font-medium">
+                <span className="text-sm text-primary hover:text-primary/80 font-medium cursor-pointer">
                   View All
-                </a>
+                </span>
               </Link>
             </div>
           </CardHeader>

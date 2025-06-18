@@ -15,6 +15,7 @@ import { z } from "zod";
 import { useState } from "react";
 import { Search, Calendar, MapPin, DollarSign } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { EventDetailModal } from "@/components/dashboard/event-detail-modal";
 
 const bidSchema = z.object({
   amount: z.number().min(1, "Bid amount must be greater than 0"),
@@ -33,6 +34,8 @@ export default function BrowseEvents() {
   const [budgetFilter, setBudgetFilter] = useState("all");
   const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedDetailEventId, setSelectedDetailEventId] = useState<number | null>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
   const form = useForm<BidFormData>({
     resolver: zodResolver(bidSchema),
@@ -132,6 +135,11 @@ export default function BrowseEvents() {
     setIsDialogOpen(true);
   };
 
+  const handleViewDetails = (eventId: number) => {
+    setSelectedDetailEventId(eventId);
+    setIsDetailModalOpen(true);
+  };
+
   const onSubmitBid = (data: BidFormData) => {
     if (selectedEventId) {
       submitBidMutation.mutate({ ...data, eventId: selectedEventId });
@@ -139,6 +147,7 @@ export default function BrowseEvents() {
   };
 
   const selectedEvent = selectedEventId ? events.find((e: any) => e.id === selectedEventId) : null;
+  const selectedDetailEvent = selectedDetailEventId ? events.find((e: any) => e.id === selectedDetailEventId) : null;
 
   const uniqueLocations = Array.from(new Set(events.map((event: any) => 
     event.location.split(',')[0].trim()
@@ -246,6 +255,7 @@ export default function BrowseEvents() {
                 event={event}
                 showBidButton={user?.role === 'chef'}
                 onBid={user?.role === 'chef' ? handleBid : undefined}
+                onViewDetails={handleViewDetails}
               />
             ))}
           </div>
@@ -357,6 +367,16 @@ export default function BrowseEvents() {
             )}
           </DialogContent>
         </Dialog>
+
+        {/* Event Detail Modal */}
+        <EventDetailModal
+          event={selectedDetailEvent}
+          isOpen={isDetailModalOpen}
+          onClose={() => {
+            setIsDetailModalOpen(false);
+            setSelectedDetailEventId(null);
+          }}
+        />
       </div>
     </DashboardLayout>
   );

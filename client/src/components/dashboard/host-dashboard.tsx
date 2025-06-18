@@ -134,9 +134,9 @@ export function HostDashboard() {
             <div className="flex items-center justify-between">
               <CardTitle>Recent Events</CardTitle>
               <Link href="/dashboard/my-events">
-                <a className="text-sm text-primary hover:text-primary/80 font-medium">
+                <span className="text-sm text-primary hover:text-primary/80 font-medium cursor-pointer">
                   View All
-                </a>
+                </span>
               </Link>
             </div>
           </CardHeader>
@@ -185,9 +185,9 @@ export function HostDashboard() {
             <div className="flex items-center justify-between">
               <CardTitle>Recent Bids</CardTitle>
               <Link href="/dashboard/bids">
-                <a className="text-sm text-primary hover:text-primary/80 font-medium">
+                <span className="text-sm text-primary hover:text-primary/80 font-medium cursor-pointer">
                   View All
-                </a>
+                </span>
               </Link>
             </div>
           </CardHeader>

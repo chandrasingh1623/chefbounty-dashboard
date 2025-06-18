@@ -26,10 +26,11 @@ interface EventCardProps {
   };
   showBidButton?: boolean;
   onBid?: (eventId: number) => void;
+  onViewDetails?: (eventId: number) => void;
   bidCount?: number;
 }
 
-export function EventCard({ event, showBidButton = false, onBid, bidCount }: EventCardProps) {
+export function EventCard({ event, showBidButton = false, onBid, onViewDetails, bidCount }: EventCardProps) {
   const eventDate = new Date(event.eventDate);
   const isUpcoming = eventDate > new Date();
 
@@ -102,15 +103,26 @@ export function EventCard({ event, showBidButton = false, onBid, bidCount }: Eve
             <span>{event.duration} hours</span>
           </div>
           
-          {showBidButton && event.status === 'open' && isUpcoming && (
+          <div className="flex items-center space-x-2">
             <Button
               size="sm"
-              className="bg-primary text-white hover:bg-primary/90"
-              onClick={() => onBid?.(event.id)}
+              variant="outline"
+              className="text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+              onClick={() => onViewDetails?.(event.id)}
             >
-              Place Bid
+              View Full Listing
             </Button>
-          )}
+            
+            {showBidButton && event.status === 'open' && isUpcoming && (
+              <Button
+                size="sm"
+                className="bg-primary text-white hover:bg-primary/90"
+                onClick={() => onBid?.(event.id)}
+              >
+                Place Bid
+              </Button>
+            )}
+          </div>
         </div>
       </CardContent>
     </Card>
