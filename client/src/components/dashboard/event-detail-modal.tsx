@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { 
@@ -52,6 +52,9 @@ export function EventDetailModal({ event, isOpen, onClose }: EventDetailModalPro
           <DialogTitle className="text-2xl font-bold text-gray-900 pr-8">
             {event.title}
           </DialogTitle>
+          <DialogDescription className="text-gray-600">
+            Complete event details and requirements
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
