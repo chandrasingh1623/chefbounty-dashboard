@@ -230,17 +230,21 @@ export function MessageCenter() {
         </div>
 
         {/* Filter Tabs */}
-        <Tabs value={activeFilter} onValueChange={(value) => setActiveFilter(value as any)} className="flex-1 flex flex-col">
-          <TabsList className="grid w-full grid-cols-4 mx-3 mt-2 h-8 gap-0 p-0">
-            <TabsTrigger value="all" className="text-xs px-0.5 py-1 h-7 min-w-0 flex-shrink truncate">All</TabsTrigger>
-            <TabsTrigger value="unread" className="text-xs px-0.5 py-1 h-7 min-w-0 flex-shrink truncate">Unread</TabsTrigger>
-            <TabsTrigger value="starred" className="text-xs px-0.5 py-1 h-7 min-w-0 flex-shrink truncate">Starred</TabsTrigger>
-            <TabsTrigger value="archived" className="text-xs px-0.5 py-1 h-7 min-w-0 flex-shrink truncate">Archived</TabsTrigger>
-          </TabsList>
+        <div className="px-3 pt-2 pb-1">
+          <Tabs value={activeFilter} onValueChange={(value) => setActiveFilter(value as any)} className="w-full">
+            <TabsList className="grid w-full grid-cols-4 h-8 p-0 bg-gray-100">
+              <TabsTrigger value="all" className="text-[10px] px-1 py-1 h-7 data-[state=active]:bg-white">All</TabsTrigger>
+              <TabsTrigger value="unread" className="text-[10px] px-1 py-1 h-7 data-[state=active]:bg-white">Unread</TabsTrigger>
+              <TabsTrigger value="starred" className="text-[10px] px-1 py-1 h-7 data-[state=active]:bg-white">Star</TabsTrigger>
+              <TabsTrigger value="archived" className="text-[10px] px-1 py-1 h-7 data-[state=active]:bg-white">Archive</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
 
-          {/* Conversations List */}
+        {/* Conversations List */}
+        <Tabs value={activeFilter} onValueChange={(value) => setActiveFilter(value as any)} className="flex-1 flex flex-col">
           <ScrollArea className="flex-1">
-            <div className="p-2">
+            <div className="p-3">
               {filteredConversations.map((conversation: Conversation) => (
                 <div
                   key={conversation.participantId}
@@ -289,9 +293,10 @@ export function MessageCenter() {
               ))}
 
               {filteredConversations.length === 0 && (
-                <div className="text-center py-8 text-gray-500">
-                  <MessageCircle className="w-8 h-8 mx-auto mb-2 text-gray-300" />
-                  <p className="text-sm">No conversations found</p>
+                <div className="text-center py-12 text-gray-500">
+                  <MessageCircle className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                  <p className="text-base">No conversations found</p>
+                  <p className="text-sm text-gray-400 mt-1">Start messaging hosts and chefs</p>
                 </div>
               )}
             </div>
