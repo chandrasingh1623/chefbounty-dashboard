@@ -109,7 +109,7 @@ export function EnhancedChefProfile() {
   const { data: profile, isLoading } = useQuery({
     queryKey: ['/api/chef-profile', user?.id],
     queryFn: async () => {
-      const token = localStorage.getItem('auth_token');
+      const token = localStorage.getItem('chefbounty_token');
       const response = await fetch(`/api/chef-profile/${user?.id}`, {
         headers: {
           'Authorization': token ? `Bearer ${token}` : '',
@@ -124,7 +124,7 @@ export function EnhancedChefProfile() {
   // Update profile mutation
   const updateProfileMutation = useMutation({
     mutationFn: async (data: Partial<ChefProfile>) => {
-      const token = localStorage.getItem('auth_token');
+      const token = localStorage.getItem('chefbounty_token');
       const response = await fetch(`/api/chef-profile/${user?.id}`, {
         method: 'PUT',
         headers: {
@@ -156,7 +156,7 @@ export function EnhancedChefProfile() {
   // Launch profile mutation
   const launchProfileMutation = useMutation({
     mutationFn: async (isLive: boolean) => {
-      const token = localStorage.getItem('auth_token');
+      const token = localStorage.getItem('chefbounty_token');
       const response = await fetch(`/api/chef-profile/${user?.id}/launch`, {
         method: 'PUT',
         headers: {
