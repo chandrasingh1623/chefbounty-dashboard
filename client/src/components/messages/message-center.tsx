@@ -69,7 +69,7 @@ export function MessageCenter() {
   const [selectedConversation, setSelectedConversation] = useState<number | null>(null);
   const [newMessage, setNewMessage] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const [activeFilter, setActiveFilter] = useState<'all' | 'unread' | 'starred' | 'archived'>('all');
+  const [activeFilter, setActiveFilter] = useState<'all' | 'unread'>('all');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
 
@@ -230,13 +230,11 @@ export function MessageCenter() {
         </div>
 
         {/* Filter Tabs */}
-        <div className="px-3 pt-2 pb-1">
+        <div className="px-4 pt-2 pb-1">
           <Tabs value={activeFilter} onValueChange={(value) => setActiveFilter(value as any)} className="w-full">
-            <TabsList className="grid w-full grid-cols-4 h-8 p-0 bg-gray-100">
-              <TabsTrigger value="all" className="text-[10px] px-1 py-1 h-7 data-[state=active]:bg-white">All</TabsTrigger>
-              <TabsTrigger value="unread" className="text-[10px] px-1 py-1 h-7 data-[state=active]:bg-white">Unread</TabsTrigger>
-              <TabsTrigger value="starred" className="text-[10px] px-1 py-1 h-7 data-[state=active]:bg-white">Star</TabsTrigger>
-              <TabsTrigger value="archived" className="text-[10px] px-1 py-1 h-7 data-[state=active]:bg-white">Archive</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 h-9 p-1 bg-gray-100">
+              <TabsTrigger value="all" className="text-sm px-3 py-2 h-7 data-[state=active]:bg-white">All</TabsTrigger>
+              <TabsTrigger value="unread" className="text-sm px-3 py-2 h-7 data-[state=active]:bg-white">Unread</TabsTrigger>
             </TabsList>
           </Tabs>
         </div>
