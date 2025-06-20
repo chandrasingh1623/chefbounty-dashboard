@@ -717,7 +717,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Unauthorized to update this profile" });
       }
 
-      const updatedChef = await storage.updateUser(chefId, req.body);
+      // Sanitize the request body to handle potential date/timestamp issues
+      const sanitizedData = { ...req.body };
+      
+      console.log("Original request body:", JSON.stringify(req.body, null, 2));
+      
+      // Remove any fields that should not be updated directly
+      delete sanitizedData.id;
+      delete sanitizedData.password;
+      delete sanitizedData.createdAt;
+      delete sanitizedData.emailVerificationToken;
+      
+      // Ensure arrays are properly formatted
+      const arrayFields = [
+        'customTravelAreas', 'languagesSpoken', 'specialties', 'signatureDishes', 
+        'dietaryAccommodations', 'foodSafetyCertifications', 'portfolioImages', 
+        'clientTestimonials', 'availableServices', 'equipmentList', 'customPackages'
+      ];
+      
+      arrayFields.forEach(field => {
+        if (sanitizedData[field] && !Array.isArray(sanitizedData[field])) {
+          sanitizedData[field] = [];
+        }
+      });
+      
+      // Ensure numeric fields are properly formatted
+      if (sanitizedData.maxTravelDistance) {
+        sanitizedData.maxTravelDistance = parseInt(sanitizedData.maxTravelDistance) || null;
+      }
+      if (sanitizedData.experience) {
+        sanitizedData.experience = parseInt(sanitizedData.experience) || null;
+      }
+      if (sanitizedData.maxPartySize) {
+        sanitizedData.maxPartySize = parseInt(sanitizedData.maxPartySize) || null;
+      }
+      if (sanitizedData.hourlyRate) {
+        sanitizedData.hourlyRate = parseFloat(sanitizedData.hourlyRate) || null;
+      }
+      
+      // Ensure boolean fields are properly formatted
+      const booleanFields = [
+        'willingToTravel', 'lastMinuteBookings', 'bringsOwnEquipment', 
+        'canProvideStaff', 'profileLive', 'featured', 'availableNow', 'emailVerified'
+      ];
+      
+      booleanFields.forEach(field => {
+        if (sanitizedData[field] !== undefined) {
+          sanitizedData[field] = Boolean(sanitizedData[field]);
+        }
+      });
+      
+      console.log("Sanitized data for database:", JSON.stringify(sanitizedData, null, 2));
+
+      const updatedChef = await storage.updateUser(chefId, sanitizedData);
       
       if (!updatedChef) {
         return res.status(404).json({ message: "Chef profile not found" });
