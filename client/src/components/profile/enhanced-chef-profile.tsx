@@ -40,6 +40,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 
 interface ChefProfile {
   id: number;
@@ -108,33 +109,13 @@ export function EnhancedChefProfile() {
   // Fetch chef profile
   const { data: profile, isLoading } = useQuery({
     queryKey: ['/api/chef-profile', user?.id],
-    queryFn: async () => {
-      const token = localStorage.getItem('chefbounty_token');
-      const response = await fetch(`/api/chef-profile/${user?.id}`, {
-        headers: {
-          'Authorization': token ? `Bearer ${token}` : '',
-        },
-      });
-      if (!response.ok) throw new Error('Failed to fetch profile');
-      return response.json();
-    },
     enabled: !!user?.id,
   });
 
   // Update profile mutation
   const updateProfileMutation = useMutation({
     mutationFn: async (data: Partial<ChefProfile>) => {
-      const token = localStorage.getItem('chefbounty_token');
-      const response = await fetch(`/api/chef-profile/${user?.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': token ? `Bearer ${token}` : '',
-        },
-        body: JSON.stringify(data),
-      });
-      if (!response.ok) throw new Error('Failed to update profile');
-      return response.json();
+      return await apiRequest('PUT', `/api/chef-profile/${user?.id}`, data).then(res => res.json());
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/chef-profile', user?.id] });
@@ -156,17 +137,7 @@ export function EnhancedChefProfile() {
   // Launch profile mutation
   const launchProfileMutation = useMutation({
     mutationFn: async (isLive: boolean) => {
-      const token = localStorage.getItem('chefbounty_token');
-      const response = await fetch(`/api/chef-profile/${user?.id}/launch`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': token ? `Bearer ${token}` : '',
-        },
-        body: JSON.stringify({ profileLive: isLive }),
-      });
-      if (!response.ok) throw new Error('Failed to update profile status');
-      return response.json();
+      return await apiRequest('PUT', `/api/chef-profile/${user?.id}/launch`, { profileLive: isLive }).then(res => res.json());
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/chef-profile', user?.id] });
