@@ -1,361 +1,925 @@
-import { useState } from "react";
-import { useAuth } from "@/lib/auth";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AvailabilityCalendar } from "@/components/calendar/availability-calendar";
+import { useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
+import { Label } from "@/components/ui/label";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { 
   User, 
   MapPin, 
-  DollarSign, 
-  Star, 
-  Calendar,
+  Globe, 
+  BookOpen, 
+  Languages, 
+  UtensilsCrossed,
   Award,
   Camera,
-  Plus,
+  Settings,
+  DollarSign,
   Edit,
-  Save,
-  X
+  Eye,
+  EyeOff,
+  Plus,
+  X,
+  Upload,
+  Star,
+  Clock,
+  Users,
+  Briefcase
 } from "lucide-react";
+import { useAuth } from "@/lib/auth";
+import { useToast } from "@/hooks/use-toast";
+
+interface ChefProfile {
+  id: number;
+  name: string;
+  profilePhoto?: string;
+  bio?: string;
+  location?: string;
+  willingToTravel: boolean;
+  maxTravelDistance?: number;
+  customTravelAreas: string[];
+  experience?: number;
+  languagesSpoken: string[];
+  specialties: string[];
+  signatureDishes: string[];
+  dietaryAccommodations: string[];
+  formalTraining?: string;
+  foodSafetyCertifications: string[];
+  workHistory?: string;
+  portfolioImages: string[];
+  clientTestimonials: string[];
+  videoUrl?: string;
+  availableServices: string[];
+  lastMinuteBookings: boolean;
+  maxPartySize?: number;
+  bringsOwnEquipment: boolean;
+  equipmentList: string[];
+  canProvideStaff: boolean;
+  hourlyRate?: number;
+  rateUnit: string;
+  customPackages: string[];
+  travelFees?: string;
+  equipmentFees?: string;
+  profileLive: boolean;
+}
+
+const cuisineOptions = [
+  "Italian", "French", "American", "Mexican", "Japanese", "Chinese", "Indian", 
+  "Thai", "Mediterranean", "Vegan", "Vegetarian", "BBQ", "Seafood", "Steakhouse", 
+  "Farm-to-Table", "Fusion", "Latin", "Caribbean", "Middle Eastern", "Korean"
+];
+
+const serviceOptions = [
+  "Private Dinners", "Meal Prep", "Catering", "Cooking Classes", "Wine Pairings",
+  "Yacht Events", "Corporate Events", "Wedding Catering", "Holiday Parties",
+  "Birthday Parties", "Brunch Service", "Buffet Service", "Tasting Menus"
+];
+
+const dietaryOptions = [
+  "Gluten-Free", "Dairy-Free", "Vegan", "Vegetarian", "Keto", "Paleo", 
+  "Halal", "Kosher", "Nut-Free", "Shellfish-Free", "Low-Sodium", "Diabetic-Friendly"
+];
+
+const languageOptions = [
+  "English", "Spanish", "French", "Italian", "German", "Portuguese", "Mandarin",
+  "Japanese", "Korean", "Arabic", "Hindi", "Russian", "Dutch", "Swedish"
+];
 
 export function EnhancedChefProfile() {
   const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
-  const [profileData, setProfileData] = useState({
-    name: user?.name || "",
-    bio: user?.bio || "",
-    location: user?.location || "",
-    hourlyRate: user?.hourlyRate || "",
-    specialties: user?.specialties || [],
+  const [showLaunchModal, setShowLaunchModal] = useState(false);
+  const [formData, setFormData] = useState<Partial<ChefProfile>>({});
+
+  // Fetch chef profile
+  const { data: profile, isLoading } = useQuery({
+    queryKey: ['/api/chef-profile', user?.id],
+    queryFn: async () => {
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch(`/api/chef-profile/${user?.id}`, {
+        headers: {
+          'Authorization': token ? `Bearer ${token}` : '',
+        },
+      });
+      if (!response.ok) throw new Error('Failed to fetch profile');
+      return response.json();
+    },
+    enabled: !!user?.id,
   });
-  const [newSpecialty, setNewSpecialty] = useState("");
+
+  // Update profile mutation
+  const updateProfileMutation = useMutation({
+    mutationFn: async (data: Partial<ChefProfile>) => {
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch(`/api/chef-profile/${user?.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token ? `Bearer ${token}` : '',
+        },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) throw new Error('Failed to update profile');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/chef-profile', user?.id] });
+      setIsEditing(false);
+      toast({
+        title: "Profile Updated",
+        description: "Your chef profile has been successfully updated.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Update Failed",
+        description: "Failed to update your profile. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Launch profile mutation
+  const launchProfileMutation = useMutation({
+    mutationFn: async (isLive: boolean) => {
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch(`/api/chef-profile/${user?.id}/launch`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token ? `Bearer ${token}` : '',
+        },
+        body: JSON.stringify({ profileLive: isLive }),
+      });
+      if (!response.ok) throw new Error('Failed to update profile status');
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/chef-profile', user?.id] });
+      setShowLaunchModal(false);
+      toast({
+        title: data.profileLive ? "Profile Launched!" : "Profile Unpublished",
+        description: data.profileLive 
+          ? "Your profile is now live and visible to hosts!"
+          : "Your profile has been unpublished and is no longer visible.",
+      });
+    },
+  });
+
+  useEffect(() => {
+    if (profile) {
+      setFormData(profile);
+    }
+  }, [profile]);
 
   const handleSave = () => {
-    // In real implementation, this would call the API
-    setIsEditing(false);
+    updateProfileMutation.mutate(formData);
   };
 
-  const addSpecialty = () => {
-    if (newSpecialty.trim() && !profileData.specialties.includes(newSpecialty.trim())) {
-      setProfileData(prev => ({
-        ...prev,
-        specialties: [...prev.specialties, newSpecialty.trim()]
-      }));
-      setNewSpecialty("");
+  const handleLaunch = () => {
+    if (profile?.profileLive) {
+      launchProfileMutation.mutate(false);
+    } else {
+      setShowLaunchModal(true);
     }
   };
 
-  const removeSpecialty = (specialty: string) => {
-    setProfileData(prev => ({
-      ...prev,
-      specialties: prev.specialties.filter(s => s !== specialty)
-    }));
+  const confirmLaunch = () => {
+    launchProfileMutation.mutate(true);
   };
 
+  const addToArray = (field: keyof ChefProfile, value: string) => {
+    if (!value.trim()) return;
+    const currentArray = formData[field] as string[] || [];
+    setFormData({
+      ...formData,
+      [field]: [...currentArray, value.trim()]
+    });
+  };
+
+  const removeFromArray = (field: keyof ChefProfile, index: number) => {
+    const currentArray = formData[field] as string[] || [];
+    setFormData({
+      ...formData,
+      [field]: currentArray.filter((_, i) => i !== index)
+    });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-gray-500">Loading your profile...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6">
-      {/* Profile Header */}
+    <div className="max-w-6xl mx-auto space-y-6">
+      {/* Header with Actions */}
       <Card>
-        <CardContent className="pt-6">
-          <div className="flex items-start justify-between">
-            <div className="flex items-start gap-6">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
               <div className="relative">
-                <Avatar className="w-24 h-24">
-                  <AvatarImage src={user?.profilePhoto} />
-                  <AvatarFallback className="text-2xl">
-                    {user?.name?.split(' ').map((n: string) => n[0]).join('')}
-                  </AvatarFallback>
-                </Avatar>
-                <Button 
-                  size="sm" 
-                  variant="secondary" 
-                  className="absolute -bottom-2 -right-2 rounded-full w-8 h-8 p-0"
-                >
-                  <Camera className="w-4 h-4" />
-                </Button>
-              </div>
-              
-              <div className="flex-1">
-                {isEditing ? (
-                  <div className="space-y-3">
-                    <div>
-                      <Label htmlFor="name">Name</Label>
-                      <Input
-                        id="name"
-                        value={profileData.name}
-                        onChange={(e) => setProfileData(prev => ({ ...prev, name: e.target.value }))}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="bio">Bio</Label>
-                      <Textarea
-                        id="bio"
-                        rows={3}
-                        value={profileData.bio}
-                        onChange={(e) => setProfileData(prev => ({ ...prev, bio: e.target.value }))}
-                        placeholder="Tell potential clients about your culinary background and expertise..."
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  <div>
-                    <h1 className="text-2xl font-bold text-gray-900">{profileData.name}</h1>
-                    <p className="text-gray-600 mt-1">{profileData.bio || "No bio added yet"}</p>
-                    
-                    <div className="flex items-center gap-4 mt-4">
-                      {profileData.location && (
-                        <div className="flex items-center gap-1 text-sm text-gray-500">
-                          <MapPin className="w-4 h-4" />
-                          {profileData.location}
-                        </div>
-                      )}
-                      
-                      {user?.rating && (
-                        <div className="flex items-center gap-1 text-sm text-gray-500">
-                          <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                          {user.rating} ({user.reviewCount} reviews)
-                        </div>
-                      )}
-                      
-                      {profileData.hourlyRate && (
-                        <div className="flex items-center gap-1 text-sm text-gray-500">
-                          <DollarSign className="w-4 h-4" />
-                          ${profileData.hourlyRate}/hour
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center">
+                  {profile?.profilePhoto ? (
+                    <img 
+                      src={profile.profilePhoto} 
+                      alt={profile.name}
+                      className="w-16 h-16 rounded-full object-cover"
+                    />
+                  ) : (
+                    <User className="w-8 h-8 text-gray-400" />
+                  )}
+                </div>
+                {profile?.profileLive && (
+                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
                 )}
               </div>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">{profile?.name}</h1>
+                <div className="flex items-center space-x-2 text-sm text-gray-500">
+                  <MapPin className="w-4 h-4" />
+                  <span>{profile?.location || "Location not set"}</span>
+                </div>
+              </div>
             </div>
-
-            <div className="flex gap-2">
+            
+            <div className="flex items-center space-x-3">
+              <Badge variant={profile?.profileLive ? "default" : "secondary"}>
+                {profile?.profileLive ? "Live" : "Draft"}
+              </Badge>
+              
               {isEditing ? (
-                <>
-                  <Button variant="outline" onClick={() => setIsEditing(false)}>
-                    <X className="w-4 h-4 mr-2" />
+                <div className="flex space-x-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setIsEditing(false)}
+                    disabled={updateProfileMutation.isPending}
+                  >
                     Cancel
                   </Button>
-                  <Button onClick={handleSave}>
-                    <Save className="w-4 h-4 mr-2" />
-                    Save Changes
+                  <Button 
+                    onClick={handleSave}
+                    disabled={updateProfileMutation.isPending}
+                  >
+                    {updateProfileMutation.isPending ? "Saving..." : "Save Changes"}
                   </Button>
-                </>
+                </div>
               ) : (
-                <Button variant="outline" onClick={() => setIsEditing(true)}>
-                  <Edit className="w-4 h-4 mr-2" />
-                  Edit Profile
-                </Button>
+                <div className="flex space-x-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setIsEditing(true)}
+                  >
+                    <Edit className="w-4 h-4 mr-2" />
+                    Edit Profile
+                  </Button>
+                  <Button 
+                    onClick={handleLaunch}
+                    disabled={launchProfileMutation.isPending}
+                    variant={profile?.profileLive ? "destructive" : "default"}
+                  >
+                    {profile?.profileLive ? (
+                      <>
+                        <EyeOff className="w-4 h-4 mr-2" />
+                        Unpublish
+                      </>
+                    ) : (
+                      <>
+                        <Eye className="w-4 h-4 mr-2" />
+                        Launch Profile
+                      </>
+                    )}
+                  </Button>
+                </div>
               )}
             </div>
           </div>
-        </CardContent>
+        </CardHeader>
       </Card>
 
-      <Tabs defaultValue="details" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="details">Profile Details</TabsTrigger>
-          <TabsTrigger value="availability">Availability</TabsTrigger>
-          <TabsTrigger value="portfolio">Portfolio</TabsTrigger>
-          <TabsTrigger value="reviews">Reviews</TabsTrigger>
-        </TabsList>
-
-        {/* Profile Details */}
-        <TabsContent value="details" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Basic Information */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Basic Information</CardTitle>
-                <CardDescription>
-                  Your professional details and contact information
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {isEditing ? (
-                  <>
-                    <div>
-                      <Label htmlFor="location">Location</Label>
-                      <Input
-                        id="location"
-                        value={profileData.location}
-                        onChange={(e) => setProfileData(prev => ({ ...prev, location: e.target.value }))}
-                        placeholder="City, State"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="hourlyRate">Hourly Rate ($)</Label>
-                      <Input
-                        id="hourlyRate"
-                        type="number"
-                        value={profileData.hourlyRate}
-                        onChange={(e) => setProfileData(prev => ({ ...prev, hourlyRate: e.target.value }))}
-                        placeholder="0"
-                      />
-                    </div>
-                  </>
-                ) : (
-                  <div className="space-y-3">
-                    <div>
-                      <Label className="text-sm font-medium text-gray-500">Email</Label>
-                      <p className="text-sm">{user?.email}</p>
-                    </div>
-                    <div>
-                      <Label className="text-sm font-medium text-gray-500">Location</Label>
-                      <p className="text-sm">{profileData.location || "Not specified"}</p>
-                    </div>
-                    <div>
-                      <Label className="text-sm font-medium text-gray-500">Hourly Rate</Label>
-                      <p className="text-sm">${profileData.hourlyRate || "Not set"}/hour</p>
-                    </div>
-                    {user?.experience && (
-                      <div>
-                        <Label className="text-sm font-medium text-gray-500">Experience</Label>
-                        <p className="text-sm">{user.experience} years</p>
-                      </div>
-                    )}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Basic Info */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <User className="w-5 h-5" />
+              <span>Basic Info</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {isEditing ? (
+              <>
+                <div>
+                  <Label htmlFor="name">Full Name</Label>
+                  <Input
+                    id="name"
+                    value={formData.name || ''}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="Your full name"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="location">Location</Label>
+                  <Input
+                    id="location"
+                    value={formData.location || ''}
+                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                    placeholder="City, State"
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="travel">Willing to Travel</Label>
+                  <Switch
+                    id="travel"
+                    checked={formData.willingToTravel || false}
+                    onCheckedChange={(checked) => setFormData({ ...formData, willingToTravel: checked })}
+                  />
+                </div>
+                {formData.willingToTravel && (
+                  <div>
+                    <Label htmlFor="maxDistance">Max Travel Distance (miles)</Label>
+                    <Input
+                      id="maxDistance"
+                      type="number"
+                      value={formData.maxTravelDistance || ''}
+                      onChange={(e) => setFormData({ ...formData, maxTravelDistance: parseInt(e.target.value) })}
+                      placeholder="50"
+                    />
                   </div>
                 )}
-              </CardContent>
-            </Card>
-
-            {/* Specialties */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Culinary Specialties</CardTitle>
-                <CardDescription>
-                  Your areas of expertise and signature dishes
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex flex-wrap gap-2">
-                    {profileData.specialties.map((specialty) => (
-                      <Badge 
-                        key={specialty} 
-                        variant="secondary" 
-                        className="text-sm px-3 py-1"
-                      >
-                        {specialty}
-                        {isEditing && (
-                          <button
-                            onClick={() => removeSpecialty(specialty)}
-                            className="ml-2 hover:text-red-500"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        )}
-                      </Badge>
-                    ))}
+                <div>
+                  <Label>Languages Spoken</Label>
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap gap-2">
+                      {(formData.languagesSpoken || []).map((lang, index) => (
+                        <Badge key={index} variant="secondary" className="flex items-center gap-1">
+                          {lang}
+                          <X 
+                            className="w-3 h-3 cursor-pointer" 
+                            onClick={() => removeFromArray('languagesSpoken', index)}
+                          />
+                        </Badge>
+                      ))}
+                    </div>
+                    <Select onValueChange={(value) => addToArray('languagesSpoken', value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Add a language" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {languageOptions.map((lang) => (
+                          <SelectItem key={lang} value={lang}>{lang}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
-                  
-                  {isEditing && (
+                </div>
+              </>
+            ) : (
+              <>
+                <div>
+                  <p className="text-sm text-gray-500">Full Name</p>
+                  <p className="font-medium">{profile?.name}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Location</p>
+                  <p className="font-medium">{profile?.location || "Not specified"}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Travel</p>
+                  <p className="font-medium">
+                    {profile?.willingToTravel ? (
+                      <>Yes {profile?.maxTravelDistance && `(${profile.maxTravelDistance} miles)`}</>
+                    ) : (
+                      "Local only"
+                    )}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Languages</p>
+                  <div className="flex flex-wrap gap-1">
+                    {(profile?.languagesSpoken || []).map((lang, index) => (
+                      <Badge key={index} variant="outline" className="text-xs">{lang}</Badge>
+                    ))}
+                    {(!profile?.languagesSpoken || profile.languagesSpoken.length === 0) && (
+                      <span className="text-gray-400">None specified</span>
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Culinary Specialties */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <UtensilsCrossed className="w-5 h-5" />
+              <span>Culinary Specialties</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {isEditing ? (
+              <>
+                <div>
+                  <Label>Primary Cuisines</Label>
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap gap-2">
+                      {(formData.specialties || []).map((cuisine, index) => (
+                        <Badge key={index} variant="secondary" className="flex items-center gap-1">
+                          {cuisine}
+                          <X 
+                            className="w-3 h-3 cursor-pointer" 
+                            onClick={() => removeFromArray('specialties', index)}
+                          />
+                        </Badge>
+                      ))}
+                    </div>
+                    <Select onValueChange={(value) => addToArray('specialties', value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Add a cuisine" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {cuisineOptions.map((cuisine) => (
+                          <SelectItem key={cuisine} value={cuisine}>{cuisine}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div>
+                  <Label>Signature Dishes</Label>
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap gap-2">
+                      {(formData.signatureDishes || []).map((dish, index) => (
+                        <Badge key={index} variant="outline" className="flex items-center gap-1">
+                          {dish}
+                          <X 
+                            className="w-3 h-3 cursor-pointer" 
+                            onClick={() => removeFromArray('signatureDishes', index)}
+                          />
+                        </Badge>
+                      ))}
+                    </div>
                     <div className="flex gap-2">
                       <Input
-                        placeholder="Add a specialty..."
-                        value={newSpecialty}
-                        onChange={(e) => setNewSpecialty(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && addSpecialty()}
+                        placeholder="Add signature dish"
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            addToArray('signatureDishes', e.currentTarget.value);
+                            e.currentTarget.value = '';
+                          }
+                        }}
                       />
-                      <Button onClick={addSpecialty} size="sm">
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        onClick={(e) => {
+                          const input = e.currentTarget.parentElement?.querySelector('input') as HTMLInputElement;
+                          if (input?.value) {
+                            addToArray('signatureDishes', input.value);
+                            input.value = '';
+                          }
+                        }}
+                      >
                         <Plus className="w-4 h-4" />
                       </Button>
                     </div>
-                  )}
-                  
-                  {profileData.specialties.length === 0 && !isEditing && (
-                    <p className="text-gray-500 text-sm">No specialties added yet</p>
-                  )}
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
+                <div>
+                  <Label>Dietary Accommodations</Label>
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap gap-2">
+                      {(formData.dietaryAccommodations || []).map((diet, index) => (
+                        <Badge key={index} variant="secondary" className="flex items-center gap-1">
+                          {diet}
+                          <X 
+                            className="w-3 h-3 cursor-pointer" 
+                            onClick={() => removeFromArray('dietaryAccommodations', index)}
+                          />
+                        </Badge>
+                      ))}
+                    </div>
+                    <Select onValueChange={(value) => addToArray('dietaryAccommodations', value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Add dietary accommodation" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {dietaryOptions.map((diet) => (
+                          <SelectItem key={diet} value={diet}>{diet}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                <div>
+                  <p className="text-sm text-gray-500">Primary Cuisines</p>
+                  <div className="flex flex-wrap gap-1">
+                    {(profile?.specialties || []).map((cuisine, index) => (
+                      <Badge key={index} variant="outline" className="text-xs">{cuisine}</Badge>
+                    ))}
+                    {(!profile?.specialties || profile.specialties.length === 0) && (
+                      <span className="text-gray-400">None specified</span>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Signature Dishes</p>
+                  <div className="flex flex-wrap gap-1">
+                    {(profile?.signatureDishes || []).map((dish, index) => (
+                      <Badge key={index} variant="outline" className="text-xs">{dish}</Badge>
+                    ))}
+                    {(!profile?.signatureDishes || profile.signatureDishes.length === 0) && (
+                      <span className="text-gray-400">None specified</span>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Dietary Accommodations</p>
+                  <div className="flex flex-wrap gap-1">
+                    {(profile?.dietaryAccommodations || []).map((diet, index) => (
+                      <Badge key={index} variant="outline" className="text-xs">{diet}</Badge>
+                    ))}
+                    {(!profile?.dietaryAccommodations || profile.dietaryAccommodations.length === 0) && (
+                      <span className="text-gray-400">None specified</span>
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* About Me / Bio */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <BookOpen className="w-5 h-5" />
+              <span>About Me</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {isEditing ? (
+              <>
+                <div>
+                  <Label htmlFor="bio">Personal Introduction</Label>
+                  <Textarea
+                    id="bio"
+                    value={formData.bio || ''}
+                    onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+                    placeholder="Tell hosts about yourself, your cooking philosophy, and what makes you unique..."
+                    rows={4}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="experience">Years of Experience</Label>
+                  <Input
+                    id="experience"
+                    type="number"
+                    value={formData.experience || ''}
+                    onChange={(e) => setFormData({ ...formData, experience: parseInt(e.target.value) })}
+                    placeholder="5"
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                <div>
+                  <p className="text-sm text-gray-500">Bio</p>
+                  <p className="font-medium">{profile?.bio || "No bio provided"}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Experience</p>
+                  <p className="font-medium">
+                    {profile?.experience ? `${profile.experience} years` : "Not specified"}
+                  </p>
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Credentials & Background */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Award className="w-5 h-5" />
+              <span>Credentials & Background</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {isEditing ? (
+              <>
+                <div>
+                  <Label htmlFor="training">Formal Training</Label>
+                  <Input
+                    id="training"
+                    value={formData.formalTraining || ''}
+                    onChange={(e) => setFormData({ ...formData, formalTraining: e.target.value })}
+                    placeholder="Culinary school, certifications, etc."
+                  />
+                </div>
+                <div>
+                  <Label>Food Safety Certifications</Label>
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap gap-2">
+                      {(formData.foodSafetyCertifications || []).map((cert, index) => (
+                        <Badge key={index} variant="secondary" className="flex items-center gap-1">
+                          {cert}
+                          <X 
+                            className="w-3 h-3 cursor-pointer" 
+                            onClick={() => removeFromArray('foodSafetyCertifications', index)}
+                          />
+                        </Badge>
+                      ))}
+                    </div>
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="Add certification (e.g., ServSafe)"
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            addToArray('foodSafetyCertifications', e.currentTarget.value);
+                            e.currentTarget.value = '';
+                          }
+                        }}
+                      />
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        onClick={(e) => {
+                          const input = e.currentTarget.parentElement?.querySelector('input') as HTMLInputElement;
+                          if (input?.value) {
+                            addToArray('foodSafetyCertifications', input.value);
+                            input.value = '';
+                          }
+                        }}
+                      >
+                        <Plus className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="workHistory">Work History</Label>
+                  <Textarea
+                    id="workHistory"
+                    value={formData.workHistory || ''}
+                    onChange={(e) => setFormData({ ...formData, workHistory: e.target.value })}
+                    placeholder="Brief description of past kitchens, events, and experience..."
+                    rows={3}
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                <div>
+                  <p className="text-sm text-gray-500">Formal Training</p>
+                  <p className="font-medium">{profile?.formalTraining || "Not specified"}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Food Safety Certifications</p>
+                  <div className="flex flex-wrap gap-1">
+                    {(profile?.foodSafetyCertifications || []).map((cert, index) => (
+                      <Badge key={index} variant="outline" className="text-xs">{cert}</Badge>
+                    ))}
+                    {(!profile?.foodSafetyCertifications || profile.foodSafetyCertifications.length === 0) && (
+                      <span className="text-gray-400">None specified</span>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Work History</p>
+                  <p className="font-medium">{profile?.workHistory || "Not specified"}</p>
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Service Capabilities */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Settings className="w-5 h-5" />
+              <span>Service Capabilities</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {isEditing ? (
+              <>
+                <div>
+                  <Label>Available Services</Label>
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap gap-2">
+                      {(formData.availableServices || []).map((service, index) => (
+                        <Badge key={index} variant="secondary" className="flex items-center gap-1">
+                          {service}
+                          <X 
+                            className="w-3 h-3 cursor-pointer" 
+                            onClick={() => removeFromArray('availableServices', index)}
+                          />
+                        </Badge>
+                      ))}
+                    </div>
+                    <Select onValueChange={(value) => addToArray('availableServices', value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Add a service" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {serviceOptions.map((service) => (
+                          <SelectItem key={service} value={service}>{service}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="lastMinute">Available for Last-Minute Bookings</Label>
+                  <Switch
+                    id="lastMinute"
+                    checked={formData.lastMinuteBookings || false}
+                    onCheckedChange={(checked) => setFormData({ ...formData, lastMinuteBookings: checked })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="maxParty">Max Party Size</Label>
+                  <Input
+                    id="maxParty"
+                    type="number"
+                    value={formData.maxPartySize || ''}
+                    onChange={(e) => setFormData({ ...formData, maxPartySize: parseInt(e.target.value) })}
+                    placeholder="12"
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="equipment">Brings Own Equipment</Label>
+                  <Switch
+                    id="equipment"
+                    checked={formData.bringsOwnEquipment || false}
+                    onCheckedChange={(checked) => setFormData({ ...formData, bringsOwnEquipment: checked })}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="staff">Can Provide Additional Staff</Label>
+                  <Switch
+                    id="staff"
+                    checked={formData.canProvideStaff || false}
+                    onCheckedChange={(checked) => setFormData({ ...formData, canProvideStaff: checked })}
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                <div>
+                  <p className="text-sm text-gray-500">Available Services</p>
+                  <div className="flex flex-wrap gap-1">
+                    {(profile?.availableServices || []).map((service, index) => (
+                      <Badge key={index} variant="outline" className="text-xs">{service}</Badge>
+                    ))}
+                    {(!profile?.availableServices || profile.availableServices.length === 0) && (
+                      <span className="text-gray-400">None specified</span>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Last-Minute Bookings</p>
+                  <p className="font-medium">{profile?.lastMinuteBookings ? "Yes" : "No"}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Max Party Size</p>
+                  <p className="font-medium">{profile?.maxPartySize || "Not specified"}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Equipment</p>
+                  <p className="font-medium">{profile?.bringsOwnEquipment ? "Brings own equipment" : "Uses client equipment"}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Additional Staff</p>
+                  <p className="font-medium">{profile?.canProvideStaff ? "Can provide staff" : "Solo chef"}</p>
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Rates & Packages */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <DollarSign className="w-5 h-5" />
+              <span>Rates & Packages</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {isEditing ? (
+              <>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label htmlFor="rate">Base Rate</Label>
+                    <Input
+                      id="rate"
+                      type="number"
+                      value={formData.hourlyRate || ''}
+                      onChange={(e) => setFormData({ ...formData, hourlyRate: parseFloat(e.target.value) })}
+                      placeholder="150"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="rateUnit">Rate Unit</Label>
+                    <Select
+                      value={formData.rateUnit || 'hour'}
+                      onValueChange={(value) => setFormData({ ...formData, rateUnit: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="hour">Per Hour</SelectItem>
+                        <SelectItem value="guest">Per Guest</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="travelFees">Travel/Equipment Fees</Label>
+                  <Input
+                    id="travelFees"
+                    value={formData.travelFees || ''}
+                    onChange={(e) => setFormData({ ...formData, travelFees: e.target.value })}
+                    placeholder="Travel fee: $50 within 25 miles"
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                <div>
+                  <p className="text-sm text-gray-500">Base Rate</p>
+                  <p className="font-medium">
+                    {profile?.hourlyRate ? `$${profile.hourlyRate} per ${profile.rateUnit}` : "Rate not set"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Additional Fees</p>
+                  <p className="font-medium">{profile?.travelFees || "No additional fees"}</p>
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Launch Profile Modal */}
+      <Dialog open={showLaunchModal} onOpenChange={setShowLaunchModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>🟢 Launch Your Profile?</DialogTitle>
+            <DialogDescription>
+              You're about to make your profile public on ChefBounty. This means:
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <ul className="space-y-2 text-sm text-gray-600">
+              <li>• Your profile will appear in the Browse Chefs section</li>
+              <li>• Hosts will be able to view your experience, availability, and request bookings</li>
+              <li>• You can start receiving invites to events right away</li>
+            </ul>
+            <p className="text-sm font-medium text-gray-900">
+              Are you sure you're ready to go live?
+            </p>
+            <div className="flex justify-end space-x-3">
+              <Button variant="outline" onClick={() => setShowLaunchModal(false)}>
+                Not Yet
+              </Button>
+              <Button onClick={confirmLaunch} disabled={launchProfileMutation.isPending}>
+                {launchProfileMutation.isPending ? "Launching..." : "Yes, Launch My Profile"}
+              </Button>
+            </div>
           </div>
-
-          {/* Professional Stats */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Professional Statistics</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="text-center p-4 bg-gray-50 rounded-lg">
-                  <div className="text-2xl font-bold text-gray-900">{user?.reviewCount || 0}</div>
-                  <div className="text-sm text-gray-500">Total Reviews</div>
-                </div>
-                <div className="text-center p-4 bg-gray-50 rounded-lg">
-                  <div className="text-2xl font-bold text-gray-900">{user?.rating || "0.0"}</div>
-                  <div className="text-sm text-gray-500">Average Rating</div>
-                </div>
-                <div className="text-center p-4 bg-gray-50 rounded-lg">
-                  <div className="text-2xl font-bold text-gray-900">0</div>
-                  <div className="text-sm text-gray-500">Completed Events</div>
-                </div>
-                <div className="text-center p-4 bg-gray-50 rounded-lg">
-                  <div className="text-2xl font-bold text-gray-900">{user?.experience || 0}</div>
-                  <div className="text-sm text-gray-500">Years Experience</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Availability Calendar */}
-        <TabsContent value="availability" className="space-y-6">
-          <AvailabilityCalendar chefId={user?.id || 0} />
-        </TabsContent>
-
-        {/* Portfolio */}
-        <TabsContent value="portfolio" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Portfolio & Gallery</CardTitle>
-              <CardDescription>
-                Showcase your culinary creations and past events
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-12 text-gray-500">
-                <Camera className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  Portfolio Coming Soon
-                </h3>
-                <p className="text-gray-500 max-w-md mx-auto">
-                  Upload photos of your dishes, showcase your events, and build your culinary portfolio.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Reviews */}
-        <TabsContent value="reviews" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Client Reviews</CardTitle>
-              <CardDescription>
-                Feedback from your previous events and clients
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-12 text-gray-500">
-                <Star className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  No Reviews Yet
-                </h3>
-                <p className="text-gray-500 max-w-md mx-auto">
-                  Complete your first event to start receiving reviews from clients.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

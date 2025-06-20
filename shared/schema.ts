@@ -11,11 +11,50 @@ export const users = pgTable("users", {
   profilePhoto: text("profile_photo"),
   bio: text("bio"),
   location: text("location"),
+  
+  // Travel preferences
+  willingToTravel: boolean("willing_to_travel").default(false),
+  maxTravelDistance: integer("max_travel_distance"), // in miles
+  customTravelAreas: text("custom_travel_areas").array(),
+  
+  // Experience & Languages
+  experience: integer("experience"), // years of experience
+  languagesSpoken: text("languages_spoken").array(),
+  
+  // Culinary specialties
   specialties: text("specialties").array(),
+  signatureDishes: text("signature_dishes").array(),
+  dietaryAccommodations: text("dietary_accommodations").array(),
+  
+  // Credentials & Background
+  formalTraining: text("formal_training"),
+  foodSafetyCertifications: text("food_safety_certifications").array(),
+  workHistory: text("work_history"),
+  
+  // Media & Gallery
+  portfolioImages: text("portfolio_images").array(),
+  clientTestimonials: text("client_testimonials").array(),
+  videoUrl: text("video_url"),
+  
+  // Service capabilities
+  availableServices: text("available_services").array(),
+  lastMinuteBookings: boolean("last_minute_bookings").default(false),
+  maxPartySize: integer("max_party_size"),
+  bringsOwnEquipment: boolean("brings_own_equipment").default(false),
+  equipmentList: text("equipment_list").array(),
+  canProvideStaff: boolean("can_provide_staff").default(false),
+  
+  // Rates & Packages
   hourlyRate: decimal("hourly_rate", { precision: 10, scale: 2 }),
+  rateUnit: text("rate_unit").default("hour"), // 'hour' or 'guest'
+  customPackages: text("custom_packages").array(),
+  travelFees: text("travel_fees"),
+  equipmentFees: text("equipment_fees"),
+  
+  // Profile status
+  profileLive: boolean("profile_live").default(false),
   rating: decimal("rating", { precision: 3, scale: 2 }),
   reviewCount: integer("review_count").default(0),
-  experience: integer("experience"), // years of experience
   featured: boolean("featured").default(false),
   availableNow: boolean("available_now").default(false),
   emailVerified: boolean("email_verified").default(false),

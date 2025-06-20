@@ -689,5 +689,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Chef Profile routes
+  app.get("/api/chef-profile/:id", authenticateToken, async (req: any, res) => {
+    try {
+      const chefId = parseInt(req.params.id);
+      const chef = await storage.getUser(chefId);
+      
+      if (!chef || chef.role !== 'chef') {
+        return res.status(404).json({ message: "Chef profile not found" });
+      }
+
+      // Remove password field for security
+      const safeChef = { ...chef, password: undefined };
+      res.json(safeChef);
+    } catch (error) {
+      console.error("Failed to get chef profile:", error);
+      res.status(500).json({ message: "Failed to get chef profile" });
+    }
+  });
+
+  app.put("/api/chef-profile/:id", authenticateToken, async (req: any, res) => {
+    try {
+      const chefId = parseInt(req.params.id);
+      
+      // Ensure user can only update their own profile
+      if (req.user.id !== chefId) {
+        return res.status(403).json({ message: "Unauthorized to update this profile" });
+      }
+
+      const updatedChef = await storage.updateUser(chefId, req.body);
+      
+      if (!updatedChef) {
+        return res.status(404).json({ message: "Chef profile not found" });
+      }
+
+      // Remove password field for security
+      const safeChef = { ...updatedChef, password: undefined };
+      res.json(safeChef);
+    } catch (error) {
+      console.error("Failed to update chef profile:", error);
+      res.status(500).json({ message: "Failed to update chef profile" });
+    }
+  });
+
+  app.put("/api/chef-profile/:id/launch", authenticateToken, async (req: any, res) => {
+    try {
+      const chefId = parseInt(req.params.id);
+      
+      // Ensure user can only update their own profile
+      if (req.user.id !== chefId) {
+        return res.status(403).json({ message: "Unauthorized to update this profile" });
+      }
+
+      const { profileLive } = req.body;
+      const updatedChef = await storage.updateUser(chefId, { profileLive });
+      
+      if (!updatedChef) {
+        return res.status(404).json({ message: "Chef profile not found" });
+      }
+
+      res.json({ profileLive: updatedChef.profileLive });
+    } catch (error) {
+      console.error("Failed to update profile status:", error);
+      res.status(500).json({ message: "Failed to update profile status" });
+    }
+  });
+
   return httpServer;
 }

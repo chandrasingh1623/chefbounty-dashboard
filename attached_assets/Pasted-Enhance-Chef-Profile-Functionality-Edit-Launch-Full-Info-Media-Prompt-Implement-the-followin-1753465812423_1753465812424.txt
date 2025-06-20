@@ -1,0 +1,112 @@
+Enhance Chef Profile Functionality (Edit, Launch, Full Info, Media)
+
+Prompt:
+
+Implement the following updates to the Chef Profile page in the dashboard:
+
+✅ 1. Remove Availability Column
+Remove the current "Availability" column or section from the profile view.
+
+
+✅ 2. Expand Profile Details (New Fields)
+Add the following grouped sections and fields to the Chef profile:
+
+🧍 Basic Info
+Full Name (display name format: “John D.” or full name)
+
+Profile Photo (upload field – recommend high-resolution professional or action-style image)
+
+Location (City, State – used for filtering and search)
+
+Willing to Travel (Yes/No toggle)
+
+If Yes, allow specifying max travel distance (in miles) or custom areas
+
+📖 About Me / Bio
+Personal Introduction / Bio
+
+Years of Experience (numeric field or dropdown)
+
+Languages Spoken (multi-select)
+
+🍽️ Culinary Specialties
+Primary Cuisine(s) (multi-select: Italian, French, Vegan, etc.)
+
+Signature Dishes (freeform list – 3 to 5 inputs)
+
+Dietary Accommodations (multi-select: Gluten-Free, Halal, Kosher, etc.)
+
+👨‍🎓 Credentials & Background
+Formal Training (freeform or dropdown for certifications, schools, etc.)
+
+Food Safety Certifications (e.g., ServSafe)
+
+Work History (brief descriptions – past kitchens, events, experience)
+
+📸 Media & Gallery
+Portfolio Photos – allow image uploads (grid display)
+
+Client Testimonials – text area for quotes or imported reviews
+
+Optional video embed or upload field (intro video or cooking clip)
+
+🛠️ Service Capabilities
+Available Services (multi-select: Private Dinners, Meal Prep, Yacht Events, etc.)
+
+Available for Last-Minute Bookings (Yes/No toggle)
+
+Max Party Size Comfortable Handling (number input)
+
+Brings Own Equipment (Yes/No + optional equipment list)
+
+Can Provide Additional Staff (Yes/No toggle)
+
+
+💵 Rates & Packages
+Base Rate (per hour or per guest – include unit selector)
+
+Custom Packages (freeform – e.g., "3-course dinner for 6")
+
+Travel/Equipment Fees (text field or checklist)
+
+✅ 3. Make All Sections Editable
+When pressing Edit Profile, all of the above fields should be editable.
+
+Auto-save or save button at the bottom.
+
+Update backend schema and Supabase as needed to support new fields.
+
+✅ 4. Add Portfolio Image Upload
+In the "📸 Media & Gallery" section, allow chefs to upload multiple images.
+
+Display them in a responsive grid.
+
+Optional: Drag-and-drop reorder or delete functionality.
+
+✅ 5. Add “Launch Profile” Button Next to Edit
+Place a “Launch Profile” button next to “Edit Profile”.
+
+If profile is already live, change to “Unpublish” toggle.
+
+✅ 6. On Launch Profile → Confirmation Modal
+Display the following modal:
+
+🟢 Title:
+Launch Your Profile?
+
+Body Text:
+You're about to make your profile public on ChefBounty. This means:
+
+Your profile will appear in the Browse Chefs section
+
+Hosts will be able to view your experience, availability, and request bookings
+
+You can start receiving invites to events right away
+
+Are you sure you’re ready to go live?
+
+Buttons:
+
+Yes, Launch My Profile (primary – confirm action)
+
+Not Yet (secondary – cancel)
