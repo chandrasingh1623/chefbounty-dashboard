@@ -774,22 +774,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
       
-      // Check for any fields that might contain invalid date values
+      // Check for any fields that might contain invalid date values - only check actual timestamp fields
       Object.keys(sanitizedData).forEach(key => {
         const value = sanitizedData[key];
         if (value !== null && value !== undefined) {
-          // Check if this looks like it could be a date but isn't properly formatted
-          if (typeof value === 'string' && (value.includes('T') || value.includes('Z') || value.includes('GMT'))) {
-            console.log(`WARNING: Field ${key} contains potential date string: ${value}`);
-            // Try to parse and validate
+          // Only validate fields that are actually supposed to be timestamps
+          const timestampFields = ['createdAt', 'updatedAt', 'lastLogin', 'eventDate', 'completedAt'];
+          if (timestampFields.includes(key) && typeof value === 'string') {
+            console.log(`WARNING: Timestamp field ${key} contains: ${value}`);
+            // Try to parse and validate actual timestamp fields
             try {
               const date = new Date(value);
               if (isNaN(date.getTime())) {
-                console.log(`ERROR: Field ${key} contains invalid date, removing it`);
+                console.log(`ERROR: Timestamp field ${key} contains invalid date, removing it`);
                 delete sanitizedData[key];
               }
             } catch (e) {
-              console.log(`ERROR: Field ${key} failed date parsing, removing it`);
+              console.log(`ERROR: Timestamp field ${key} failed date parsing, removing it`);
               delete sanitizedData[key];
             }
           }
