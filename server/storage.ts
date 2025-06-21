@@ -94,7 +94,20 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateUser(id: number, updates: Partial<InsertUser>): Promise<User | undefined> {
-    const result = await db.update(users).set(updates).where(eq(users.id, id)).returning();
+    // Sanitize the updates object to handle any problematic fields
+    const sanitizedUpdates = { ...updates };
+    
+    // Remove any undefined fields that could cause issues
+    Object.keys(sanitizedUpdates).forEach(key => {
+      const value = sanitizedUpdates[key];
+      if (value === undefined || value === null) {
+        delete sanitizedUpdates[key];
+      }
+    });
+    
+    console.log("Storage updateUser - sanitized updates:", JSON.stringify(sanitizedUpdates, null, 2));
+    
+    const result = await db.update(users).set(sanitizedUpdates).where(eq(users.id, id)).returning();
     return result[0];
   }
 
