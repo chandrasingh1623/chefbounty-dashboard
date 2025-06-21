@@ -710,6 +710,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/chef-profile/:id", authenticateToken, async (req: any, res) => {
     try {
+      console.log("=== CHEF PROFILE UPDATE DEBUG ===");
+      console.log("Raw request body:", JSON.stringify(req.body, null, 2));
+      
       const chefId = parseInt(req.params.id);
       
       // Ensure user can only update their own profile
@@ -720,13 +723,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Sanitize the request body to handle potential date/timestamp issues
       const sanitizedData = { ...req.body };
       
-      console.log("Original request body:", JSON.stringify(req.body, null, 2));
-      
-      // Remove any fields that should not be updated directly
+      // Remove any fields that should not be updated directly - CRITICAL for timestamp error
       delete sanitizedData.id;
       delete sanitizedData.password;
-      delete sanitizedData.createdAt;
+      delete sanitizedData.createdAt; // This is the timestamp causing the error!
       delete sanitizedData.emailVerificationToken;
+      
+      // Also remove any other potential timestamp fields that shouldn't be updated
+      delete sanitizedData.updatedAt;
+      delete sanitizedData.lastLogin;
+      
+      console.log("After removing system fields:", JSON.stringify(sanitizedData, null, 2));
       
       // Ensure arrays are properly formatted
       const arrayFields = [
@@ -767,7 +774,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
       
-      console.log("Sanitized data for database:", JSON.stringify(sanitizedData, null, 2));
+      // Check for any fields that might contain invalid date values
+      Object.keys(sanitizedData).forEach(key => {
+        const value = sanitizedData[key];
+        if (value !== null && value !== undefined) {
+          // Check if this looks like it could be a date but isn't properly formatted
+          if (typeof value === 'string' && (value.includes('T') || value.includes('Z') || value.includes('GMT'))) {
+            console.log(`WARNING: Field ${key} contains potential date string: ${value}`);
+            // Try to parse and validate
+            try {
+              const date = new Date(value);
+              if (isNaN(date.getTime())) {
+                console.log(`ERROR: Field ${key} contains invalid date, removing it`);
+                delete sanitizedData[key];
+              }
+            } catch (e) {
+              console.log(`ERROR: Field ${key} failed date parsing, removing it`);
+              delete sanitizedData[key];
+            }
+          }
+        }
+      });
+      
+      console.log("Final sanitized data for database:", JSON.stringify(sanitizedData, null, 2));
 
       const updatedChef = await storage.updateUser(chefId, sanitizedData);
       
