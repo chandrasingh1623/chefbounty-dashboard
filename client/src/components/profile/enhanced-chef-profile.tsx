@@ -190,6 +190,47 @@ export function EnhancedChefProfile() {
     });
   };
 
+  const handleProfilePhotoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Check file size (limit to 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please select an image under 5MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid file type",
+        description: "Please select an image file",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Convert to base64 for now (in production, you'd upload to a storage service)
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const base64String = e.target?.result as string;
+      setFormData({
+        ...formData,
+        profilePhoto: base64String
+      });
+      
+      toast({
+        title: "Photo uploaded",
+        description: "Profile photo has been updated. Remember to save your changes.",
+      });
+    };
+    reader.readAsDataURL(file);
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -210,16 +251,27 @@ export function EnhancedChefProfile() {
             <div className="flex items-center space-x-4">
               <div className="relative">
                 <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center">
-                  {profile?.profilePhoto ? (
+                  {(isEditing ? formData.profilePhoto : profile?.profilePhoto) ? (
                     <img 
-                      src={profile.profilePhoto} 
-                      alt={profile.name}
+                      src={isEditing ? formData.profilePhoto || profile?.profilePhoto : profile?.profilePhoto} 
+                      alt={profile?.name || 'Profile'}
                       className="w-16 h-16 rounded-full object-cover"
                     />
                   ) : (
                     <User className="w-8 h-8 text-gray-400" />
                   )}
                 </div>
+                {isEditing && (
+                  <label className="absolute bottom-0 right-0 w-6 h-6 bg-primary rounded-full flex items-center justify-center cursor-pointer hover:bg-primary/80 transition-colors">
+                    <Camera className="w-3 h-3 text-white" />
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleProfilePhotoUpload}
+                    />
+                  </label>
+                )}
                 {profile?.profileLive && (
                   <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
                 )}
