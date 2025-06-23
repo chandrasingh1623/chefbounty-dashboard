@@ -45,19 +45,39 @@ export default function BrowseChefs() {
     "Indian", "Japanese", "American", "Vegetarian", "Vegan"
   ];
 
+  // Build query string for dynamic filtering
+  const queryString = (() => {
+    const params = new URLSearchParams();
+    if (searchTerm) params.append('search', searchTerm);
+    if (sortBy) params.append('sort', sortBy);
+    if (locationFilter) params.append('location', locationFilter);
+    if (availableNowOnly) params.append('available', 'true');
+    if (selectedCuisines.length > 0) params.append('cuisines', selectedCuisines.join(','));
+    params.append('minRate', budgetRange[0].toString());
+    params.append('maxRate', budgetRange[1].toString());
+    return params.toString();
+  })();
+
   const { data: chefs = [], isLoading } = useQuery({
-    queryKey: ['/api/chefs', searchTerm, sortBy, budgetRange, selectedCuisines, locationFilter, availableNowOnly],
-    queryFn: () => {
-      const params = new URLSearchParams();
-      if (searchTerm) params.append('search', searchTerm);
-      if (sortBy) params.append('sort', sortBy);
-      if (locationFilter) params.append('location', locationFilter);
-      if (availableNowOnly) params.append('available', 'true');
-      if (selectedCuisines.length > 0) params.append('cuisines', selectedCuisines.join(','));
-      params.append('minRate', budgetRange[0].toString());
-      params.append('maxRate', budgetRange[1].toString());
+    queryKey: ['/api/chefs', queryString],
+    queryFn: async () => {
+      const url = `/api/chefs${queryString ? `?${queryString}` : ''}`;
+      const token = localStorage.getItem('chefbounty_token');
       
-      return fetch(`/api/chefs?${params.toString()}`).then(res => res.json());
+      const response = await fetch(url, {
+        headers: {
+          'Authorization': token ? `Bearer ${token}` : '',
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        console.error('Failed to fetch chefs:', response.status, response.statusText);
+        return [];
+      }
+      
+      const data = await response.json();
+      return Array.isArray(data) ? data : [];
     }
   });
 
