@@ -386,9 +386,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { search, sort, location, available, cuisines, minRate, maxRate } = req.query;
       
-      // Get all chef users
+      // Get all chef users who have launched their profiles
       const allUsers = await storage.getUsers();
-      let chefs = allUsers.filter(user => user.role === 'chef');
+      let chefs = allUsers.filter(user => user.role === 'chef' && user.profileLive === true);
       
       // Apply search filter
       if (search) {

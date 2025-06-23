@@ -47,7 +47,7 @@ export default function BrowseChefs() {
 
   const { data: chefs = [], isLoading } = useQuery({
     queryKey: ['/api/chefs', searchTerm, sortBy, budgetRange, selectedCuisines, locationFilter, availableNowOnly],
-    queryFn: async () => {
+    queryFn: () => {
       const params = new URLSearchParams();
       if (searchTerm) params.append('search', searchTerm);
       if (sortBy) params.append('sort', sortBy);
@@ -57,15 +57,7 @@ export default function BrowseChefs() {
       params.append('minRate', budgetRange[0].toString());
       params.append('maxRate', budgetRange[1].toString());
       
-      const token = localStorage.getItem('auth_token');
-      const response = await fetch(`/api/chefs?${params.toString()}`, {
-        headers: {
-          'Authorization': token ? `Bearer ${token}` : '',
-          'Content-Type': 'application/json',
-        },
-      });
-      if (!response.ok) throw new Error('Failed to fetch chefs');
-      return response.json();
+      return fetch(`/api/chefs?${params.toString()}`).then(res => res.json());
     }
   });
 
