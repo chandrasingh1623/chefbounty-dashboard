@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/lib/auth";
 import { Link } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -33,6 +34,7 @@ interface Chef {
 import { DashboardLayout } from "@/components/dashboard/layout";
 
 export default function BrowseChefs() {
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("rating");
   const [budgetRange, setBudgetRange] = useState([25, 200]);
@@ -390,9 +392,11 @@ export default function BrowseChefs() {
                   <Eye className="w-4 h-4 mr-2" />
                   View Profile
                 </Button>
-                <Button className="flex-1 bg-primary hover:bg-primary/90">
-                  Contact Chef
-                </Button>
+                {user?.role !== 'chef' && (
+                  <Button className="flex-1 bg-primary hover:bg-primary/90">
+                    Contact Chef
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -546,10 +550,12 @@ export default function BrowseChefs() {
 
                   {/* Contact Actions */}
                   <div className="space-y-3">
-                    <Button className="w-full bg-primary hover:bg-primary/90">
-                      <Users className="w-4 h-4 mr-2" />
-                      Contact Chef
-                    </Button>
+                    {user?.role !== 'chef' && (
+                      <Button className="w-full bg-primary hover:bg-primary/90">
+                        <Users className="w-4 h-4 mr-2" />
+                        Contact Chef
+                      </Button>
+                    )}
                     <Button variant="outline" className="w-full">
                       Save to Favorites
                     </Button>
