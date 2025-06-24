@@ -8,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
-import { Search, MapPin, DollarSign, Star, Filter, SlidersHorizontal, Award } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Search, MapPin, DollarSign, Star, Filter, SlidersHorizontal, Award, Eye, X, User, Globe, Clock, Users, UtensilsCrossed } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -39,6 +40,8 @@ export default function BrowseChefs() {
   const [locationFilter, setLocationFilter] = useState("");
   const [availableNowOnly, setAvailableNowOnly] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [selectedChef, setSelectedChef] = useState<Chef | null>(null);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   const cuisineTypes = [
     "Italian", "French", "Asian", "Mexican", "Mediterranean", 
@@ -95,6 +98,16 @@ export default function BrowseChefs() {
     setSelectedCuisines([]);
     setLocationFilter("");
     setAvailableNowOnly(false);
+  };
+
+  const openProfileModal = (chef: Chef) => {
+    setSelectedChef(chef);
+    setIsProfileModalOpen(true);
+  };
+
+  const closeProfileModal = () => {
+    setSelectedChef(null);
+    setIsProfileModalOpen(false);
   };
 
   if (isLoading) {
@@ -278,9 +291,9 @@ export default function BrowseChefs() {
       </div>
 
       {/* Chef Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
         {chefs.map((chef: Chef) => (
-          <Card key={chef.id} className="hover:shadow-lg transition-shadow">
+          <Card key={chef.id} className="rounded-2xl shadow-lg bg-white hover:scale-[1.02] transition-transform duration-300 ease-in-out overflow-hidden">
             <CardContent className="p-6">
               {/* Header with Avatar and Badge */}
               <div className="flex items-start justify-between mb-4">
@@ -367,12 +380,20 @@ export default function BrowseChefs() {
                 )}
               </div>
 
-              {/* View Profile Button */}
-              <Link href={`/dashboard/chef/${chef.id}`}>
-                <Button className="w-full bg-primary hover:bg-primary/90">
+              {/* Action Buttons */}
+              <div className="flex gap-3">
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => openProfileModal(chef)}
+                >
+                  <Eye className="w-4 h-4 mr-2" />
                   View Profile
                 </Button>
-              </Link>
+                <Button className="flex-1 bg-primary hover:bg-primary/90">
+                  Contact Chef
+                </Button>
+              </div>
             </CardContent>
           </Card>
         ))}
@@ -396,6 +417,149 @@ export default function BrowseChefs() {
         </Card>
       )}
       </div>
+
+      {/* Chef Profile Modal */}
+      <Dialog open={isProfileModalOpen} onOpenChange={setIsProfileModalOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          {selectedChef && (
+            <>
+              <DialogHeader>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <Avatar className="w-16 h-16">
+                      <AvatarImage src={selectedChef.profileImage} alt={selectedChef.name} />
+                      <AvatarFallback className="text-lg">{selectedChef.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <DialogTitle className="text-2xl font-bold">{selectedChef.name}</DialogTitle>
+                      <DialogDescription className="flex items-center text-gray-600 mt-1">
+                        <MapPin className="w-4 h-4 mr-1" />
+                        {selectedChef.location || "Location not specified"}
+                      </DialogDescription>
+                    </div>
+                  </div>
+                  <Button variant="ghost" size="sm" onClick={closeProfileModal}>
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              </DialogHeader>
+
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+                {/* Left Column - Basic Info */}
+                <div className="lg:col-span-2 space-y-6">
+                  {/* About Section */}
+                  {selectedChef.bio && (
+                    <div className="space-y-3">
+                      <h3 className="text-lg font-semibold flex items-center">
+                        <User className="w-5 h-5 mr-2" />
+                        About
+                      </h3>
+                      <p className="text-gray-700 leading-relaxed">{selectedChef.bio}</p>
+                    </div>
+                  )}
+
+                  {/* Specialties */}
+                  {selectedChef.specialties && selectedChef.specialties.length > 0 && (
+                    <div className="space-y-3">
+                      <h3 className="text-lg font-semibold flex items-center">
+                        <UtensilsCrossed className="w-5 h-5 mr-2" />
+                        Cuisine Specialties
+                      </h3>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedChef.specialties.map((specialty) => (
+                          <Badge key={specialty} variant="secondary" className="px-3 py-1">
+                            {specialty}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Experience & Skills */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {selectedChef.experience && (
+                      <div className="space-y-2">
+                        <h4 className="font-medium flex items-center">
+                          <Clock className="w-4 h-4 mr-2" />
+                          Experience
+                        </h4>
+                        <p className="text-gray-600">{selectedChef.experience}+ years</p>
+                      </div>
+                    )}
+                    
+                    {selectedChef.rating && (
+                      <div className="space-y-2">
+                        <h4 className="font-medium flex items-center">
+                          <Star className="w-4 h-4 mr-2" />
+                          Rating
+                        </h4>
+                        <div className="flex items-center">
+                          <Star className="w-4 h-4 text-yellow-400 fill-current mr-1" />
+                          <span className="font-medium">{selectedChef.rating.toFixed(1)}</span>
+                          {selectedChef.reviewCount && (
+                            <span className="text-gray-500 ml-2">({selectedChef.reviewCount} reviews)</span>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Right Column - Booking Info */}
+                <div className="space-y-6">
+                  {/* Pricing */}
+                  {selectedChef.hourlyRate && (
+                    <Card className="p-4">
+                      <h3 className="font-semibold mb-3 flex items-center">
+                        <DollarSign className="w-5 h-5 mr-2" />
+                        Pricing
+                      </h3>
+                      <div className="text-2xl font-bold text-primary mb-2">
+                        ${selectedChef.hourlyRate}/hour
+                      </div>
+                      <p className="text-sm text-gray-600">Starting rate for private events</p>
+                    </Card>
+                  )}
+
+                  {/* Availability */}
+                  <Card className="p-4">
+                    <h3 className="font-semibold mb-3 flex items-center">
+                      <Globe className="w-5 h-5 mr-2" />
+                      Availability
+                    </h3>
+                    <div className="space-y-2">
+                      {selectedChef.availableNow ? (
+                        <Badge variant="outline" className="text-green-600 border-green-600">
+                          Available Now
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary">Contact for Availability</Badge>
+                      )}
+                      {selectedChef.featured && (
+                        <Badge variant="default" className="bg-[#0a51be] block w-fit mt-2">
+                          <Award className="w-3 h-3 mr-1" />
+                          Featured Chef
+                        </Badge>
+                      )}
+                    </div>
+                  </Card>
+
+                  {/* Contact Actions */}
+                  <div className="space-y-3">
+                    <Button className="w-full bg-primary hover:bg-primary/90">
+                      <Users className="w-4 h-4 mr-2" />
+                      Contact Chef
+                    </Button>
+                    <Button variant="outline" className="w-full">
+                      Save to Favorites
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }

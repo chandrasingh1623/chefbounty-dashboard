@@ -13,7 +13,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useState } from "react";
-import { Search, Calendar, MapPin, DollarSign } from "lucide-react";
+import { Search, Calendar, MapPin, DollarSign, Eye, X, User, Globe, Users, UtensilsCrossed } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { EventDetailModal } from "@/components/dashboard/event-detail-modal";
 
@@ -36,6 +36,8 @@ export default function BrowseEvents() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedDetailEventId, setSelectedDetailEventId] = useState<number | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<any>(null);
+  const [isEventModalOpen, setIsEventModalOpen] = useState(false);
 
   const form = useForm<BidFormData>({
     resolver: zodResolver(bidSchema),
@@ -140,13 +142,23 @@ export default function BrowseEvents() {
     setIsDetailModalOpen(true);
   };
 
+  const openEventModal = (event: any) => {
+    setSelectedEvent(event);
+    setIsEventModalOpen(true);
+  };
+
+  const closeEventModal = () => {
+    setSelectedEvent(null);
+    setIsEventModalOpen(false);
+  };
+
   const onSubmitBid = (data: BidFormData) => {
     if (selectedEventId) {
       submitBidMutation.mutate({ ...data, eventId: selectedEventId });
     }
   };
 
-  const selectedEvent = selectedEventId ? events.find((e: any) => e.id === selectedEventId) : null;
+  const selectedBidEvent = selectedEventId ? events.find((e: any) => e.id === selectedEventId) : null;
   const selectedDetailEvent = selectedDetailEventId ? events.find((e: any) => e.id === selectedDetailEventId) : null;
 
   const uniqueLocations = Array.from(new Set(events.map((event: any) => 
@@ -248,15 +260,68 @@ export default function BrowseEvents() {
 
         {/* Events Grid */}
         {filteredEvents.length > 0 ? (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
             {filteredEvents.map((event: any) => (
-              <EventCard
-                key={event.id}
-                event={event}
-                showBidButton={user?.role === 'chef'}
-                onBid={user?.role === 'chef' ? handleBid : undefined}
-                onViewDetails={handleViewDetails}
-              />
+              <div key={event.id} className="rounded-2xl shadow-lg bg-white hover:scale-[1.02] transition-transform duration-300 ease-in-out overflow-hidden">
+                <div className="p-6">
+                  {/* Event Header */}
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <h3 className="text-xl font-semibold text-gray-900 mb-2">{event.title}</h3>
+                      <div className="flex items-center text-gray-600 mb-2">
+                        <Calendar className="w-4 h-4 mr-2" />
+                        <span className="text-sm">{new Date(event.eventDate).toLocaleDateString()}</span>
+                      </div>
+                      <div className="flex items-center text-gray-600">
+                        <MapPin className="w-4 h-4 mr-2" />
+                        <span className="text-sm">{event.location}</span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="flex items-center text-lg font-bold text-primary">
+                        <DollarSign className="w-5 h-5" />
+                        {event.budget}
+                      </div>
+                      <span className="text-xs text-gray-500">Budget</span>
+                    </div>
+                  </div>
+
+                  {/* Event Description */}
+                  <p className="text-gray-700 text-sm mb-4 line-clamp-2">{event.description}</p>
+
+                  {/* Event Details */}
+                  <div className="space-y-2 mb-4">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">Cuisine:</span>
+                      <span className="font-medium">{event.cuisineType}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">Guests:</span>
+                      <span className="font-medium">{event.guestCount}</span>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-3">
+                    <Button 
+                      variant="outline" 
+                      className="flex-1"
+                      onClick={() => openEventModal(event)}
+                    >
+                      <Eye className="w-4 h-4 mr-2" />
+                      View Details
+                    </Button>
+                    {user?.role === 'chef' && (
+                      <Button 
+                        className="flex-1 bg-primary hover:bg-primary/90"
+                        onClick={() => handleBid(event.id)}
+                      >
+                        Submit Bid
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
         ) : (
@@ -285,22 +350,22 @@ export default function BrowseEvents() {
               <DialogTitle>Submit Bid</DialogTitle>
             </DialogHeader>
             
-            {selectedEvent && (
+            {selectedBidEvent && (
               <div className="space-y-4">
                 <div className="p-4 bg-gray-50 rounded-lg">
-                  <h4 className="font-medium text-gray-900">{selectedEvent.title}</h4>
+                  <h4 className="font-medium text-gray-900">{selectedBidEvent.title}</h4>
                   <div className="flex items-center space-x-4 mt-2 text-sm text-gray-600">
                     <div className="flex items-center space-x-1">
                       <Calendar className="w-4 h-4" />
-                      <span>{new Date(selectedEvent.eventDate).toLocaleDateString()}</span>
+                      <span>{new Date(selectedBidEvent.eventDate).toLocaleDateString()}</span>
                     </div>
                     <div className="flex items-center space-x-1">
                       <MapPin className="w-4 h-4" />
-                      <span>{selectedEvent.location}</span>
+                      <span>{selectedBidEvent.location}</span>
                     </div>
                     <div className="flex items-center space-x-1">
                       <DollarSign className="w-4 h-4" />
-                      <span>${selectedEvent.budget}</span>
+                      <span>${selectedBidEvent.budget}</span>
                     </div>
                   </div>
                 </div>
@@ -377,6 +442,165 @@ export default function BrowseEvents() {
             setSelectedDetailEventId(null);
           }}
         />
+
+        {/* Full Event Details Modal */}
+        <Dialog open={isEventModalOpen} onOpenChange={setIsEventModalOpen}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            {selectedEvent && (
+              <>
+                <DialogHeader>
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <DialogTitle className="text-2xl font-bold">{selectedEvent.title}</DialogTitle>
+                      <DialogDescription className="flex items-center text-gray-600 mt-2">
+                        <Calendar className="w-4 h-4 mr-2" />
+                        {new Date(selectedEvent.eventDate).toLocaleDateString('en-US', { 
+                          weekday: 'long', 
+                          year: 'numeric', 
+                          month: 'long', 
+                          day: 'numeric' 
+                        })}
+                        <span className="mx-2">•</span>
+                        <MapPin className="w-4 h-4 mr-1" />
+                        {selectedEvent.location}
+                      </DialogDescription>
+                    </div>
+                    <Button variant="ghost" size="sm" onClick={closeEventModal}>
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </DialogHeader>
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+                  {/* Left Column - Event Details */}
+                  <div className="lg:col-span-2 space-y-6">
+                    {/* Description */}
+                    <div className="space-y-3">
+                      <h3 className="text-lg font-semibold">Event Description</h3>
+                      <p className="text-gray-700 leading-relaxed">{selectedEvent.description}</p>
+                    </div>
+
+                    {/* Event Requirements */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-3">
+                        <h4 className="font-medium flex items-center">
+                          <UtensilsCrossed className="w-4 h-4 mr-2" />
+                          Cuisine & Style
+                        </h4>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Cuisine Type:</span>
+                            <span className="font-medium">{selectedEvent.cuisineType}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Dietary Requirements:</span>
+                            <span className="font-medium">{selectedEvent.dietaryRestrictions || 'None specified'}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        <h4 className="font-medium flex items-center">
+                          <Users className="w-4 h-4 mr-2" />
+                          Event Details
+                        </h4>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Guest Count:</span>
+                            <span className="font-medium">{selectedEvent.guestCount} people</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Duration:</span>
+                            <span className="font-medium">{selectedEvent.duration || 'Not specified'}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Service Style:</span>
+                            <span className="font-medium">{selectedEvent.serviceStyle || 'To be discussed'}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Host Information */}
+                    <div className="space-y-3">
+                      <h4 className="font-medium flex items-center">
+                        <User className="w-4 h-4 mr-2" />
+                        Host Information
+                      </h4>
+                      <div className="p-4 bg-gray-50 rounded-lg">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 bg-primary text-white rounded-full flex items-center justify-center font-medium">
+                            {selectedEvent.hostName ? selectedEvent.hostName[0].toUpperCase() : 'H'}
+                          </div>
+                          <div>
+                            <p className="font-medium">{selectedEvent.hostName || 'Host'}</p>
+                            <p className="text-sm text-gray-600">Event Organizer</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right Column - Pricing & Actions */}
+                  <div className="space-y-6">
+                    {/* Budget */}
+                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-lg border border-blue-200">
+                      <h3 className="font-semibold mb-3 flex items-center text-blue-900">
+                        <DollarSign className="w-5 h-5 mr-2" />
+                        Budget
+                      </h3>
+                      <div className="text-3xl font-bold text-blue-900 mb-2">
+                        ${selectedEvent.budget}
+                      </div>
+                      <p className="text-sm text-blue-700">Total event budget</p>
+                    </div>
+
+                    {/* Event Status */}
+                    <div className="bg-white border rounded-lg p-4">
+                      <h3 className="font-semibold mb-3 flex items-center">
+                        <Globe className="w-5 h-5 mr-2" />
+                        Event Status
+                      </h3>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-600">Status:</span>
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            {selectedEvent.status === 'open' ? 'Accepting Bids' : selectedEvent.status}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-600">Posted:</span>
+                          <span className="text-sm font-medium">
+                            {new Date(selectedEvent.createdAt || selectedEvent.eventDate).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    {user?.role === 'chef' && (
+                      <div className="space-y-3">
+                        <Button 
+                          className="w-full bg-primary hover:bg-primary/90"
+                          onClick={() => {
+                            closeEventModal();
+                            handleBid(selectedEvent.id);
+                          }}
+                        >
+                          <DollarSign className="w-4 h-4 mr-2" />
+                          Submit Bid
+                        </Button>
+                        <Button variant="outline" className="w-full">
+                          Save Event
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );
