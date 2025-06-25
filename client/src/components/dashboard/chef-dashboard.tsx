@@ -10,10 +10,11 @@ import {
   Star, 
   DollarSign 
 } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 
 export function ChefDashboard() {
   const { user } = useAuth();
+  const [, setLocation] = useLocation();
 
   const { data: myBids = [] } = useQuery({
     queryKey: ['/api/bids/chef', user?.id],
@@ -70,8 +71,20 @@ export function ChefDashboard() {
   ];
 
   const handleSubmitBid = async (eventId: number) => {
-    // This would open a bid submission modal
-    console.log('Submit bid for event:', eventId);
+    // Navigate to browse events page
+    setLocation('/dashboard/browse-events');
+    
+    // Add a small delay and trigger the bid modal for the specific event
+    setTimeout(() => {
+      // Find the Submit Bid button for this event and click it
+      const bidButtons = document.querySelectorAll('button');
+      bidButtons.forEach(button => {
+        if (button.textContent === 'Submit Bid') {
+          button.click();
+          return;
+        }
+      });
+    }, 100);
   };
 
   return (
