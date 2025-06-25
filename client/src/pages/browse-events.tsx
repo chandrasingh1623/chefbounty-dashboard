@@ -18,7 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import { EventDetailModal } from "@/components/dashboard/event-detail-modal";
 
 const bidSchema = z.object({
-  amount: z.number().min(1, "Bid amount must be greater than 0"),
+  amount: z.coerce.number().min(1, "Bid amount must be greater than 0"),
   message: z.string().min(10, "Message must be at least 10 characters"),
 });
 
@@ -42,7 +42,7 @@ export default function BrowseEvents() {
   const form = useForm<BidFormData>({
     resolver: zodResolver(bidSchema),
     defaultValues: {
-      amount: 0,
+      amount: "" as any,
       message: "",
     },
   });
@@ -387,7 +387,8 @@ export default function BrowseEvents() {
                               min="1"
                               placeholder="Enter your bid amount"
                               {...field}
-                              onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                              onChange={(e) => field.onChange(e.target.value)}
+                              value={field.value || ""}
                             />
                           </FormControl>
                           <FormMessage />
