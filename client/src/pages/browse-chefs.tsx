@@ -26,7 +26,7 @@ interface Chef {
   hourlyRate?: number;
   rating?: number;
   reviewCount?: number;
-  profileImage?: string;
+  profilePhoto?: string;
   featured?: boolean;
   availableNow?: boolean;
 }
@@ -301,7 +301,7 @@ export default function BrowseChefs() {
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center space-x-3">
                   <Avatar className="w-12 h-12">
-                    <AvatarImage src={chef.profileImage} alt={chef.name} />
+                    <AvatarImage src={chef.profilePhoto} alt={chef.name} />
                     <AvatarFallback>{chef.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
                   </Avatar>
                   <div>
@@ -430,7 +430,7 @@ export default function BrowseChefs() {
               <DialogHeader>
                 <div className="flex items-center space-x-4">
                   <Avatar className="w-16 h-16">
-                    <AvatarImage src={selectedChef.profileImage} alt={selectedChef.name} />
+                    <AvatarImage src={selectedChef.profilePhoto} alt={selectedChef.name} />
                     <AvatarFallback className="text-lg">{selectedChef.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
                   </Avatar>
                   <div>
