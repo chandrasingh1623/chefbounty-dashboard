@@ -428,23 +428,18 @@ export default function BrowseChefs() {
           {selectedChef && (
             <>
               <DialogHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <Avatar className="w-16 h-16">
-                      <AvatarImage src={selectedChef.profileImage} alt={selectedChef.name} />
-                      <AvatarFallback className="text-lg">{selectedChef.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <DialogTitle className="text-2xl font-bold">{selectedChef.name}</DialogTitle>
-                      <DialogDescription className="flex items-center text-gray-600 mt-1">
-                        <MapPin className="w-4 h-4 mr-1" />
-                        {selectedChef.location || "Location not specified"}
-                      </DialogDescription>
-                    </div>
+                <div className="flex items-center space-x-4">
+                  <Avatar className="w-16 h-16">
+                    <AvatarImage src={selectedChef.profileImage} alt={selectedChef.name} />
+                    <AvatarFallback className="text-lg">{selectedChef.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <DialogTitle className="text-2xl font-bold">{selectedChef.name}</DialogTitle>
+                    <DialogDescription className="flex items-center text-gray-600 mt-1">
+                      <MapPin className="w-4 h-4 mr-1" />
+                      {selectedChef.location || "Location not specified"}
+                    </DialogDescription>
                   </div>
-                  <Button variant="ghost" size="sm" onClick={closeProfileModal}>
-                    <X className="w-4 h-4" />
-                  </Button>
                 </div>
               </DialogHeader>
 

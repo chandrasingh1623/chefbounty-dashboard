@@ -452,25 +452,20 @@ export default function BrowseEvents() {
             {selectedEvent && (
               <>
                 <DialogHeader>
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <DialogTitle className="text-2xl font-bold">{selectedEvent.title}</DialogTitle>
-                      <DialogDescription className="flex items-center text-gray-600 mt-2">
-                        <Calendar className="w-4 h-4 mr-2" />
-                        {new Date(selectedEvent.eventDate).toLocaleDateString('en-US', { 
-                          weekday: 'long', 
-                          year: 'numeric', 
-                          month: 'long', 
-                          day: 'numeric' 
-                        })}
-                        <span className="mx-2">•</span>
-                        <MapPin className="w-4 h-4 mr-1" />
-                        {selectedEvent.location}
-                      </DialogDescription>
-                    </div>
-                    <Button variant="ghost" size="sm" onClick={closeEventModal}>
-                      <X className="w-4 h-4" />
-                    </Button>
+                  <div className="flex-1">
+                    <DialogTitle className="text-2xl font-bold">{selectedEvent.title}</DialogTitle>
+                    <DialogDescription className="flex items-center text-gray-600 mt-2">
+                      <Calendar className="w-4 h-4 mr-2" />
+                      {new Date(selectedEvent.eventDate).toLocaleDateString('en-US', { 
+                        weekday: 'long', 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                      })}
+                      <span className="mx-2">•</span>
+                      <MapPin className="w-4 h-4 mr-1" />
+                      {selectedEvent.location}
+                    </DialogDescription>
                   </div>
                 </DialogHeader>
 
