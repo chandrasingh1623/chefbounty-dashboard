@@ -133,6 +133,9 @@ export default function BrowseEvents() {
   });
 
   const handleBid = (eventId: number) => {
+    console.log('Setting up bid for event:', eventId);
+    const event = events.find((e: any) => e.id === eventId);
+    console.log('Found event:', event);
     setSelectedEventId(eventId);
     setIsDialogOpen(true);
   };
