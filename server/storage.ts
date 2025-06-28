@@ -142,6 +142,23 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(bids).where(eq(bids.chefId, chefId)).orderBy(desc(bids.createdAt));
   }
 
+  async getBidsByHostId(hostId: number): Promise<Bid[]> {
+    // Get all bids for events owned by this host
+    return await db.select({
+      id: bids.id,
+      eventId: bids.eventId,
+      chefId: bids.chefId,
+      amount: bids.amount,
+      message: bids.message,
+      status: bids.status,
+      createdAt: bids.createdAt,
+    })
+    .from(bids)
+    .innerJoin(events, eq(bids.eventId, events.id))
+    .where(eq(events.hostId, hostId))
+    .orderBy(desc(bids.createdAt));
+  }
+
   async getBidById(id: number): Promise<Bid | undefined> {
     const result = await db.select().from(bids).where(eq(bids.id, id)).limit(1);
     return result[0];

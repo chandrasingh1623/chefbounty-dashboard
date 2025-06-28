@@ -29,9 +29,10 @@ export default function MyEvents() {
   });
 
   const { data: allBids = [] } = useQuery({
-    queryKey: ['/api/bids/all'],
+    queryKey: ['/api/bids/host', user?.id],
+    enabled: !!user?.id,
     queryFn: async () => {
-      const response = await fetch('/api/bids/all', {
+      const response = await fetch(`/api/bids/host/${user?.id}`, {
         headers: authService.getAuthHeaders(),
       });
       if (!response.ok) return [];

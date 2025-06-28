@@ -345,6 +345,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/bids/host/:hostId", authenticateToken, async (req, res) => {
+    try {
+      const bids = await storage.getBidsByHostId(parseInt(req.params.hostId));
+      res.json(bids);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get host bids" });
+    }
+  });
+
   app.post("/api/bids", authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
     try {
       // Only chefs can submit bids
