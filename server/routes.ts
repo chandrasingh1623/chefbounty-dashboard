@@ -354,6 +354,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/bids/recent", authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      if (req.user.role === 'host') {
+        // For hosts, get recent bids on their events
+        const bids = await storage.getBidsByHostId(req.user.id);
+        res.json(bids);
+      } else if (req.user.role === 'chef') {
+        // For chefs, get their recent bids
+        const bids = await storage.getBidsByChefId(req.user.id);
+        res.json(bids);
+      } else {
+        res.json([]);
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get recent bids" });
+    }
+  });
+
   app.post("/api/bids", authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
     try {
       // Only chefs can submit bids
