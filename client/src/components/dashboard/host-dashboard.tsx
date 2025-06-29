@@ -202,7 +202,7 @@ export function HostDashboard() {
                   <p className="font-medium text-gray-900">{bid.chef?.name || 'Chef'}</p>
                   <p className="text-sm text-gray-500">{bid.event?.title}</p>
                   <p className="text-sm text-gray-500">
-                    {new Date(bid.createdAt).toRelativeTimeString()}
+                    {new Date(bid.createdAt).toLocaleDateString()}
                   </p>
                 </div>
                 <div className="text-right">
