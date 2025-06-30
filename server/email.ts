@@ -252,4 +252,93 @@ ChefBounty - Connecting Hosts and Professional Chefs
       return false;
     }
   }
+
+  static async sendPasswordResetEmail(
+    email: string, 
+    name: string, 
+    resetToken: string,
+    baseUrl: string = 'http://localhost:5000'
+  ): Promise<boolean> {
+    if (!resend) {
+      console.warn('Resend API key not configured. Password reset email disabled.');
+      return true; // Return true for development to not block functionality
+    }
+    
+    try {
+      const resetUrl = `${baseUrl}/reset-password?token=${resetToken}`;
+      
+      const { data, error } = await resend.emails.send({
+        from: 'ChefBounty <noreply@chefbounty.com>',
+        to: [email],
+        subject: 'Reset your ChefBounty password',
+        html: `
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>Reset Your ChefBounty Password</title>
+            </head>
+            <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <div style="background: linear-gradient(135deg, #0a51be 0%, #1e3a8a 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+                <h1 style="color: white; margin: 0; font-size: 28px;">ChefBounty</h1>
+                <p style="color: #e2e8f0; margin: 10px 0 0 0;">Professional Chef Marketplace</p>
+              </div>
+              
+              <div style="background: #f8fafc; padding: 40px 30px; border-radius: 0 0 10px 10px; border: 1px solid #e2e8f0;">
+                <h2 style="color: #1e293b; margin: 0 0 20px 0;">Password Reset Request</h2>
+                
+                <p style="color: #475569; margin: 0 0 20px 0;">
+                  Hi ${name},
+                </p>
+                
+                <p style="color: #475569; margin: 0 0 20px 0;">
+                  We received a request to reset your password for your ChefBounty account. If you didn't make this request, you can safely ignore this email.
+                </p>
+                
+                <p style="color: #475569; margin: 0 0 30px 0;">
+                  To reset your password, click the button below. This link will expire in 24 hours for security reasons.
+                </p>
+                
+                <div style="text-align: center; margin: 30px 0;">
+                  <a href="${resetUrl}" style="background: #0a51be; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; display: inline-block;">
+                    Reset My Password
+                  </a>
+                </div>
+                
+                <p style="color: #64748b; font-size: 14px; margin: 20px 0 0 0;">
+                  If the button doesn't work, copy and paste this link into your browser:
+                </p>
+                <p style="color: #0a51be; font-size: 14px; word-break: break-all; margin: 5px 0 0 0;">
+                  ${resetUrl}
+                </p>
+                
+                <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;">
+                
+                <p style="color: #64748b; font-size: 14px; margin: 0;">
+                  This password reset link will expire in 24 hours. If you need help, contact our support team.
+                </p>
+                
+                <p style="color: #64748b; font-size: 14px; margin: 10px 0 0 0;">
+                  Best regards,<br>
+                  The ChefBounty Team
+                </p>
+              </div>
+            </body>
+          </html>
+        `,
+      });
+
+      if (error) {
+        console.error('Password reset email error:', error);
+        return false;
+      }
+
+      console.log('Password reset email sent successfully:', data?.id);
+      return true;
+    } catch (error) {
+      console.error('Failed to send password reset email:', error);
+      return false;
+    }
+  }
 }

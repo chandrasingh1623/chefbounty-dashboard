@@ -242,6 +242,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Forgot password route
+  app.post('/api/auth/forgot-password', async (req, res) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ message: 'Email is required' });
+      }
+
+      // Check if user exists
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        // Don't reveal if email exists or not for security
+        return res.json({ message: 'If an account with that email exists, a password reset link has been sent.' });
+      }
+
+      // Generate password reset token (reuse verification token logic)
+      const resetToken = EmailService.generateVerificationToken(user.id, email);
+      
+      // Update user with reset token
+      await storage.updateUser(user.id, { emailVerificationToken: resetToken });
+
+      // Send password reset email
+      const baseUrl = process.env.NODE_ENV === 'production' ? 
+        `https://${req.get('host')}` : 
+        `http://${req.get('host')}`;
+        
+      await EmailService.sendPasswordResetEmail(email, user.name, resetToken, baseUrl);
+
+      res.json({ message: 'If an account with that email exists, a password reset link has been sent.' });
+    } catch (error) {
+      console.error('Error sending password reset email:', error);
+      res.status(500).json({ message: 'Failed to send password reset email' });
+    }
+  });
+
   // User routes
   app.get("/api/user/profile", authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
     try {

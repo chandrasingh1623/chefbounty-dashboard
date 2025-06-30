@@ -28,8 +28,13 @@ const signupSchema = z.object({
   role: z.enum(["host", "chef"], { required_error: "Please select a role" }),
 });
 
+const forgotPasswordSchema = z.object({
+  email: z.string().email("Invalid email address"),
+});
+
 type LoginFormData = z.infer<typeof loginSchema>;
 type SignupFormData = z.infer<typeof signupSchema>;
+type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
 
 export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
@@ -37,6 +42,8 @@ export default function Login() {
   const [signupEmail, setSignupEmail] = useState("");
   const [needsVerification, setNeedsVerification] = useState(false);
   const [verificationEmail, setVerificationEmail] = useState("");
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotPasswordEmailSent, setForgotPasswordEmailSent] = useState(false);
   const { signIn, signUp } = useAuth();
   const { toast } = useToast();
   const [location, setLocation] = useLocation();
@@ -70,6 +77,13 @@ export default function Login() {
       password: "",
       name: "",
       role: undefined,
+    },
+  });
+
+  const forgotPasswordForm = useForm<ForgotPasswordFormData>({
+    resolver: zodResolver(forgotPasswordSchema),
+    defaultValues: {
+      email: "",
     },
   });
 
@@ -157,6 +171,35 @@ export default function Login() {
     }
   };
 
+  const onForgotPassword = async (data: ForgotPasswordFormData) => {
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: data.email }),
+      });
+
+      if (response.ok) {
+        setForgotPasswordEmailSent(true);
+        toast({
+          title: "Reset email sent!",
+          description: "Check your email for password reset instructions.",
+        });
+      } else {
+        throw new Error('Failed to send reset email');
+      }
+    } catch (error) {
+      toast({
+        title: "Failed to send reset email",
+        description: "Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
@@ -207,6 +250,78 @@ export default function Login() {
                 </Button>
               </div>
             </div>
+          ) : showForgotPassword ? (
+            forgotPasswordEmailSent ? (
+              <div className="text-center space-y-4">
+                <CheckCircle className="h-16 w-16 text-green-600 mx-auto" />
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    Reset Email Sent
+                  </h3>
+                  <p className="text-gray-600 mb-4">
+                    We've sent password reset instructions to your email address.
+                    Please check your inbox and follow the link to reset your password.
+                  </p>
+                  <Button 
+                    onClick={() => {
+                      setShowForgotPassword(false);
+                      setForgotPasswordEmailSent(false);
+                      forgotPasswordForm.reset();
+                    }}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    Back to Sign In
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="text-center">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    Reset Your Password
+                  </h3>
+                  <p className="text-gray-600 text-sm">
+                    Enter your email address and we'll send you a link to reset your password.
+                  </p>
+                </div>
+                <Form {...forgotPasswordForm}>
+                  <form onSubmit={forgotPasswordForm.handleSubmit(onForgotPassword)} className="space-y-4">
+                    <FormField
+                      control={forgotPasswordForm.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="email"
+                              placeholder="Enter your email"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <Button
+                      type="submit"
+                      className="w-full bg-primary text-white hover:bg-primary/90"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? "Sending..." : "Send Reset Email"}
+                    </Button>
+                  </form>
+                </Form>
+                <Button 
+                  onClick={() => setShowForgotPassword(false)}
+                  variant="ghost"
+                  className="w-full text-gray-500"
+                >
+                  Back to Sign In
+                </Button>
+              </div>
+            )
           ) : (
             <Tabs defaultValue="login" className="w-full">
               <TabsList className="grid w-full grid-cols-2">
@@ -258,6 +373,16 @@ export default function Login() {
                   >
                     {isLoading ? "Signing in..." : "Sign In"}
                   </Button>
+                  
+                  <div className="text-center">
+                    <button
+                      type="button"
+                      onClick={() => setShowForgotPassword(true)}
+                      className="text-sm text-primary hover:text-primary/80 underline"
+                    >
+                      Forgot your password?
+                    </button>
+                  </div>
                 </form>
               </Form>
             </TabsContent>
