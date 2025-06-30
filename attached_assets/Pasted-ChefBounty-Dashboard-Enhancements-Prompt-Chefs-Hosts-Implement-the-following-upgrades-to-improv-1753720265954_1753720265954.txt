@@ -1,0 +1,127 @@
+ChefBounty Dashboard Enhancements Prompt (Chefs & Hosts)
+
+Implement the following upgrades to improve the ChefBounty platform experience for both chefs and hosts.
+
+🧑‍🍳 Chef Dashboard Enhancements
+1. Welcome Banner for Chefs
+
+Display at the top of the dashboard when a chef logs in.
+
+Heading: Welcome back, Chef [FirstName]!
+
+Subtext/Slogan: "Let’s cook up some opportunities."
+
+2. Profile Progress Bar
+
+Add a progress bar that shows the completion status of the chef’s profile.
+
+Base progress on required sections like:
+
+Bio / About Me
+
+Culinary Specialties
+
+Portfolio
+
+Service Capabilities
+
+Include supporting text beneath the progress bar:
+
+“Finishing your profile helps boost your visibility and get more bookings.”
+Example: “Your profile is 70% complete. Finish it to start receiving invites!”
+
+3. Contact Chef Button Functionality
+
+On the Browse Chefs page and Chef Profile page:
+
+Add a Contact Chef button.
+
+Clicking it opens a message modal (popup).
+
+When the host sends a message:
+
+It saves in Messages → Sent for the host.
+
+It appears in Messages → Inbox for the chef.
+
+🧑‍💼 Host Dashboard Enhancements
+4. Welcome Banner for Hosts
+
+Show at the top of the host dashboard:
+
+Heading: Welcome back, [FirstName]!
+
+Subtext/Slogan: "Your next culinary experience is just a booking away."
+
+💸 Payments & Withdrawals
+5. $100 Minimum Withdrawal Limit
+
+In the Payments section:
+
+Prevent withdrawals below $100.
+
+Display an alert/tooltip:
+
+“Minimum withdrawal is $100.”
+
+6. Get Paid Faster Section
+
+Add a section in Payments titled: Get Paid Faster
+
+Let chefs link external payment methods via button or input:
+
+Zelle
+
+CashApp
+
+Venmo
+
+PayPal
+
+⚙️ Settings Page Improvements
+7. Phone Number Required
+
+Make phone number a required field in Settings for both chefs and hosts.
+
+Add validation and ensure data is saved.
+
+8. Remove Data Export Option
+
+Remove any “Export My Data” feature from both the UI and backend if it exists.
+
+9. SMS Notifications Default ON
+
+Set SMS notifications to enabled by default for all new and existing accounts.
+
+Still allow users to manually toggle off.
+
+10. Replace Chef Bid Settings with Event Notifications
+
+For chefs:
+
+Remove bid-related settings or toggles.
+
+Replace with a new toggle in Notifications:
+
+“Notify me about new events in my area”
+
+🔐 Authentication & Security
+11. Reset Password
+
+Add a Reset Password button to the Settings page.
+
+Clicking the button triggers a password reset email using Supabase or the current auth provider.
+
+Display a confirmation toast message:
+
+“Password reset link sent.”
+
+Implementation Notes:
+
+Use Tailwind CSS for styling.
+
+Make all components fully responsive.
+
+Ensure role-based welcome banners.
+
+All forms should have clear, helpful validations and UX-friendly messaging.

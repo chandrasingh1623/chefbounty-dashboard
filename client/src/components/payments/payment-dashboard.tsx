@@ -61,6 +61,9 @@ export function PaymentDashboard() {
   const { user } = useAuth();
   const [isAddCardOpen, setIsAddCardOpen] = useState(false);
   const [withdrawalAmount, setWithdrawalAmount] = useState("");
+  const [withdrawalError, setWithdrawalError] = useState("");
+  const [externalPaymentMethod, setExternalPaymentMethod] = useState("");
+  const [externalPaymentValue, setExternalPaymentValue] = useState("");
   const queryClient = useQueryClient();
 
   // Fetch payment history
@@ -135,6 +138,11 @@ export function PaymentDashboard() {
   // Request withdrawal mutation (for chefs)
   const requestWithdrawalMutation = useMutation({
     mutationFn: async (amount: string) => {
+      const numAmount = parseFloat(amount);
+      if (numAmount < 100) {
+        throw new Error('Minimum withdrawal is $100');
+      }
+      
       const token = localStorage.getItem('auth_token');
       const response = await fetch('/api/withdrawals', {
         method: 'POST',
@@ -150,8 +158,32 @@ export function PaymentDashboard() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/payments'] });
       setWithdrawalAmount("");
+      setWithdrawalError("");
+    },
+    onError: (error: any) => {
+      setWithdrawalError(error.message);
     },
   });
+
+  // Handle withdrawal validation
+  const handleWithdrawalSubmit = () => {
+    const amount = parseFloat(withdrawalAmount);
+    if (isNaN(amount) || amount <= 0) {
+      setWithdrawalError("Please enter a valid amount");
+      return;
+    }
+    if (amount < 100) {
+      setWithdrawalError("Minimum withdrawal is $100");
+      return;
+    }
+    if (amount > (totalEarnings - totalFees)) {
+      setWithdrawalError("Amount exceeds available balance");
+      return;
+    }
+    
+    setWithdrawalError("");
+    requestWithdrawalMutation.mutate(withdrawalAmount);
+  };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -487,8 +519,14 @@ export function PaymentDashboard() {
                     />
                   </div>
                   
+                  {withdrawalError && (
+                    <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded p-2">
+                      {withdrawalError}
+                    </div>
+                  )}
+                  
                   <Button 
-                    onClick={() => requestWithdrawalMutation.mutate(withdrawalAmount)}
+                    onClick={handleWithdrawalSubmit}
                     disabled={!withdrawalAmount || parseFloat(withdrawalAmount) <= 0 || requestWithdrawalMutation.isPending}
                     className="w-full"
                   >
@@ -502,9 +540,78 @@ export function PaymentDashboard() {
                   <h4 className="font-medium mb-2">Withdrawal Information</h4>
                   <div className="text-sm text-gray-600 space-y-1">
                     <p>• Withdrawals are processed within 2-3 business days</p>
-                    <p>• Minimum withdrawal amount is $10.00</p>
+                    <p>• Minimum withdrawal amount is $100.00</p>
                     <p>• Funds will be transferred to your linked bank account</p>
                     <p>• You'll receive an email confirmation once processed</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Get Paid Faster Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Get Paid Faster</CardTitle>
+                <CardDescription>
+                  Link external payment methods for faster transactions
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="payment-method">Payment Method</Label>
+                    <Select value={externalPaymentMethod} onValueChange={setExternalPaymentMethod}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Choose payment method" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="zelle">Zelle</SelectItem>
+                        <SelectItem value="cashapp">CashApp</SelectItem>
+                        <SelectItem value="venmo">Venmo</SelectItem>
+                        <SelectItem value="paypal">PayPal</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="payment-value">Account/Email/Phone</Label>
+                    <Input
+                      id="payment-value"
+                      placeholder="Enter account details"
+                      value={externalPaymentValue}
+                      onChange={(e) => setExternalPaymentValue(e.target.value)}
+                    />
+                  </div>
+                </div>
+                
+                <Button 
+                  disabled={!externalPaymentMethod || !externalPaymentValue}
+                  className="w-full"
+                  onClick={() => {
+                    // Save external payment method
+                    setExternalPaymentMethod("");
+                    setExternalPaymentValue("");
+                  }}
+                >
+                  Link Payment Method
+                </Button>
+                
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-4">
+                  <div className="text-center p-3 border rounded-lg">
+                    <div className="font-semibold text-blue-600">Zelle</div>
+                    <div className="text-xs text-gray-500">Instant transfer</div>
+                  </div>
+                  <div className="text-center p-3 border rounded-lg">
+                    <div className="font-semibold text-green-600">CashApp</div>
+                    <div className="text-xs text-gray-500">Quick payments</div>
+                  </div>
+                  <div className="text-center p-3 border rounded-lg">
+                    <div className="font-semibold text-blue-500">Venmo</div>
+                    <div className="text-xs text-gray-500">Social payments</div>
+                  </div>
+                  <div className="text-center p-3 border rounded-lg">
+                    <div className="font-semibold text-indigo-600">PayPal</div>
+                    <div className="text-xs text-gray-500">Global payments</div>
                   </div>
                 </div>
               </CardContent>

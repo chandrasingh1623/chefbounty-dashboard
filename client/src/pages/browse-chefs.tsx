@@ -10,10 +10,11 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Search, MapPin, DollarSign, Star, Filter, SlidersHorizontal, Award, Eye, X, User, Globe, Clock, Users, UtensilsCrossed } from "lucide-react";
+import { Search, MapPin, DollarSign, Star, Filter, SlidersHorizontal, Award, Eye, X, User, Globe, Clock, Users, UtensilsCrossed, MessageCircle } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
+import { ContactChefModal } from "@/components/dashboard/contact-chef-modal";
 
 interface Chef {
   id: number;
@@ -44,6 +45,8 @@ export default function BrowseChefs() {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [selectedChef, setSelectedChef] = useState<Chef | null>(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [contactChef, setContactChef] = useState<Chef | null>(null);
+  const [isContactModalOpen, setIsContactModalOpen] = useState(false);
 
   const cuisineTypes = [
     "Italian", "French", "Asian", "Mexican", "Mediterranean", 
@@ -393,7 +396,14 @@ export default function BrowseChefs() {
                   View Profile
                 </Button>
                 {user?.role !== 'chef' && (
-                  <Button className="flex-1 bg-primary hover:bg-primary/90">
+                  <Button 
+                    className="flex-1 bg-primary hover:bg-primary/90"
+                    onClick={() => {
+                      setContactChef(chef);
+                      setIsContactModalOpen(true);
+                    }}
+                  >
+                    <MessageCircle className="w-4 h-4 mr-2" />
                     Contact Chef
                   </Button>
                 )}
@@ -546,7 +556,14 @@ export default function BrowseChefs() {
                   {/* Contact Actions */}
                   <div className="space-y-3">
                     {user?.role !== 'chef' && (
-                      <Button className="w-full bg-primary hover:bg-primary/90">
+                      <Button 
+                        className="w-full bg-primary hover:bg-primary/90"
+                        onClick={() => {
+                          setContactChef(selectedChef);
+                          setIsContactModalOpen(true);
+                          setIsProfileModalOpen(false);
+                        }}
+                      >
                         <Users className="w-4 h-4 mr-2" />
                         Contact Chef
                       </Button>
@@ -561,6 +578,15 @@ export default function BrowseChefs() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Contact Chef Modal */}
+      {contactChef && (
+        <ContactChefModal
+          open={isContactModalOpen}
+          onOpenChange={setIsContactModalOpen}
+          chef={contactChef}
+        />
+      )}
     </DashboardLayout>
   );
 }

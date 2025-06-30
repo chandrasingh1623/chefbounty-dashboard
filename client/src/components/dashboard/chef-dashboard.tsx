@@ -16,6 +16,24 @@ export function ChefDashboard() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
 
+  // Calculate profile completion percentage
+  const calculateProfileCompletion = () => {
+    if (!user) return 0;
+    
+    let completedFields = 0;
+    const totalFields = 5;
+    
+    if (user.bio && user.bio.length > 10) completedFields++;
+    if (user.specialties && user.specialties.length > 0) completedFields++;
+    if (user.experience && user.experience.length > 0) completedFields++;
+    if (user.baseRate && user.baseRate > 0) completedFields++;
+    if (user.serviceArea && user.serviceArea.length > 0) completedFields++;
+    
+    return Math.round((completedFields / totalFields) * 100);
+  };
+
+  const profileCompletion = calculateProfileCompletion();
+
   const { data: myBids = [] } = useQuery({
     queryKey: ['/api/bids/chef', user?.id],
     enabled: !!user?.id,
@@ -89,6 +107,52 @@ export function ChefDashboard() {
 
   return (
     <div>
+      {/* Welcome Banner */}
+      <Card className="mb-8 bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <h1 className="text-2xl font-bold text-gray-900">
+                Welcome back, Chef {user?.name?.split(' ')[0] || 'Chef'}!
+              </h1>
+              <p className="text-gray-600 mt-1">
+                Let's cook up some opportunities.
+              </p>
+            </div>
+            <div className="hidden md:block">
+              <Star className="w-12 h-12 text-green-600" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Profile Progress Bar */}
+      <Card className="mb-8">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Profile Completion</h3>
+            <span className="text-sm font-medium text-gray-600">{profileCompletion}%</span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-3 mb-3">
+            <div 
+              className="bg-green-600 h-3 rounded-full transition-all duration-300" 
+              style={{ width: `${profileCompletion}%` }}
+            ></div>
+          </div>
+          <p className="text-sm text-gray-600">
+            {profileCompletion < 100 
+              ? `Your profile is ${profileCompletion}% complete. Finish it to start receiving invites!`
+              : "Your profile is complete! You're ready to receive bookings."
+            }
+          </p>
+          {profileCompletion < 100 && (
+            <Link href="/dashboard/profile">
+              <Button size="sm" className="mt-3">Complete Profile</Button>
+            </Link>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {stats.map((stat) => {

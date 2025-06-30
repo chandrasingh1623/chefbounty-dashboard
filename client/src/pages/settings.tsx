@@ -32,7 +32,7 @@ import {
 const accountSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
-  phone: z.string().optional(),
+  phone: z.string().min(10, "Phone number is required and must be at least 10 digits"),
 });
 
 const passwordSchema = z.object({
@@ -54,8 +54,9 @@ const notificationSchema = z.object({
   emailNewBids: z.boolean(),
   emailBookings: z.boolean(),
   emailMessages: z.boolean(),
-  smsAlerts: z.boolean(),
+  smsAlerts: z.boolean().default(true), // Default ON for SMS
   pushNotifications: z.boolean(),
+  newEventsInArea: z.boolean().default(true), // New: for chefs to get event notifications
 });
 
 type AccountFormData = z.infer<typeof accountSchema>;
@@ -104,8 +105,35 @@ export default function Settings() {
       emailNewBids: true,
       emailBookings: true,
       emailMessages: true,
-      smsAlerts: false,
+      smsAlerts: true, // Default ON for SMS
       pushNotifications: false,
+      newEventsInArea: true, // Default ON for chef event notifications
+    },
+  });
+
+  // Reset Password functionality
+  const resetPasswordMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: user?.email }),
+      });
+      if (!response.ok) throw new Error('Failed to send reset email');
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Password reset link sent",
+        description: "Check your email for the password reset link.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to send password reset email.",
+        variant: "destructive",
+      });
     },
   });
 
@@ -293,7 +321,7 @@ export default function Settings() {
                     name="phone"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Phone Number (Optional)</FormLabel>
+                        <FormLabel>Phone Number <span className="text-red-500">*</span></FormLabel>
                         <FormControl>
                           <Input placeholder="(555) 123-4567" {...field} />
                         </FormControl>
@@ -377,13 +405,24 @@ export default function Settings() {
                     />
                   </div>
 
-                  <Button
-                    type="submit"
-                    className="bg-[#0a51be] hover:bg-[#0a51be]/90"
-                    disabled={updatePasswordMutation.isPending}
-                  >
-                    {updatePasswordMutation.isPending ? "Updating..." : "Update Password"}
-                  </Button>
+                  <div className="flex gap-3">
+                    <Button
+                      type="submit"
+                      className="bg-[#0a51be] hover:bg-[#0a51be]/90"
+                      disabled={updatePasswordMutation.isPending}
+                    >
+                      {updatePasswordMutation.isPending ? "Updating..." : "Update Password"}
+                    </Button>
+                    
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => resetPasswordMutation.mutate()}
+                      disabled={resetPasswordMutation.isPending}
+                    >
+                      {resetPasswordMutation.isPending ? "Sending..." : "Reset Password"}
+                    </Button>
+                  </div>
                 </form>
               </Form>
             </div>
@@ -506,40 +545,7 @@ export default function Settings() {
                   </div>
                 </div>
 
-                {/* Data Export */}
-                <div>
-                  <h3 className="text-lg font-semibold mb-4">Data Export</h3>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between p-4 border rounded-lg">
-                      <div>
-                        <h4 className="font-medium">Request a copy of my data</h4>
-                        <p className="text-sm text-gray-500">Download all your data in a portable format</p>
-                      </div>
-                      <Button 
-                        variant="outline" 
-                        onClick={handleDataExport}
-                        className="border-[#0a51be] text-[#0a51be] hover:bg-[#0a51be]/5"
-                      >
-                        <Download className="w-4 h-4 mr-2" />
-                        Export Data
-                      </Button>
-                    </div>
 
-                    <div className="flex items-center justify-between p-4 border rounded-lg">
-                      <div>
-                        <h4 className="font-medium">Clear all saved sessions</h4>
-                        <p className="text-sm text-gray-500">Remove all stored session data and preferences</p>
-                      </div>
-                      <Button 
-                        variant="outline" 
-                        onClick={handleClearSessions}
-                      >
-                        <LogOut className="w-4 h-4 mr-2" />
-                        Clear Sessions
-                      </Button>
-                    </div>
-                  </div>
-                </div>
 
                 <Button
                   type="submit"
@@ -678,6 +684,31 @@ export default function Settings() {
                     )}
                   />
                 </div>
+
+                {/* Chef-specific Event Notifications */}
+                {user?.role === 'chef' && (
+                  <div>
+                    <h3 className="text-lg font-semibold mb-4">Event Notifications</h3>
+                    <FormField
+                      control={notificationForm.control}
+                      name="newEventsInArea"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center justify-between p-4 border rounded-lg">
+                          <div>
+                            <FormLabel className="text-base font-medium">Notify me about new events in my area</FormLabel>
+                            <p className="text-sm text-gray-500">Get notified when new culinary opportunities are posted near you</p>
+                          </div>
+                          <FormControl>
+                            <Switch 
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                )}
 
                 <Button
                   type="submit"

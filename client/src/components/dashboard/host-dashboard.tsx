@@ -104,6 +104,25 @@ export function HostDashboard() {
 
   return (
     <div>
+      {/* Welcome Banner */}
+      <Card className="mb-8 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">
+                Welcome back, {user?.name?.split(' ')[0] || 'Host'}!
+              </h1>
+              <p className="text-gray-600 mt-1">
+                Your next culinary experience is just a booking away.
+              </p>
+            </div>
+            <div className="hidden md:block">
+              <UtensilsCrossed className="w-12 h-12 text-blue-600" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {stats.map((stat) => {
