@@ -52,10 +52,7 @@ export function ContactChefModal({ open, onOpenChange, chef, eventId }: ContactC
         eventId: eventId || null,
       };
 
-      return await apiRequest('/api/messages', {
-        method: 'POST',
-        body: JSON.stringify(messageData),
-      });
+      return await apiRequest('POST', '/api/messages', messageData);
     },
     onSuccess: () => {
       toast({
