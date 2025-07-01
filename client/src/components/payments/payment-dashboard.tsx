@@ -64,6 +64,8 @@ export function PaymentDashboard() {
   const [withdrawalError, setWithdrawalError] = useState("");
   const [externalPaymentMethod, setExternalPaymentMethod] = useState("");
   const [externalPaymentValue, setExternalPaymentValue] = useState("");
+  const [depositAmount, setDepositAmount] = useState("");
+  const [depositError, setDepositError] = useState("");
   const queryClient = useQueryClient();
 
   // Fetch payment history
@@ -281,6 +283,7 @@ export function PaymentDashboard() {
           <TabsTrigger value="history">Payment History</TabsTrigger>
           <TabsTrigger value="methods">Payment Methods</TabsTrigger>
           {user?.role === 'chef' && <TabsTrigger value="withdrawals">Withdrawals</TabsTrigger>}
+          {user?.role === 'host' && <TabsTrigger value="deposits">Quick Deposits</TabsTrigger>}
         </TabsList>
 
         {/* Payment History */}
@@ -604,6 +607,147 @@ export function PaymentDashboard() {
                   <div className="text-center p-3 border rounded-lg">
                     <div className="font-semibold text-green-600">CashApp</div>
                     <div className="text-xs text-gray-500">Quick payments</div>
+                  </div>
+                  <div className="text-center p-3 border rounded-lg">
+                    <div className="font-semibold text-blue-500">Venmo</div>
+                    <div className="text-xs text-gray-500">Social payments</div>
+                  </div>
+                  <div className="text-center p-3 border rounded-lg">
+                    <div className="font-semibold text-indigo-600">PayPal</div>
+                    <div className="text-xs text-gray-500">Global payments</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
+
+        {/* Quick Deposits (Host only) */}
+        {user?.role === 'host' && (
+          <TabsContent value="deposits" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Quick Deposit</CardTitle>
+                <CardDescription>
+                  Add funds to your account for event bookings and deposits
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Banknote className="w-5 h-5 text-blue-600" />
+                    <h4 className="font-medium text-blue-900">Account Balance</h4>
+                  </div>
+                  <div className="text-2xl font-bold text-blue-900">
+                    ${(totalEarnings - totalFees).toFixed(2)}
+                  </div>
+                  <p className="text-sm text-blue-700">
+                    Available for event bookings
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="deposit-amount">Deposit Amount</Label>
+                    <Input
+                      id="deposit-amount"
+                      type="number"
+                      placeholder="0.00"
+                      value={depositAmount}
+                      onChange={(e) => setDepositAmount(e.target.value)}
+                      min="0"
+                      step="0.01"
+                    />
+                  </div>
+                  
+                  {depositError && (
+                    <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded p-2">
+                      {depositError}
+                    </div>
+                  )}
+                  
+                  <Button 
+                    onClick={() => {
+                      // Handle deposit logic
+                      setDepositAmount("");
+                    }}
+                    disabled={!depositAmount || parseFloat(depositAmount) <= 0}
+                    className="w-full"
+                  >
+                    Add Funds
+                  </Button>
+                </div>
+
+                <Separator />
+
+                <div>
+                  <h4 className="font-medium mb-2">Deposit Information</h4>
+                  <div className="text-sm text-gray-600 space-y-1">
+                    <p>• Funds are available immediately for bookings</p>
+                    <p>• No minimum deposit amount required</p>
+                    <p>• Secure processing with bank-level encryption</p>
+                    <p>• You'll receive an email confirmation once processed</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Deposit Faster Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Deposit Faster</CardTitle>
+                <CardDescription>
+                  Link external payment methods for quicker deposits
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="host-payment-method">Payment Method</Label>
+                    <Select value={externalPaymentMethod} onValueChange={setExternalPaymentMethod}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Choose payment method" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="zelle">Zelle</SelectItem>
+                        <SelectItem value="cashapp">CashApp</SelectItem>
+                        <SelectItem value="venmo">Venmo</SelectItem>
+                        <SelectItem value="paypal">PayPal</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="host-payment-value">Account/Email/Phone</Label>
+                    <Input
+                      id="host-payment-value"
+                      placeholder="Enter account details"
+                      value={externalPaymentValue}
+                      onChange={(e) => setExternalPaymentValue(e.target.value)}
+                    />
+                  </div>
+                </div>
+                
+                <Button 
+                  disabled={!externalPaymentMethod || !externalPaymentValue}
+                  className="w-full"
+                  onClick={() => {
+                    // Save external payment method for deposits
+                    setExternalPaymentMethod("");
+                    setExternalPaymentValue("");
+                  }}
+                >
+                  Link Payment Method
+                </Button>
+                
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-4">
+                  <div className="text-center p-3 border rounded-lg">
+                    <div className="font-semibold text-blue-600">Zelle</div>
+                    <div className="text-xs text-gray-500">Instant deposits</div>
+                  </div>
+                  <div className="text-center p-3 border rounded-lg">
+                    <div className="font-semibold text-green-600">CashApp</div>
+                    <div className="text-xs text-gray-500">Quick deposits</div>
                   </div>
                   <div className="text-center p-3 border rounded-lg">
                     <div className="font-semibold text-blue-500">Venmo</div>

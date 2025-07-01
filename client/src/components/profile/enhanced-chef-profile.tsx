@@ -242,8 +242,130 @@ export function EnhancedChefProfile() {
     );
   }
 
+  // Calculate profile completion percentage and missing fields
+  const calculateProfileCompletion = () => {
+    if (!profile) return { percentage: 0, missingFields: [], totalFields: 0 };
+    
+    const requiredFields = [
+      { key: 'name', label: 'Full Name', value: profile.name?.length > 0 },
+      { key: 'bio', label: 'Bio/About Me', value: profile.bio?.length > 10 },
+      { key: 'specialties', label: 'Cuisine Type', value: profile.specialties?.length > 0 },
+      { key: 'signatureDishes', label: 'Signature Dishes', value: profile.signatureDishes?.length > 0 },
+      { key: 'portfolioImages', label: 'Portfolio Photos', value: profile.portfolioImages?.length > 0 },
+      { key: 'hourlyRate', label: 'Rates', value: profile.hourlyRate > 0 },
+      { key: 'foodSafetyCertifications', label: 'Certifications', value: profile.foodSafetyCertifications?.length > 0 },
+      { key: 'location', label: 'Location', value: profile.location?.length > 0 },
+      { key: 'experience', label: 'Experience', value: profile.experience > 0 },
+      { key: 'languagesSpoken', label: 'Languages Spoken', value: profile.languagesSpoken?.length > 0 },
+    ];
+    
+    const completedFields = requiredFields.filter(field => field.value);
+    const missingFields = requiredFields.filter(field => !field.value);
+    const percentage = Math.round((completedFields.length / requiredFields.length) * 100);
+    
+    return {
+      percentage,
+      missingFields: missingFields.map(field => field.label),
+      totalFields: requiredFields.length,
+      completedCount: completedFields.length
+    };
+  };
+
+  const profileCompletion = calculateProfileCompletion();
+
   return (
     <div className="max-w-6xl mx-auto space-y-6">
+      {/* Profile Completion Section */}
+      {!isEditing && (
+        <Card className="border-blue-200 bg-blue-50/50">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg text-blue-900">Profile Completion</CardTitle>
+              <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                {profileCompletion.percentage}% Complete
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Progress Bar */}
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-blue-700">
+                  {profileCompletion.completedCount} of {profileCompletion.totalFields} fields completed
+                </span>
+                <span className="text-blue-600 font-medium">
+                  {profileCompletion.percentage}%
+                </span>
+              </div>
+              <div className="w-full bg-blue-100 rounded-full h-3">
+                <div 
+                  className="bg-blue-600 h-3 rounded-full transition-all duration-500 ease-out"
+                  style={{ width: `${profileCompletion.percentage}%` }}
+                ></div>
+              </div>
+            </div>
+
+            {/* Missing Fields Checklist */}
+            {profileCompletion.missingFields.length > 0 && (
+              <div className="space-y-3">
+                <h4 className="font-medium text-blue-900">Complete these fields to boost your visibility:</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {profileCompletion.missingFields.map((field, index) => (
+                    <div key={index} className="flex items-center space-x-2 text-sm">
+                      <div className="w-4 h-4 border-2 border-blue-300 rounded flex-shrink-0"></div>
+                      <span className="text-blue-700">{field}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Completed Fields */}
+            {profileCompletion.completedCount > 0 && (
+              <div className="space-y-3">
+                <h4 className="font-medium text-green-900">Completed sections:</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {[
+                    { key: 'name', label: 'Full Name', completed: profile?.name?.length > 0 },
+                    { key: 'bio', label: 'Bio/About Me', completed: profile?.bio?.length > 10 },
+                    { key: 'specialties', label: 'Cuisine Type', completed: profile?.specialties?.length > 0 },
+                    { key: 'signatureDishes', label: 'Signature Dishes', completed: profile?.signatureDishes?.length > 0 },
+                    { key: 'portfolioImages', label: 'Portfolio Photos', completed: profile?.portfolioImages?.length > 0 },
+                    { key: 'hourlyRate', label: 'Rates', completed: profile?.hourlyRate > 0 },
+                    { key: 'foodSafetyCertifications', label: 'Certifications', completed: profile?.foodSafetyCertifications?.length > 0 },
+                    { key: 'location', label: 'Location', completed: profile?.location?.length > 0 },
+                    { key: 'experience', label: 'Experience', completed: profile?.experience > 0 },
+                    { key: 'languagesSpoken', label: 'Languages Spoken', completed: profile?.languagesSpoken?.length > 0 },
+                  ].filter(field => field.completed).map((field, index) => (
+                    <div key={index} className="flex items-center space-x-2 text-sm">
+                      <div className="w-4 h-4 bg-green-500 rounded flex-shrink-0 flex items-center justify-center">
+                        <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                      <span className="text-green-700">{field.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="bg-blue-100 rounded-lg p-4 border border-blue-200">
+              <p className="text-sm text-blue-800">
+                <span className="font-medium">💡 Pro Tip:</span> Finishing your profile helps boost your visibility and increases your chances of getting booked.
+              </p>
+            </div>
+
+            {profileCompletion.missingFields.length > 0 && (
+              <Button onClick={() => setIsEditing(true)} className="w-full">
+                <Edit className="w-4 h-4 mr-2" />
+                Complete Your Profile
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       {/* Header with Actions */}
       <Card>
         <CardHeader>
