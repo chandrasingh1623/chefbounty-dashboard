@@ -103,6 +103,9 @@ export function EnhancedChefProfile() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  // Use shared profile completion hook at the top level (Rules of Hooks)
+  const { profileCompletion, isLoading: profileCompletionLoading } = useProfileCompletion();
   const [isEditing, setIsEditing] = useState(false);
   const [showLaunchModal, setShowLaunchModal] = useState(false);
   const [formData, setFormData] = useState<Partial<ChefProfile>>({});
@@ -232,7 +235,7 @@ export function EnhancedChefProfile() {
     reader.readAsDataURL(file);
   };
 
-  if (isLoading) {
+  if (isLoading || profileCompletionLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
@@ -242,10 +245,6 @@ export function EnhancedChefProfile() {
       </div>
     );
   }
-
-  // Use shared profile completion hook
-  const { profileCompletion: sharedProfileCompletion } = useProfileCompletion();
-  const profileCompletion = sharedProfileCompletion;
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
