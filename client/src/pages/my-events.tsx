@@ -9,12 +9,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { Plus, Search } from "lucide-react";
+import { EventDetailModal } from "@/components/dashboard/event-detail-modal";
 
 export default function MyEvents() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [selectedEvent, setSelectedEvent] = useState<any>(null);
+  const [isEventModalOpen, setIsEventModalOpen] = useState(false);
 
   const { data: events = [], isLoading } = useQuery({
     queryKey: ['/api/events/host', user?.id],
@@ -53,6 +56,15 @@ export default function MyEvents() {
 
   const handleViewBids = (eventId: number) => {
     setLocation(`/dashboard/bids?event=${eventId}`);
+  };
+
+  const handleViewFullListing = (eventId: number) => {
+    // Find the event and show it in a modal or navigate to detailed view
+    const event = events.find((e: any) => e.id === eventId);
+    if (event) {
+      setSelectedEvent(event);
+      setIsEventModalOpen(true);
+    }
   };
 
   if (isLoading) {
@@ -111,6 +123,7 @@ export default function MyEvents() {
                 event={event}
                 bidCount={getBidCount(event.id)}
                 onBid={() => handleViewBids(event.id)}
+                onViewDetails={() => handleViewFullListing(event.id)}
               />
             ))}
           </div>
@@ -142,6 +155,15 @@ export default function MyEvents() {
           </div>
         )}
       </div>
+
+      {/* Event Detail Modal */}
+      {selectedEvent && (
+        <EventDetailModal
+          event={selectedEvent}
+          isOpen={isEventModalOpen}
+          onClose={() => setIsEventModalOpen(false)}
+        />
+      )}
     </DashboardLayout>
   );
 }

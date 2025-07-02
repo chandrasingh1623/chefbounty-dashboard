@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
-import { Star, MapPin, DollarSign, Award, MessageCircle, Calendar, Clock, ChefHat } from "lucide-react";
+import { Star, MapPin, DollarSign, Award, MessageCircle, Calendar, Clock, ChefHat, Globe, Users, Utensils, Phone, Mail, Heart, TrendingUp } from "lucide-react";
 import { Link } from "wouter";
+import { DashboardLayout } from "@/components/dashboard/layout";
 
 interface Chef {
   id: number;
@@ -22,6 +23,21 @@ interface Chef {
   profilePhoto?: string;
   featured?: boolean;
   availableNow?: boolean;
+  languages?: string[];
+  signatureDishes?: string[];
+  certifications?: string[];
+  formalTraining?: string;
+  workHistory?: string;
+  dietaryAccommodations?: string[];
+  availableServices?: string[];
+  maxPartySize?: number;
+  bringsOwnEquipment?: boolean;
+  canProvideStaff?: boolean;
+  travelPreference?: string;
+  travelFees?: string;
+  portfolioPhotos?: string[];
+  rateUnit?: string;
+  customPackages?: string;
 }
 
 export function ChefProfile() {
@@ -31,7 +47,12 @@ export function ChefProfile() {
   const { data: chef, isLoading, error } = useQuery({
     queryKey: ['/api/chefs', chefId],
     queryFn: async () => {
-      const response = await fetch(`/api/chefs/${chefId}`);
+      const token = localStorage.getItem('chefbounty_token');
+      const response = await fetch(`/api/chefs/${chefId}`, {
+        headers: {
+          'Authorization': token ? `Bearer ${token}` : '',
+        },
+      });
       if (!response.ok) throw new Error('Failed to fetch chef');
       return response.json();
     },
@@ -40,36 +61,43 @@ export function ChefProfile() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <div className="animate-pulse">
-          <div className="h-32 bg-gray-200 rounded-lg mb-4"></div>
-          <div className="h-8 bg-gray-200 rounded mb-2"></div>
-          <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+      <DashboardLayout title="Chef Profile" subtitle="Loading chef information...">
+        <div className="space-y-6">
+          <div className="animate-pulse">
+            <div className="h-32 bg-gray-200 rounded-lg mb-4"></div>
+            <div className="h-8 bg-gray-200 rounded mb-2"></div>
+            <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+          </div>
         </div>
-      </div>
+      </DashboardLayout>
     );
   }
 
   if (error || !chef) {
     return (
-      <Card>
-        <CardContent className="text-center py-12">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Chef not found</h3>
-          <p className="text-gray-600 mb-4">
-            The chef profile you're looking for doesn't exist or has been removed.
-          </p>
-          <Link href="/dashboard/browse-chefs">
-            <Button variant="outline">Back to Browse Chefs</Button>
-          </Link>
-        </CardContent>
-      </Card>
+      <DashboardLayout title="Chef Profile" subtitle="Chef not found">
+        <Card>
+          <CardContent className="text-center py-12">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Chef not found</h3>
+            <p className="text-gray-600 mb-4">
+              The chef profile you're looking for doesn't exist or has been removed.
+            </p>
+            <Link href="/dashboard/browse-chefs">
+              <Button variant="outline">Back to Browse Chefs</Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </DashboardLayout>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    <DashboardLayout 
+      title={`${chef.name}'s Profile`} 
+      subtitle={`${chef.location ? chef.location + ' • ' : ''}${chef.specialties?.length ? chef.specialties.slice(0, 2).join(', ') : 'Professional Chef'}`}
+    >
+      <div className="space-y-6">
+        {/* Back Navigation */}
         <Link href="/dashboard/browse-chefs">
           <Button variant="ghost" className="mb-4">
             ← Back to Browse Chefs
@@ -300,6 +328,6 @@ export function ChefProfile() {
           </Card>
         </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }
