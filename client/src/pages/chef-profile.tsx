@@ -16,6 +16,8 @@ interface Chef {
   location?: string;
   bio?: string;
   specialties?: string[];
+  signatureDishes?: string[];
+  dietaryAccommodations?: string[];
   experience?: number;
   hourlyRate?: number;
   rating?: number;
@@ -23,21 +25,26 @@ interface Chef {
   profilePhoto?: string;
   featured?: boolean;
   availableNow?: boolean;
-  languages?: string[];
-  signatureDishes?: string[];
-  certifications?: string[];
+  languagesSpoken?: string[];
   formalTraining?: string;
+  foodSafetyCertifications?: string[];
   workHistory?: string;
-  dietaryAccommodations?: string[];
   availableServices?: string[];
   maxPartySize?: number;
   bringsOwnEquipment?: boolean;
+  equipmentList?: string[];
   canProvideStaff?: boolean;
-  travelPreference?: string;
+  willingToTravel?: boolean;
+  maxTravelDistance?: number;
+  customTravelAreas?: string[];
   travelFees?: string;
-  portfolioPhotos?: string[];
+  equipmentFees?: string;
+  portfolioImages?: string[];
   rateUnit?: string;
-  customPackages?: string;
+  customPackages?: string[];
+  lastMinuteBookings?: boolean;
+  clientTestimonials?: string[];
+  videoUrl?: string;
 }
 
 export function ChefProfile() {
@@ -235,17 +242,102 @@ export function ChefProfile() {
             </Card>
           )}
 
-          {/* Specialties */}
+          {/* Culinary Specialties */}
           {chef.specialties && chef.specialties.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle>Cuisine Specialties</CardTitle>
+                <CardTitle className="flex items-center">
+                  <ChefHat className="w-5 h-5 mr-2" />
+                  Culinary Specialties
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-2">
                   {chef.specialties.map((specialty) => (
-                    <Badge key={specialty} variant="secondary" className="text-sm">
+                    <Badge key={specialty} variant="secondary" className="px-3 py-1">
                       {specialty}
+                    </Badge>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Signature Dishes */}
+          {chef.signatureDishes && chef.signatureDishes.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Utensils className="w-5 h-5 mr-2" />
+                  Signature Dishes
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {chef.signatureDishes.map((dish, index) => (
+                    <div key={index} className="flex items-center space-x-2">
+                      <Heart className="w-4 h-4 text-red-500" />
+                      <span>{dish}</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Credentials & Background */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Award className="w-5 h-5 mr-2" />
+                Credentials & Background
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {chef.formalTraining && (
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-2">Formal Training</h4>
+                  <p className="text-gray-700">{chef.formalTraining}</p>
+                </div>
+              )}
+              
+              {chef.workHistory && (
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-2">Work Experience</h4>
+                  <p className="text-gray-700">{chef.workHistory}</p>
+                </div>
+              )}
+
+              {chef.foodSafetyCertifications && chef.foodSafetyCertifications.length > 0 && (
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-2">Food Safety Certifications</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {chef.foodSafetyCertifications.map((cert) => (
+                      <Badge key={cert} variant="outline" className="flex items-center">
+                        <Award className="w-3 h-3 mr-1" />
+                        {cert}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Dietary Accommodations */}
+          {chef.dietaryAccommodations && chef.dietaryAccommodations.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Heart className="w-5 h-5 mr-2" />
+                  Dietary Accommodations
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-2">
+                  {chef.dietaryAccommodations.map((accommodation) => (
+                    <Badge key={accommodation} variant="outline" className="text-xs">
+                      {accommodation}
                     </Badge>
                   ))}
                 </div>
@@ -273,26 +365,124 @@ export function ChefProfile() {
 
         {/* Sidebar */}
         <div className="space-y-6">
-          {/* Quick Stats */}
+          {/* Quick Info */}
           <Card>
             <CardHeader>
-              <CardTitle>Quick Stats</CardTitle>
+              <CardTitle>Quick Info</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Response time</span>
-                <span className="font-medium">Within 2 hours</span>
-              </div>
-              <Separator />
-              <div className="flex justify-between">
-                <span className="text-gray-600">Repeat hire rate</span>
-                <span className="font-medium">85%</span>
-              </div>
-              <Separator />
-              <div className="flex justify-between">
-                <span className="text-gray-600">On-time delivery</span>
-                <span className="font-medium">98%</span>
-              </div>
+              {chef.languagesSpoken && chef.languagesSpoken.length > 0 && (
+                <div>
+                  <div className="flex items-center mb-2">
+                    <Globe className="w-4 h-4 text-gray-500 mr-2" />
+                    <span className="font-medium">Languages</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {chef.languagesSpoken.map((lang) => (
+                      <Badge key={lang} variant="secondary" className="text-xs">
+                        {lang}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {chef.maxPartySize && (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <Users className="w-4 h-4 text-gray-500 mr-2" />
+                    <span className="font-medium">Max Party Size</span>
+                  </div>
+                  <span className="text-gray-700">{chef.maxPartySize} guests</span>
+                </div>
+              )}
+
+              {chef.bringsOwnEquipment !== undefined && (
+                <div className="flex items-center justify-between">
+                  <span className="font-medium">Brings Equipment</span>
+                  <Badge variant={chef.bringsOwnEquipment ? "default" : "secondary"}>
+                    {chef.bringsOwnEquipment ? "Yes" : "No"}
+                  </Badge>
+                </div>
+              )}
+
+              {chef.canProvideStaff !== undefined && (
+                <div className="flex items-center justify-between">
+                  <span className="font-medium">Provides Staff</span>
+                  <Badge variant={chef.canProvideStaff ? "default" : "secondary"}>
+                    {chef.canProvideStaff ? "Yes" : "No"}
+                  </Badge>
+                </div>
+              )}
+
+              {chef.lastMinuteBookings !== undefined && (
+                <div className="flex items-center justify-between">
+                  <span className="font-medium">Last Minute Bookings</span>
+                  <Badge variant={chef.lastMinuteBookings ? "default" : "secondary"}>
+                    {chef.lastMinuteBookings ? "Available" : "Not Available"}
+                  </Badge>
+                </div>
+              )}
+
+              {chef.willingToTravel !== undefined && (
+                <div>
+                  <div className="flex items-center mb-2">
+                    <MapPin className="w-4 h-4 text-gray-500 mr-2" />
+                    <span className="font-medium">Travel Preference</span>
+                  </div>
+                  <p className="text-sm text-gray-700">
+                    {chef.willingToTravel ? `Willing to travel` : "Local only"}
+                    {chef.maxTravelDistance && ` (up to ${chef.maxTravelDistance} miles)`}
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Services & Pricing */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Services & Pricing</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {chef.availableServices && chef.availableServices.length > 0 && (
+                <div>
+                  <span className="font-medium mb-2 block">Available Services</span>
+                  <div className="space-y-1">
+                    {chef.availableServices.map((service) => (
+                      <div key={service} className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-primary rounded-full"></div>
+                        <span className="text-sm">{service}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {chef.travelFees && (
+                <div>
+                  <span className="font-medium mb-2 block">Travel Fees</span>
+                  <p className="text-sm text-gray-700">{chef.travelFees}</p>
+                </div>
+              )}
+
+              {chef.equipmentFees && (
+                <div>
+                  <span className="font-medium mb-2 block">Equipment Fees</span>
+                  <p className="text-sm text-gray-700">{chef.equipmentFees}</p>
+                </div>
+              )}
+
+              {chef.customPackages && chef.customPackages.length > 0 && (
+                <div>
+                  <span className="font-medium mb-2 block">Custom Packages</span>
+                  <div className="space-y-1">
+                    {chef.customPackages.map((pkg, index) => (
+                      <p key={index} className="text-sm text-gray-700">{pkg}</p>
+                    ))}
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
