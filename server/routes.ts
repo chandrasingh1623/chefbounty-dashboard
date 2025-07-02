@@ -615,8 +615,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/conversations", authenticateToken, async (req, res) => {
     try {
       const userId = req.user!.id;
-      const conversations = await storage.getConversationsForUser(userId);
-      res.json(conversations);
+      const { type } = req.query;
+      
+      if (type === 'sent') {
+        // Get conversations where user is the sender
+        const conversations = await storage.getSentConversationsForUser(userId);
+        res.json(conversations);
+      } else {
+        // Get regular conversations (inbox)
+        const conversations = await storage.getConversationsForUser(userId);
+        res.json(conversations);
+      }
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch conversations" });
     }

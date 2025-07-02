@@ -286,6 +286,67 @@ export class DatabaseStorage implements IStorage {
       );
   }
 
+  async getSentConversationsForUser(userId: number): Promise<any[]> {
+    // Get all messages where user is the sender
+    const sentMessages = await db.select({
+      id: messages.id,
+      senderId: messages.senderId,
+      receiverId: messages.receiverId,
+      content: messages.content,
+      isRead: messages.isRead,
+      createdAt: messages.createdAt,
+      receiverName: alias(users, 'receiver').name,
+      receiverRole: alias(users, 'receiver').role,
+      receiverPhoto: alias(users, 'receiver').profilePhoto,
+    })
+    .from(messages)
+    .leftJoin(alias(users, 'receiver'), eq(messages.receiverId, alias(users, 'receiver').id))
+    .where(eq(messages.senderId, userId))
+    .orderBy(desc(messages.createdAt));
+
+    // Group messages by receiver
+    const conversationMap = new Map<number, any>();
+    
+    for (const message of sentMessages) {
+      const receiverId = message.receiverId;
+      
+      if (!conversationMap.has(receiverId)) {
+        conversationMap.set(receiverId, {
+          participantId: receiverId,
+          participant: {
+            id: receiverId,
+            name: message.receiverName,
+            profilePhoto: message.receiverPhoto,
+            role: message.receiverRole,
+          },
+          lastMessage: {
+            id: message.id,
+            content: message.content,
+            createdAt: message.createdAt,
+            isRead: message.isRead,
+            senderId: message.senderId,
+          },
+          unreadCount: 0, // Sent messages don't have unread count for sender
+          eventId: null,
+        });
+      } else {
+        // Update with latest message if this one is newer
+        const existing = conversationMap.get(receiverId);
+        if (new Date(message.createdAt) > new Date(existing.lastMessage.createdAt)) {
+          existing.lastMessage = {
+            id: message.id,
+            content: message.content,
+            createdAt: message.createdAt,
+            isRead: message.isRead,
+            senderId: message.senderId,
+          };
+        }
+      }
+    }
+    
+    return Array.from(conversationMap.values());
+  }
+
   async toggleMessageStar(id: number): Promise<Message | undefined> {
     const message = await db.select().from(messages).where(eq(messages.id, id)).limit(1);
     if (message[0]) {

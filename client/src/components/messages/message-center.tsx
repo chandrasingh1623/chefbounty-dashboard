@@ -70,21 +70,32 @@ export function MessageCenter() {
   const [newMessage, setNewMessage] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [activeFilter, setActiveFilter] = useState<'all' | 'unread'>('all');
+  const [activeTab, setActiveTab] = useState<'inbox' | 'sent'>('inbox');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
 
   // Fetch conversations
   const { data: conversations = [] } = useQuery({
-    queryKey: ['/api/conversations', activeFilter, searchTerm],
+    queryKey: ['/api/conversations', activeFilter, searchTerm, activeTab],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (activeFilter !== 'all') params.append('filter', activeFilter);
       if (searchTerm) params.append('search', searchTerm);
+      if (activeTab === 'sent') params.append('type', 'sent');
       
-      const token = localStorage.getItem('auth_token');
+      const token = localStorage.getItem('chefbounty_token');
+      
+      // Debug token issue
+      if (!token) {
+        console.error('No authentication token found in localStorage');
+        throw new Error('Authentication required');
+      }
+      console.log('Using token for conversations:', token.substring(0, 20) + '...');
+      
       const response = await fetch(`/api/conversations?${params.toString()}`, {
         headers: {
-          'Authorization': token ? `Bearer ${token}` : '',
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
         },
       });
       if (!response.ok) throw new Error('Failed to fetch conversations');
@@ -99,7 +110,7 @@ export function MessageCenter() {
     queryFn: async () => {
       if (!selectedConversation) return [];
       
-      const token = localStorage.getItem('auth_token');
+      const token = localStorage.getItem('chefbounty_token');
       const response = await fetch(`/api/messages/${selectedConversation}`, {
         headers: {
           'Authorization': token ? `Bearer ${token}` : '',
@@ -216,6 +227,14 @@ export function MessageCenter() {
               <MoreHorizontal className="w-4 h-4" />
             </Button>
           </div>
+          
+          {/* Inbox/Sent Tabs */}
+          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'inbox' | 'sent')} className="mb-3">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="inbox">Inbox</TabsTrigger>
+              <TabsTrigger value="sent">Sent</TabsTrigger>
+            </TabsList>
+          </Tabs>
           
           {/* Search */}
           <div className="relative">
