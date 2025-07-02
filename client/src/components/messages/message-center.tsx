@@ -115,7 +115,7 @@ export function MessageCenter() {
   // Send message mutation
   const sendMessageMutation = useMutation({
     mutationFn: async (data: { receiverId: number; content: string; eventId?: number }) => {
-      const token = localStorage.getItem('auth_token');
+      const token = localStorage.getItem('chefbounty_token');
       const response = await fetch('/api/messages', {
         method: 'POST',
         headers: {
@@ -137,7 +137,7 @@ export function MessageCenter() {
   // Mark messages as read mutation
   const markAsReadMutation = useMutation({
     mutationFn: async (conversationId: number) => {
-      const token = localStorage.getItem('auth_token');
+      const token = localStorage.getItem('chefbounty_token');
       const response = await fetch(`/api/messages/mark-read/${conversationId}`, {
         method: 'PUT',
         headers: {
@@ -155,7 +155,7 @@ export function MessageCenter() {
   // Star/unstar message mutation
   const toggleStarMutation = useMutation({
     mutationFn: async (messageId: number) => {
-      const token = localStorage.getItem('auth_token');
+      const token = localStorage.getItem('chefbounty_token');
       const response = await fetch(`/api/messages/${messageId}/star`, {
         method: 'PUT',
         headers: {

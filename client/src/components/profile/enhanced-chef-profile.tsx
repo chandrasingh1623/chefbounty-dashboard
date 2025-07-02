@@ -41,6 +41,7 @@ import {
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { useProfileCompletion } from "@/hooks/use-profile-completion";
 
 interface ChefProfile {
   id: number;
@@ -242,36 +243,9 @@ export function EnhancedChefProfile() {
     );
   }
 
-  // Calculate profile completion percentage and missing fields
-  const calculateProfileCompletion = () => {
-    if (!profile) return { percentage: 0, missingFields: [], totalFields: 0 };
-    
-    const requiredFields = [
-      { key: 'name', label: 'Full Name', value: profile.name?.length > 0 },
-      { key: 'bio', label: 'Bio/About Me', value: profile.bio?.length > 10 },
-      { key: 'specialties', label: 'Cuisine Type', value: profile.specialties?.length > 0 },
-      { key: 'signatureDishes', label: 'Signature Dishes', value: profile.signatureDishes?.length > 0 },
-      { key: 'portfolioImages', label: 'Portfolio Photos', value: profile.portfolioImages?.length > 0 },
-      { key: 'hourlyRate', label: 'Rates', value: profile.hourlyRate > 0 },
-      { key: 'foodSafetyCertifications', label: 'Certifications', value: profile.foodSafetyCertifications?.length > 0 },
-      { key: 'location', label: 'Location', value: profile.location?.length > 0 },
-      { key: 'experience', label: 'Experience', value: profile.experience > 0 },
-      { key: 'languagesSpoken', label: 'Languages Spoken', value: profile.languagesSpoken?.length > 0 },
-    ];
-    
-    const completedFields = requiredFields.filter(field => field.value);
-    const missingFields = requiredFields.filter(field => !field.value);
-    const percentage = Math.round((completedFields.length / requiredFields.length) * 100);
-    
-    return {
-      percentage,
-      missingFields: missingFields.map(field => field.label),
-      totalFields: requiredFields.length,
-      completedCount: completedFields.length
-    };
-  };
-
-  const profileCompletion = calculateProfileCompletion();
+  // Use shared profile completion hook
+  const { profileCompletion: sharedProfileCompletion } = useProfileCompletion();
+  const profileCompletion = sharedProfileCompletion;
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">

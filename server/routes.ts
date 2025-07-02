@@ -548,10 +548,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Message routes
+  // Get all messages for current user
+  app.get("/api/messages", authenticateToken, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const messages = await storage.getMessagesForUser(userId);
+      res.json(messages);
+    } catch (error) {
+      console.error("Failed to fetch messages:", error);
+      res.status(500).json({ message: "Failed to get messages" });
+    }
+  });
+
   app.get("/api/messages/:userId", authenticateToken, async (req, res) => {
     try {
       const messages = await storage.getMessagesBetweenUsers(
-        req.user.id,
+        req.user!.id,
         parseInt(req.params.userId)
       );
       res.json(messages);

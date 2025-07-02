@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 import { authService } from "@/lib/supabase";
+import { useProfileCompletion } from "@/hooks/use-profile-completion";
 import { 
   Hand, 
   CheckCircle, 
@@ -15,24 +16,7 @@ import { Link, useLocation } from "wouter";
 export function ChefDashboard() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
-
-  // Calculate profile completion percentage
-  const calculateProfileCompletion = () => {
-    if (!user) return 0;
-    
-    let completedFields = 0;
-    const totalFields = 5;
-    
-    if (user.bio && user.bio.length > 10) completedFields++;
-    if (user.specialties && user.specialties.length > 0) completedFields++;
-    if (user.experience && user.experience.length > 0) completedFields++;
-    if (user.baseRate && user.baseRate > 0) completedFields++;
-    if (user.serviceArea && user.serviceArea.length > 0) completedFields++;
-    
-    return Math.round((completedFields / totalFields) * 100);
-  };
-
-  const profileCompletion = calculateProfileCompletion();
+  const { profileCompletion, isLoading: profileLoading } = useProfileCompletion();
 
   const { data: myBids = [] } = useQuery({
     queryKey: ['/api/bids/chef', user?.id],
@@ -131,24 +115,30 @@ export function ChefDashboard() {
         <CardContent className="p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900">Profile Completion</h3>
-            <span className="text-sm font-medium text-gray-600">{profileCompletion}%</span>
+            <span className="text-sm font-medium text-gray-600">{profileCompletion.percentage}%</span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-3 mb-3">
             <div 
               className="bg-green-600 h-3 rounded-full transition-all duration-300" 
-              style={{ width: `${profileCompletion}%` }}
+              style={{ width: `${profileCompletion.percentage}%` }}
             ></div>
           </div>
           <p className="text-sm text-gray-600">
-            {profileCompletion < 100 
-              ? `Your profile is ${profileCompletion}% complete. Finish it to start receiving invites!`
+            {profileCompletion.percentage < 100 
+              ? `Your profile is ${profileCompletion.percentage}% complete. Finish it to start receiving invites!`
               : "Your profile is complete! You're ready to receive bookings."
             }
           </p>
-          {profileCompletion < 100 && (
+          {profileCompletion.percentage < 100 && (
             <Link href="/dashboard/profile">
               <Button size="sm" className="mt-3">Complete Profile</Button>
             </Link>
+          )}
+          {profileCompletion.missingFields.length > 0 && (
+            <div className="mt-3 text-xs text-gray-500">
+              Missing: {profileCompletion.missingFields.slice(0, 3).join(', ')}
+              {profileCompletion.missingFields.length > 3 && ` +${profileCompletion.missingFields.length - 3} more`}
+            </div>
           )}
         </CardContent>
       </Card>

@@ -174,15 +174,32 @@ export class DatabaseStorage implements IStorage {
     return result[0];
   }
 
-  async getMessagesBetweenUsers(userId1: number, userId2: number): Promise<Message[]> {
+  async getMessagesForUser(userId: number): Promise<Message[]> {
     return await db.select().from(messages)
       .where(
-        and(
-          eq(messages.senderId, userId1),
-          eq(messages.receiverId, userId2)
+        or(
+          eq(messages.senderId, userId),
+          eq(messages.receiverId, userId)
         )
       )
       .orderBy(desc(messages.createdAt));
+  }
+
+  async getMessagesBetweenUsers(userId1: number, userId2: number): Promise<Message[]> {
+    return await db.select().from(messages)
+      .where(
+        or(
+          and(
+            eq(messages.senderId, userId1),
+            eq(messages.receiverId, userId2)
+          ),
+          and(
+            eq(messages.senderId, userId2),
+            eq(messages.receiverId, userId1)
+          )
+        )
+      )
+      .orderBy(messages.createdAt); // Change to ascending for chat order
   }
 
   async createMessage(message: InsertMessage): Promise<Message> {
@@ -196,9 +213,66 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getConversationsForUser(userId: number): Promise<any[]> {
-    // This would need a more complex query in production
-    // For now, return a simplified structure
-    return [];
+    // Get unique conversations by finding users who have exchanged messages with the current user
+    const userMessages = await db.select({
+      id: messages.id,
+      senderId: messages.senderId,
+      receiverId: messages.receiverId,
+      content: messages.content,
+      isRead: messages.isRead,
+      createdAt: messages.createdAt,
+      eventId: messages.eventId
+    })
+    .from(messages)
+    .where(
+      or(
+        eq(messages.senderId, userId),
+        eq(messages.receiverId, userId)
+      )
+    )
+    .orderBy(desc(messages.createdAt));
+
+    // Group messages by conversation partner
+    const conversationMap = new Map();
+    
+    for (const message of userMessages) {
+      const partnerId = message.senderId === userId ? message.receiverId : message.senderId;
+      
+      if (!conversationMap.has(partnerId)) {
+        // Get partner info
+        const partner = await this.getUser(partnerId);
+        if (partner) {
+          conversationMap.set(partnerId, {
+            participantId: partnerId,
+            participant: {
+              id: partner.id,
+              name: partner.name,
+              profilePhoto: partner.profilePhoto,
+              role: partner.role,
+            },
+            lastMessage: {
+              id: message.id,
+              content: message.content,
+              createdAt: message.createdAt,
+              isRead: message.isRead,
+              senderId: message.senderId,
+            },
+            unreadCount: 0,
+            eventId: message.eventId
+          });
+        }
+      }
+      
+      // Count unread messages from this partner
+      if (message.receiverId === userId && !message.isRead) {
+        const conversation = conversationMap.get(partnerId);
+        if (conversation) {
+          conversation.unreadCount++;
+        }
+      }
+    }
+
+    return Array.from(conversationMap.values());
   }
 
   async markConversationAsRead(userId: number, otherUserId: number): Promise<void> {
