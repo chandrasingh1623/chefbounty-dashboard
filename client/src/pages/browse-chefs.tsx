@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Search, MapPin, DollarSign, Star, Filter, SlidersHorizontal, Award, Eye, X, User, Globe, Clock, Users, UtensilsCrossed, MessageCircle } from "lucide-react";
+import { Search, MapPin, DollarSign, Star, Filter, SlidersHorizontal, Award, Eye, X, User, Globe, Clock, Users, UtensilsCrossed, MessageCircle, Utensils, Heart, ChefHat } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -23,6 +23,8 @@ interface Chef {
   location?: string;
   bio?: string;
   specialties?: string[];
+  signatureDishes?: string[];
+  dietaryAccommodations?: string[];
   experience?: number;
   hourlyRate?: number;
   rating?: number;
@@ -30,6 +32,26 @@ interface Chef {
   profilePhoto?: string;
   featured?: boolean;
   availableNow?: boolean;
+  languagesSpoken?: string[];
+  formalTraining?: string;
+  foodSafetyCertifications?: string[];
+  workHistory?: string;
+  availableServices?: string[];
+  maxPartySize?: number;
+  bringsOwnEquipment?: boolean;
+  equipmentList?: string[];
+  canProvideStaff?: boolean;
+  willingToTravel?: boolean;
+  maxTravelDistance?: number;
+  customTravelAreas?: string[];
+  travelFees?: string;
+  equipmentFees?: string;
+  portfolioImages?: string[];
+  rateUnit?: string;
+  customPackages?: string[];
+  lastMinuteBookings?: boolean;
+  clientTestimonials?: string[];
+  videoUrl?: string;
 }
 
 import { DashboardLayout } from "@/components/dashboard/layout";
@@ -467,17 +489,89 @@ export default function BrowseChefs() {
                     </div>
                   )}
 
-                  {/* Specialties */}
+                  {/* Culinary Specialties */}
                   {selectedChef.specialties && selectedChef.specialties.length > 0 && (
                     <div className="space-y-3">
                       <h3 className="text-lg font-semibold flex items-center">
                         <UtensilsCrossed className="w-5 h-5 mr-2" />
-                        Cuisine Specialties
+                        Culinary Specialties
                       </h3>
                       <div className="flex flex-wrap gap-2">
                         {selectedChef.specialties.map((specialty) => (
                           <Badge key={specialty} variant="secondary" className="px-3 py-1">
                             {specialty}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Signature Dishes */}
+                  {selectedChef.signatureDishes && selectedChef.signatureDishes.length > 0 && (
+                    <div className="space-y-3">
+                      <h3 className="text-lg font-semibold flex items-center">
+                        <UtensilsCrossed className="w-5 h-5 mr-2 text-red-500" />
+                        Signature Dishes
+                      </h3>
+                      <div className="space-y-2">
+                        {selectedChef.signatureDishes.map((dish, index) => (
+                          <div key={index} className="flex items-center space-x-2">
+                            <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                            <span className="text-gray-700">{dish}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Credentials & Background */}
+                  <div className="space-y-3">
+                    <h3 className="text-lg font-semibold flex items-center">
+                      <Award className="w-5 h-5 mr-2" />
+                      Credentials & Background
+                    </h3>
+                    <div className="space-y-4">
+                      {selectedChef.formalTraining && (
+                        <div>
+                          <h4 className="font-medium text-gray-900 mb-2">Formal Training</h4>
+                          <p className="text-gray-700">{selectedChef.formalTraining}</p>
+                        </div>
+                      )}
+                      
+                      {selectedChef.workHistory && (
+                        <div>
+                          <h4 className="font-medium text-gray-900 mb-2">Work Experience</h4>
+                          <p className="text-gray-700">{selectedChef.workHistory}</p>
+                        </div>
+                      )}
+
+                      {selectedChef.foodSafetyCertifications && selectedChef.foodSafetyCertifications.length > 0 && (
+                        <div>
+                          <h4 className="font-medium text-gray-900 mb-2">Food Safety Certifications</h4>
+                          <div className="flex flex-wrap gap-2">
+                            {selectedChef.foodSafetyCertifications.map((cert) => (
+                              <Badge key={cert} variant="outline" className="flex items-center">
+                                <Award className="w-3 h-3 mr-1" />
+                                {cert}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Dietary Accommodations */}
+                  {selectedChef.dietaryAccommodations && selectedChef.dietaryAccommodations.length > 0 && (
+                    <div className="space-y-3">
+                      <h3 className="text-lg font-semibold flex items-center">
+                        <Globe className="w-5 h-5 mr-2 text-green-500" />
+                        Dietary Accommodations
+                      </h3>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedChef.dietaryAccommodations.map((accommodation) => (
+                          <Badge key={accommodation} variant="outline" className="text-xs">
+                            {accommodation}
                           </Badge>
                         ))}
                       </div>
@@ -530,13 +624,13 @@ export default function BrowseChefs() {
                     </Card>
                   )}
 
-                  {/* Availability */}
+                  {/* Service Details */}
                   <Card className="p-4">
                     <h3 className="font-semibold mb-3 flex items-center">
-                      <Globe className="w-5 h-5 mr-2" />
-                      Availability
+                      <ChefHat className="w-5 h-5 mr-2" />
+                      Service Info
                     </h3>
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       {selectedChef.availableNow ? (
                         <Badge variant="outline" className="text-green-600 border-green-600">
                           Available Now
@@ -544,11 +638,60 @@ export default function BrowseChefs() {
                       ) : (
                         <Badge variant="secondary">Contact for Availability</Badge>
                       )}
+                      
                       {selectedChef.featured && (
-                        <Badge variant="default" className="bg-[#0a51be] block w-fit mt-2">
+                        <Badge variant="default" className="bg-[#0a51be] block w-fit">
                           <Award className="w-3 h-3 mr-1" />
                           Featured Chef
                         </Badge>
+                      )}
+
+                      {selectedChef.languagesSpoken && selectedChef.languagesSpoken.length > 0 && (
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-700 mb-1">Languages</h4>
+                          <div className="flex flex-wrap gap-1">
+                            {selectedChef.languagesSpoken.map((lang) => (
+                              <Badge key={lang} variant="secondary" className="text-xs">
+                                {lang}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {selectedChef.maxPartySize && (
+                        <div className="text-sm">
+                          <span className="font-medium">Max Party Size:</span>
+                          <span className="ml-2">{selectedChef.maxPartySize} guests</span>
+                        </div>
+                      )}
+
+                      {selectedChef.bringsOwnEquipment !== undefined && (
+                        <div className="text-sm">
+                          <span className="font-medium">Brings Equipment:</span>
+                          <Badge variant={selectedChef.bringsOwnEquipment ? "outline" : "secondary"} className="ml-2 text-xs">
+                            {selectedChef.bringsOwnEquipment ? "Yes" : "No"}
+                          </Badge>
+                        </div>
+                      )}
+
+                      {selectedChef.canProvideStaff !== undefined && (
+                        <div className="text-sm">
+                          <span className="font-medium">Provides Staff:</span>
+                          <Badge variant={selectedChef.canProvideStaff ? "outline" : "secondary"} className="ml-2 text-xs">
+                            {selectedChef.canProvideStaff ? "Yes" : "No"}
+                          </Badge>
+                        </div>
+                      )}
+
+                      {selectedChef.willingToTravel !== undefined && (
+                        <div className="text-sm">
+                          <span className="font-medium">Travel:</span>
+                          <span className="ml-2 text-gray-600">
+                            {selectedChef.willingToTravel ? "Available" : "Local only"}
+                            {selectedChef.maxTravelDistance && ` (${selectedChef.maxTravelDistance}mi)`}
+                          </span>
+                        </div>
                       )}
                     </div>
                   </Card>
