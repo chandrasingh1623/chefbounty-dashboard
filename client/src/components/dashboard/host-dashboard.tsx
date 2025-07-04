@@ -11,12 +11,57 @@ import {
   CheckCircle, 
   DollarSign,
   UtensilsCrossed,
-  Cake
+  Cake,
+  Eye,
+  MessageCircle
 } from "lucide-react";
 import { Link } from "wouter";
+import { getChefPrivacyInfo, shouldShowContactInfo } from "@/lib/chef-privacy";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 
 export function HostDashboard() {
   const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  
+  const updateBidMutation = useMutation({
+    mutationFn: async ({ bidId, status }: { bidId: number; status: string }) => {
+      const response = await fetch(`/api/bids/${bidId}/status`, {
+        method: 'PUT',
+        headers: authService.getAuthHeaders(),
+        body: JSON.stringify({ status }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update bid status');
+      }
+
+      return response.json();
+    },
+    onSuccess: (_, { status }) => {
+      toast({
+        title: `Bid ${status}`,
+        description: `The bid has been ${status} successfully.`,
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/bids'] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Failed to update bid",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleAcceptBid = (bidId: number) => {
+    updateBidMutation.mutate({ bidId, status: 'accepted' });
+  };
+
+  const handleRejectBid = (bidId: number) => {
+    updateBidMutation.mutate({ bidId, status: 'rejected' });
+  };
 
   const { data: events = [] } = useQuery({
     queryKey: ['/api/events/host', user?.id],
@@ -74,33 +119,7 @@ export function HostDashboard() {
     },
   ];
 
-  const handleAcceptBid = async (bidId: number) => {
-    try {
-      await fetch(`/api/bids/${bidId}/status`, {
-        method: 'PUT',
-        headers: authService.getAuthHeaders(),
-        body: JSON.stringify({ status: 'accepted' }),
-      });
-      // Refresh bids data
-      // queryClient.invalidateQueries({ queryKey: ['/api/bids/recent'] });
-    } catch (error) {
-      console.error('Failed to accept bid:', error);
-    }
-  };
 
-  const handleRejectBid = async (bidId: number) => {
-    try {
-      await fetch(`/api/bids/${bidId}/status`, {
-        method: 'PUT',
-        headers: authService.getAuthHeaders(),
-        body: JSON.stringify({ status: 'rejected' }),
-      });
-      // Refresh bids data
-      // queryClient.invalidateQueries({ queryKey: ['/api/bids/recent'] });
-    } catch (error) {
-      console.error('Failed to reject bid:', error);
-    }
-  };
 
   return (
     <div>
@@ -211,44 +230,78 @@ export function HostDashboard() {
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            {recentBids.slice(0, 3).map((bid: any) => (
-              <div key={bid.id} className="flex items-center space-x-4">
-                <Avatar className="w-12 h-12">
-                  <AvatarImage src={bid.chef?.profilePhoto} />
-                  <AvatarFallback>{bid.chef?.name?.charAt(0) || 'C'}</AvatarFallback>
-                </Avatar>
-                <div className="flex-1">
-                  <p className="font-medium text-gray-900">{bid.chef?.name || 'Chef'}</p>
-                  <p className="text-sm text-gray-500">{bid.event?.title}</p>
-                  <p className="text-sm text-gray-500">
-                    {new Date(bid.createdAt).toLocaleDateString()}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="font-medium text-gray-900">${bid.amount}</p>
-                  {bid.status === 'pending' && (
-                    <div className="flex space-x-2 mt-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="text-xs bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
-                        onClick={() => handleAcceptBid(bid.id)}
-                      >
-                        Accept
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="text-xs bg-red-50 text-red-700 border-red-200 hover:bg-red-100"
-                        onClick={() => handleRejectBid(bid.id)}
-                      >
-                        Reject
-                      </Button>
+            {recentBids.slice(0, 3).map((bid: any) => {
+              const chefPrivacy = getChefPrivacyInfo(bid.status, user?.role || '', bid.chef?.name || '');
+              const canShowContactInfo = shouldShowContactInfo(bid.status, user?.role || '');
+              
+              return (
+                <div key={bid.id} className="flex items-center space-x-4">
+                  <Avatar className="w-12 h-12">
+                    <AvatarImage src={bid.chef?.profilePhoto} />
+                    <AvatarFallback>{bid.chef?.name?.charAt(0) || 'C'}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-2">
+                      <p className="font-medium text-gray-900">
+                        {chefPrivacy.maskedName || 'Chef'}
+                      </p>
+                      {!chefPrivacy.showFullInfo && (
+                        <Badge variant="secondary" className="text-xs">
+                          <Eye className="w-3 h-3 mr-1" />
+                          Masked
+                        </Badge>
+                      )}
                     </div>
-                  )}
+                    {chefPrivacy.privacyMessage && (
+                      <p className="text-xs text-gray-500 italic">
+                        {chefPrivacy.privacyMessage}
+                      </p>
+                    )}
+                    <p className="text-sm text-gray-500">{bid.event?.title}</p>
+                    <p className="text-sm text-gray-500">
+                      {new Date(bid.createdAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-medium text-gray-900">${bid.amount}</p>
+                    {bid.status === 'pending' && (
+                      <div className="flex space-x-2 mt-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-xs bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
+                          onClick={() => handleAcceptBid(bid.id)}
+                          disabled={updateBidMutation.isPending}
+                        >
+                          Accept
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-xs bg-red-50 text-red-700 border-red-200 hover:bg-red-100"
+                          onClick={() => handleRejectBid(bid.id)}
+                          disabled={updateBidMutation.isPending}
+                        >
+                          Reject
+                        </Button>
+                      </div>
+                    )}
+                    {canShowContactInfo && bid.status === 'accepted' && (
+                      <Button
+                        size="sm"
+                        className="bg-primary hover:bg-primary/90 mt-2"
+                        onClick={() => {
+                          window.location.href = `/dashboard/messages?chef=${bid.chef?.id}`;
+                        }}
+                      >
+                        <MessageCircle className="w-3 h-3 mr-1" />
+                        Contact
+                      </Button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
             {recentBids.length === 0 && (
               <div className="text-center py-8">
                 <p className="text-gray-500">No bids yet. Your events will receive bids from interested chefs.</p>

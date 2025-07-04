@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useState } from "react";
 import { Search, Users, DollarSign, Clock, CheckCircle } from "lucide-react";
+import { getChefPrivacyInfo } from "@/lib/chef-privacy";
 
 export default function Bids() {
   const { user } = useAuth();
@@ -44,8 +45,15 @@ export default function Bids() {
   });
 
   const filteredBids = allBids.filter((bid: any) => {
-    const matchesSearch = bid.chef?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         bid.message.toLowerCase().includes(searchTerm.toLowerCase());
+    // For search, use actual chef name for hosts (they can search by masked name too)
+    // But only show masked results unless bid is accepted
+    const chefPrivacy = getChefPrivacyInfo(bid.status, user?.role || '', bid.chef?.name || '');
+    
+    const matchesSearch = 
+      bid.chef?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      chefPrivacy.maskedName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      bid.message.toLowerCase().includes(searchTerm.toLowerCase());
+    
     const matchesStatus = statusFilter === "all" || bid.status === statusFilter;
     const matchesEvent = eventFilter === "all" || bid.eventId.toString() === eventFilter;
     return matchesSearch && matchesStatus && matchesEvent;

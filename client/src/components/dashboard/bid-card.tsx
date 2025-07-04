@@ -5,6 +5,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { authService } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/lib/auth";
+import { getChefPrivacyInfo, shouldShowContactInfo } from "@/lib/chef-privacy";
+import { MessageCircle, Eye } from "lucide-react";
 
 interface BidCardProps {
   bid: {
@@ -18,6 +21,7 @@ interface BidCardProps {
       name: string;
       profilePhoto?: string;
       rating?: string;
+      email?: string;
     };
     event?: {
       id: number;
@@ -30,6 +34,16 @@ interface BidCardProps {
 export function BidCard({ bid, showActions = false }: BidCardProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+  
+  // Get chef privacy information based on bid status and user role
+  const chefPrivacy = getChefPrivacyInfo(
+    bid.status, 
+    user?.role || '', 
+    bid.chef?.name || ''
+  );
+  
+  const canShowContactInfo = shouldShowContactInfo(bid.status, user?.role || '');
 
   const updateBidMutation = useMutation({
     mutationFn: async ({ bidId, status }: { bidId: number; status: string }) => {
@@ -92,7 +106,24 @@ export function BidCard({ bid, showActions = false }: BidCardProps) {
           <div className="flex-1">
             <div className="flex items-start justify-between">
               <div>
-                <p className="font-medium text-gray-900">{bid.chef?.name || 'Unknown Chef'}</p>
+                <div className="flex items-center space-x-2">
+                  <p className="font-medium text-gray-900">
+                    {chefPrivacy.maskedName || 'Unknown Chef'}
+                  </p>
+                  {!chefPrivacy.showFullInfo && (
+                    <Badge variant="secondary" className="text-xs">
+                      <Eye className="w-3 h-3 mr-1" />
+                      Masked
+                    </Badge>
+                  )}
+                </div>
+                
+                {chefPrivacy.privacyMessage && (
+                  <p className="text-xs text-gray-500 italic mt-1">
+                    {chefPrivacy.privacyMessage}
+                  </p>
+                )}
+                
                 {bid.event && (
                   <p className="text-sm text-gray-500">{bid.event.title}</p>
                 )}
@@ -117,26 +148,44 @@ export function BidCard({ bid, showActions = false }: BidCardProps) {
             
             <p className="text-sm text-gray-700 mt-2 line-clamp-2">{bid.message}</p>
             
-            {showActions && bid.status === 'pending' && (
+            {showActions && (
               <div className="flex space-x-2 mt-3">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
-                  onClick={handleAccept}
-                  disabled={updateBidMutation.isPending}
-                >
-                  Accept
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="bg-red-50 text-red-700 border-red-200 hover:bg-red-100"
-                  onClick={handleReject}
-                  disabled={updateBidMutation.isPending}
-                >
-                  Reject
-                </Button>
+                {bid.status === 'pending' && (
+                  <>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
+                      onClick={handleAccept}
+                      disabled={updateBidMutation.isPending}
+                    >
+                      Accept
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="bg-red-50 text-red-700 border-red-200 hover:bg-red-100"
+                      onClick={handleReject}
+                      disabled={updateBidMutation.isPending}
+                    >
+                      Decline
+                    </Button>
+                  </>
+                )}
+                
+                {canShowContactInfo && bid.status === 'accepted' && (
+                  <Button
+                    size="sm"
+                    className="bg-primary hover:bg-primary/90"
+                    onClick={() => {
+                      // Navigate to messages or open contact modal
+                      window.location.href = `/dashboard/messages?chef=${bid.chef?.id}`;
+                    }}
+                  >
+                    <MessageCircle className="w-4 h-4 mr-2" />
+                    Contact Chef
+                  </Button>
+                )}
               </div>
             )}
           </div>
