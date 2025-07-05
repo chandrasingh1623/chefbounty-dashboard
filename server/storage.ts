@@ -134,16 +134,8 @@ export class DatabaseStorage implements IStorage {
     return result[0];
   }
 
-  async getBidsByEventId(eventId: number): Promise<Bid[]> {
-    return await db.select().from(bids).where(eq(bids.eventId, eventId)).orderBy(desc(bids.createdAt));
-  }
-
-  async getBidsByChefId(chefId: number): Promise<Bid[]> {
-    return await db.select().from(bids).where(eq(bids.chefId, chefId)).orderBy(desc(bids.createdAt));
-  }
-
-  async getBidsByHostId(hostId: number): Promise<Bid[]> {
-    // Get all bids for events owned by this host
+  async getBidsByEventId(eventId: number): Promise<any[]> {
+    // Include chef information for bids on specific events
     return await db.select({
       id: bids.id,
       eventId: bids.eventId,
@@ -152,9 +144,49 @@ export class DatabaseStorage implements IStorage {
       message: bids.message,
       status: bids.status,
       createdAt: bids.createdAt,
+      chef: {
+        id: users.id,
+        name: users.name,
+        profilePhoto: users.profilePhoto,
+        rating: users.rating,
+        email: users.email,
+      }
+    })
+    .from(bids)
+    .innerJoin(users, eq(bids.chefId, users.id))
+    .where(eq(bids.eventId, eventId))
+    .orderBy(desc(bids.createdAt));
+  }
+
+  async getBidsByChefId(chefId: number): Promise<Bid[]> {
+    return await db.select().from(bids).where(eq(bids.chefId, chefId)).orderBy(desc(bids.createdAt));
+  }
+
+  async getBidsByHostId(hostId: number): Promise<any[]> {
+    // Get all bids for events owned by this host with chef and event information
+    return await db.select({
+      id: bids.id,
+      eventId: bids.eventId,
+      chefId: bids.chefId,
+      amount: bids.amount,
+      message: bids.message,
+      status: bids.status,
+      createdAt: bids.createdAt,
+      chef: {
+        id: users.id,
+        name: users.name,
+        profilePhoto: users.profilePhoto,
+        rating: users.rating,
+        email: users.email,
+      },
+      event: {
+        id: events.id,
+        title: events.title,
+      }
     })
     .from(bids)
     .innerJoin(events, eq(bids.eventId, events.id))
+    .innerJoin(users, eq(bids.chefId, users.id))
     .where(eq(events.hostId, hostId))
     .orderBy(desc(bids.createdAt));
   }
