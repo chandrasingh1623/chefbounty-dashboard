@@ -7,7 +7,7 @@ import { authService } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth";
 import { getChefPrivacyInfo, shouldShowContactInfo } from "@/lib/chef-privacy";
-import { MessageCircle, Eye } from "lucide-react";
+import { MessageCircle, Eye, Award, MapPin, Users, ChefHat } from "lucide-react";
 
 interface BidCardProps {
   bid: {
@@ -22,6 +22,14 @@ interface BidCardProps {
       profilePhoto?: string;
       rating?: string;
       email?: string;
+      specialties?: string[];
+      experience?: number;
+      maxTravelDistance?: number;
+      foodSafetyCertifications?: string[];
+      formalTraining?: string;
+      workHistory?: string;
+      availableServices?: string[];
+      maxPartySize?: number;
     };
     event?: {
       id: number;
@@ -147,6 +155,86 @@ export function BidCard({ bid, showActions = false }: BidCardProps) {
             </div>
             
             <p className="text-sm text-gray-700 mt-2 line-clamp-2">{bid.message}</p>
+            
+            {/* Chef Qualifications Section */}
+            <div className="mt-4 space-y-3">
+              {/* Cuisine Specialization Tags */}
+              {bid.chef?.specialties && bid.chef.specialties.length > 0 && (
+                <div>
+                  <div className="flex flex-wrap gap-1">
+                    {bid.chef.specialties.slice(0, 4).map((specialty, index) => (
+                      <Badge key={index} variant="secondary" className="rounded-full bg-gray-100 text-gray-700 text-xs px-2 py-1">
+                        {specialty}
+                      </Badge>
+                    ))}
+                    {bid.chef.specialties.length > 4 && (
+                      <Badge variant="secondary" className="rounded-full bg-gray-100 text-gray-700 text-xs px-2 py-1">
+                        +{bid.chef.specialties.length - 4} more
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              )}
+              
+              {/* Experience Summary */}
+              {bid.chef?.experience && (
+                <div className="flex items-start space-x-2">
+                  <ChefHat className="w-4 h-4 text-gray-500 mt-0.5" />
+                  <p className="text-sm text-gray-600">
+                    {bid.chef.experience}+ years of culinary experience
+                  </p>
+                </div>
+              )}
+              
+              {/* Travel Radius */}
+              {bid.chef?.maxTravelDistance && (
+                <div className="flex items-start space-x-2">
+                  <MapPin className="w-4 h-4 text-gray-500 mt-0.5" />
+                  <p className="text-sm text-gray-600">
+                    Available within {bid.chef.maxTravelDistance} miles
+                  </p>
+                </div>
+              )}
+              
+              {/* Service Capacity */}
+              {bid.chef?.maxPartySize && (
+                <div className="flex items-start space-x-2">
+                  <Users className="w-4 h-4 text-gray-500 mt-0.5" />
+                  <p className="text-sm text-gray-600">
+                    Can serve up to {bid.chef.maxPartySize} guests
+                  </p>
+                </div>
+              )}
+              
+              {/* Certifications */}
+              {bid.chef?.foodSafetyCertifications && bid.chef.foodSafetyCertifications.length > 0 && (
+                <div>
+                  <div className="flex items-start space-x-2 mb-1">
+                    <Award className="w-4 h-4 text-gray-500 mt-0.5" />
+                    <p className="text-sm text-gray-600 font-medium">Certifications:</p>
+                  </div>
+                  <div className="flex flex-wrap gap-1 ml-6">
+                    {bid.chef.foodSafetyCertifications.map((cert, index) => (
+                      <Badge key={index} variant="outline" className="text-xs px-2 py-1 bg-blue-50 text-blue-700 border-blue-200">
+                        {cert}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Formal Training */}
+              {bid.chef?.formalTraining && (
+                <div>
+                  <div className="flex items-start space-x-2">
+                    <Award className="w-4 h-4 text-gray-500 mt-0.5" />
+                    <p className="text-sm text-gray-600">
+                      <span className="font-medium">Training:</span> {bid.chef.formalTraining}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
             
             {showActions && (
               <div className="flex space-x-2 mt-3">

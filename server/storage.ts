@@ -135,7 +135,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getBidsByEventId(eventId: number): Promise<any[]> {
-    // Include chef information for bids on specific events
+    // Include chef qualifications for bids on specific events
     return await db.select({
       id: bids.id,
       eventId: bids.eventId,
@@ -150,6 +150,15 @@ export class DatabaseStorage implements IStorage {
         profilePhoto: users.profilePhoto,
         rating: users.rating,
         email: users.email,
+        // Qualification fields for enhanced bid display
+        specialties: users.specialties,
+        experience: users.experience,
+        maxTravelDistance: users.maxTravelDistance,
+        foodSafetyCertifications: users.foodSafetyCertifications,
+        formalTraining: users.formalTraining,
+        workHistory: users.workHistory,
+        availableServices: users.availableServices,
+        maxPartySize: users.maxPartySize,
       }
     })
     .from(bids)
@@ -163,7 +172,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getBidsByHostId(hostId: number): Promise<any[]> {
-    // Get all bids for events owned by this host with chef and event information
+    // Get all bids for events owned by this host with chef qualifications and event information
     return await db.select({
       id: bids.id,
       eventId: bids.eventId,
@@ -178,6 +187,15 @@ export class DatabaseStorage implements IStorage {
         profilePhoto: users.profilePhoto,
         rating: users.rating,
         email: users.email,
+        // Qualification fields for enhanced bid display
+        specialties: users.specialties,
+        experience: users.experience,
+        maxTravelDistance: users.maxTravelDistance,
+        foodSafetyCertifications: users.foodSafetyCertifications,
+        formalTraining: users.formalTraining,
+        workHistory: users.workHistory,
+        availableServices: users.availableServices,
+        maxPartySize: users.maxPartySize,
       },
       event: {
         id: events.id,
