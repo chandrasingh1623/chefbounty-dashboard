@@ -61,7 +61,9 @@ export function getChefPrivacyInfo(
     showFullInfo: !shouldMask,
     privacyMessage: shouldMask 
       ? "Full profile details are shared after accepting a bid."
-      : ""
+      : (bidStatus === 'accepted' && userRole === 'host') 
+        ? "All communication must take place within ChefBounty. Contact information is securely managed through in-app messaging."
+        : ""
   };
 }
 

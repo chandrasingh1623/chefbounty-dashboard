@@ -21,7 +21,7 @@ import {
   type PaymentMethod,
   type InsertPaymentMethod
 } from "@shared/schema";
-import { eq, desc, and, between, or } from "drizzle-orm";
+import { eq, desc, and, between, or, not } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
 
@@ -46,9 +46,11 @@ export interface IStorage {
   // Bid operations
   getBidsByEventId(eventId: number): Promise<Bid[]>;
   getBidsByChefId(chefId: number): Promise<Bid[]>;
+  getBidsByHostId(hostId: number): Promise<any[]>;
   getBidById(id: number): Promise<Bid | undefined>;
   createBid(bid: InsertBid): Promise<Bid>;
   updateBidStatus(id: number, status: string): Promise<Bid | undefined>;
+  rejectOtherBidsForEvent(eventId: number, acceptedBidId: number): Promise<void>;
 
   // Message operations
   getMessagesBetweenUsers(userId1: number, userId2: number): Promise<Message[]>;
@@ -221,6 +223,24 @@ export class DatabaseStorage implements IStorage {
 
   async updateBidStatus(id: number, status: string): Promise<Bid | undefined> {
     const result = await db.update(bids).set({ status }).where(eq(bids.id, id)).returning();
+    return result[0];
+  }
+
+  async rejectOtherBidsForEvent(eventId: number, acceptedBidId: number): Promise<void> {
+    // Reject all other pending bids for this event
+    await db.update(bids)
+      .set({ status: 'rejected' })
+      .where(
+        and(
+          eq(bids.eventId, eventId),
+          eq(bids.status, 'pending'),
+          not(eq(bids.id, acceptedBidId))
+        )
+      );
+  }
+
+  async getEventById(id: number): Promise<Event | undefined> {
+    const result = await db.select().from(events).where(eq(events.id, id)).limit(1);
     return result[0];
   }
 

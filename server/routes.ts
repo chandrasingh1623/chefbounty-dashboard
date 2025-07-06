@@ -431,15 +431,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/bids/:id/status", authenticateToken, async (req, res) => {
+  app.put("/api/bids/:id/status", authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
     try {
       const { status } = req.body;
-      const bid = await storage.updateBidStatus(parseInt(req.params.id), status);
+      const bidId = parseInt(req.params.id);
+      
+      // Get the full bid with chef and event info for messaging
+      const fullBid = await storage.getBidById(bidId);
+      if (!fullBid) {
+        return res.status(404).json({ message: "Bid not found" });
+      }
+
+      // Update bid status
+      const bid = await storage.updateBidStatus(bidId, status);
       if (!bid) {
         return res.status(404).json({ message: "Bid not found" });
       }
+
+      // If bid is accepted, handle post-acceptance flow
+      if (status === 'accepted') {
+        // Get chef and host info
+        const chef = await storage.getUser(bid.chefId);
+        const host = await storage.getUser(req.user.id);
+        const event = await storage.getEventById(bid.eventId);
+
+        if (chef && host && event) {
+          // Update event status to "in_progress"
+          await storage.updateEvent(event.id, { status: 'in_progress' });
+
+          // Create automated messages
+          const systemMessage = {
+            senderId: 1, // System user ID (using ID 1 instead of 0)
+          };
+
+          // Message to chef
+          await storage.createMessage({
+            ...systemMessage,
+            receiverId: chef.id,
+            eventId: event.id,
+            content: `Congratulations! Your bid for "${event.title}" was accepted. You can now coordinate directly with the host via ChefBounty messages.`,
+          });
+
+          // Message to host
+          await storage.createMessage({
+            ...systemMessage,
+            receiverId: host.id,
+            eventId: event.id,
+            content: `You've accepted Chef ${chef.name}'s bid. Start planning your event by messaging the chef directly through ChefBounty.`,
+          });
+
+          // Reject all other pending bids for this event
+          await storage.rejectOtherBidsForEvent(event.id, bidId);
+        }
+      }
+
       res.json(bid);
     } catch (error) {
+      console.error('Update bid status error:', error);
       res.status(500).json({ message: "Failed to update bid status" });
     }
   });

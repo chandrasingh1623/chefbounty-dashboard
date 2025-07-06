@@ -8,6 +8,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth";
 import { getChefPrivacyInfo, shouldShowContactInfo } from "@/lib/chef-privacy";
 import { MessageCircle, Eye, Award, MapPin, Users, ChefHat } from "lucide-react";
+import { BidAcceptanceModal } from "./bid-acceptance-modal";
+import { useState } from "react";
 
 interface BidCardProps {
   bid: {
@@ -43,6 +45,7 @@ export function BidCard({ bid, showActions = false }: BidCardProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const [showAcceptanceModal, setShowAcceptanceModal] = useState(false);
   
   // Get chef privacy information based on bid status and user role
   const chefPrivacy = getChefPrivacyInfo(
@@ -68,11 +71,16 @@ export function BidCard({ bid, showActions = false }: BidCardProps) {
       return response.json();
     },
     onSuccess: (_, { status }) => {
-      toast({
-        title: `Bid ${status}`,
-        description: `The bid has been ${status} successfully.`,
-      });
+      if (status === 'accepted') {
+        setShowAcceptanceModal(true);
+      } else {
+        toast({
+          title: `Bid ${status}`,
+          description: `The bid has been ${status} successfully.`,
+        });
+      }
       queryClient.invalidateQueries({ queryKey: ['/api/bids'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/events'] });
     },
     onError: (error) => {
       toast({
@@ -103,13 +111,14 @@ export function BidCard({ bid, showActions = false }: BidCardProps) {
   };
 
   return (
-    <Card>
-      <CardContent className="p-4">
-        <div className="flex items-start space-x-4">
-          <Avatar className="w-12 h-12">
-            <AvatarImage src={bid.chef?.profilePhoto} />
-            <AvatarFallback>{bid.chef?.name?.charAt(0) || 'C'}</AvatarFallback>
-          </Avatar>
+    <>
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex items-start space-x-4">
+            <Avatar className="w-12 h-12">
+              <AvatarImage src={bid.chef?.profilePhoto} />
+              <AvatarFallback>{bid.chef?.name?.charAt(0) || 'C'}</AvatarFallback>
+            </Avatar>
           
           <div className="flex-1">
             <div className="flex items-start justify-between">
@@ -280,5 +289,20 @@ export function BidCard({ bid, showActions = false }: BidCardProps) {
         </div>
       </CardContent>
     </Card>
+
+    <BidAcceptanceModal
+      isOpen={showAcceptanceModal}
+      onClose={() => setShowAcceptanceModal(false)}
+      bid={bid}
+      onMessageChef={() => {
+        setShowAcceptanceModal(false);
+        window.location.href = `/dashboard/messages?chef=${bid.chef?.id}`;
+      }}
+      onViewEvent={() => {
+        setShowAcceptanceModal(false);
+        window.location.href = `/dashboard/my-events?event=${bid.event?.id}`;
+      }}
+    />
+    </>
   );
 }

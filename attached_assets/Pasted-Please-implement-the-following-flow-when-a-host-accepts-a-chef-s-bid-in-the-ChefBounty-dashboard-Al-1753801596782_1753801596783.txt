@@ -1,0 +1,90 @@
+Please implement the following flow when a host accepts a chef’s bid in the ChefBounty dashboard. All communication must remain within the platform—no external contact info is shown.
+
+✅ 1. Confirmation Modal on Bid Acceptance
+When a host clicks “Accept” on a chef’s bid:
+
+Display a modal:
+
+Title: “Bid Accepted”
+
+Message:
+
+You've accepted Chef [masked name]’s bid. You can now message the chef directly within ChefBounty to finalize details.
+
+Buttons:
+[Message Chef Now] → opens the in-app chat thread
+[View Event Details] → navigates to event summary
+
+🔓 2. Unmask Minimal Chef Info (Still No Contact Info)
+Once the bid is accepted:
+
+Reveal chef’s first and last name fully
+
+Show full profile picture
+
+Do not display:
+
+Phone number
+
+Email
+
+Any off-platform contact info
+
+Instead:
+
+Show a banner:
+
+All communication must take place within ChefBounty. Contact information is securely managed through in-app messaging.
+
+📥 3. Automated In-App Messages
+Send system-generated messages to both parties:
+
+To Chef (from system):
+
+Congratulations! Your bid for “[Event Title]” was accepted. You can now coordinate directly with the host via ChefBounty messages.
+
+To Host (from system):
+
+ You’ve accepted Chef [Name]’s bid. Start planning your event by messaging the chef directly through ChefBounty.
+
+📅 4. Event & Bid Status Update
+Change bid status to: Accepted
+
+Change event status to: In Progress
+
+Grey-out rejected bids
+
+Mark accepted bid with “Accepted” badge
+
+🧾 5. Shared Summary View (In-App Only)
+Enable a shared view (or modal) with:
+
+Event details
+
+Agreed bid price
+
+Notes/messaging thread
+
+Timeline or checklist of next steps
+
+No personal contact fields shown at any time.
+
+🔔 6. Dashboard Banner Notifications
+Chef:
+
+ “You've been hired! Start chatting with the host to coordinate.”
+
+Host:
+
+“Chef confirmed. Use the in-app messages to finalize event details.”
+
+⚙️ Implementation Notes
+All components must follow Tailwind CSS conventions.
+
+Ensure role-based permissions control who sees what.
+
+Reuse chat/message components across both roles.
+
+No contact information is stored in or rendered to the UI.
+
+Let me know if you’d like a mobile-optimized version or want a separate “Event Collaboration Hub” for hosts and chefs after acceptance.
