@@ -270,12 +270,11 @@ export function BidCard({ bid, showActions = false }: BidCardProps) {
                   </>
                 )}
                 
-                {canShowContactInfo && bid.status === 'accepted' && (
+                {bid.status === 'accepted' && (
                   <Button
                     size="sm"
                     className="bg-primary hover:bg-primary/90"
                     onClick={() => {
-                      // Navigate to messages or open contact modal
                       window.location.href = `/dashboard/messages?chef=${bid.chef?.id}`;
                     }}
                   >

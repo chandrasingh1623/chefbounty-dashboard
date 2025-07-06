@@ -74,6 +74,19 @@ export function MessageCenter() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
 
+  // Handle URL parameters for direct chef messaging
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const chefIdParam = urlParams.get('chef');
+    
+    if (chefIdParam) {
+      const chefId = parseInt(chefIdParam);
+      setSelectedConversation(chefId);
+      // Clear the URL parameter after setting the conversation
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
+
   // Fetch conversations
   const { data: conversations = [] } = useQuery({
     queryKey: ['/api/conversations', activeFilter, searchTerm, activeTab],
