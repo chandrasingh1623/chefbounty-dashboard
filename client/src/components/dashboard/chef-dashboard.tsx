@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 import { authService } from "@/lib/supabase";
 import { useProfileCompletion } from "@/hooks/use-profile-completion";
+import { JobDetailsModal } from "./job-details-modal";
 import { 
   Hand, 
   CheckCircle, 
@@ -12,11 +13,13 @@ import {
   DollarSign 
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
+import { useState } from "react";
 
 export function ChefDashboard() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
   const { profileCompletion, isLoading: profileLoading } = useProfileCompletion();
+  const [selectedJobDetails, setSelectedJobDetails] = useState<any>(null);
 
   const { data: myBids = [] } = useQuery({
     queryKey: ['/api/bids/chef', user?.id],
@@ -193,7 +196,7 @@ export function ChefDashboard() {
                     <Button
                       size="sm"
                       className="bg-primary text-white hover:bg-primary/90"
-                      onClick={() => window.location.href = `/dashboard/messages?chef=${user?.id}`}
+                      onClick={() => setSelectedJobDetails(bid)}
                     >
                       View Details
                     </Button>
@@ -263,6 +266,17 @@ export function ChefDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Job Details Modal */}
+      <JobDetailsModal
+        isOpen={!!selectedJobDetails}
+        onClose={() => setSelectedJobDetails(null)}
+        bid={selectedJobDetails}
+        onMessageHost={() => {
+          setSelectedJobDetails(null);
+          window.location.href = `/dashboard/messages?chef=${selectedJobDetails?.host?.id || selectedJobDetails?.event?.hostId}`;
+        }}
+      />
     </div>
   );
 }

@@ -169,8 +169,41 @@ export class DatabaseStorage implements IStorage {
     .orderBy(desc(bids.createdAt));
   }
 
-  async getBidsByChefId(chefId: number): Promise<Bid[]> {
-    return await db.select().from(bids).where(eq(bids.chefId, chefId)).orderBy(desc(bids.createdAt));
+  async getBidsByChefId(chefId: number): Promise<any[]> {
+    const result = await db.select({
+      id: bids.id,
+      eventId: bids.eventId,
+      chefId: bids.chefId,
+      amount: bids.amount,
+      message: bids.message,
+      status: bids.status,
+      createdAt: bids.createdAt,
+      event: {
+        id: events.id,
+        title: events.title,
+        description: events.description,
+        eventDate: events.eventDate,
+        location: events.location,
+        guestCount: events.guestCount,
+        budget: events.budget,
+        cuisinePreferences: events.cuisinePreferences,
+        specialRequests: events.specialRequests,
+        hostId: events.hostId,
+      },
+      host: {
+        id: users.id,
+        name: users.name,
+        email: users.email,
+        profilePhoto: users.profilePhoto,
+      }
+    })
+    .from(bids)
+    .leftJoin(events, eq(bids.eventId, events.id))
+    .leftJoin(users, eq(events.hostId, users.id))
+    .where(eq(bids.chefId, chefId))
+    .orderBy(desc(bids.createdAt));
+    
+    return result;
   }
 
   async getBidsByHostId(hostId: number): Promise<any[]> {
