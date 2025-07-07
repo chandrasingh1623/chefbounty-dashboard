@@ -30,16 +30,7 @@ export function ChefDashboard() {
     },
   });
 
-  const { data: availableEvents = [] } = useQuery({
-    queryKey: ['/api/events'],
-    queryFn: async () => {
-      const response = await fetch('/api/events', {
-        headers: authService.getAuthHeaders(),
-      });
-      if (!response.ok) throw new Error('Failed to fetch events');
-      return response.json();
-    },
-  });
+  // Remove the availableEvents query since we're showing Jobs Won instead
 
   const activeBids = myBids.filter((bid: any) => bid.status === 'pending');
   const jobsWon = myBids.filter((bid: any) => bid.status === 'accepted');
@@ -165,51 +156,59 @@ export function ChefDashboard() {
         })}
       </div>
 
-      {/* Available Events & My Bids */}
+      {/* Jobs Won & My Bids */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Available Events */}
+        {/* Jobs Won */}
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle>Available Events</CardTitle>
-              <Link href="/dashboard/browse-events">
+              <CardTitle>Jobs Won</CardTitle>
+              <Link href="/dashboard/my-bids">
                 <span className="text-sm text-primary hover:text-primary/80 font-medium cursor-pointer">
-                  Browse All
+                  View All Bids
                 </span>
               </Link>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            {availableEvents.filter((event: any) => event.status === 'open').slice(0, 3).map((event: any) => (
+            {jobsWon.slice(0, 3).map((bid: any) => (
               <div
-                key={event.id}
-                className="p-4 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors"
+                key={bid.id}
+                className="p-4 border border-green-100 rounded-lg bg-green-50/50"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <h4 className="font-medium text-gray-900">{event.title}</h4>
+                    <div className="flex items-center gap-2 mb-2">
+                      <CheckCircle className="w-4 h-4 text-green-600" />
+                      <Badge className="bg-green-100 text-green-800 text-xs">Won</Badge>
+                    </div>
+                    <h4 className="font-medium text-gray-900">{bid.event?.title}</h4>
                     <p className="text-sm text-gray-500 mt-1">
-                      {new Date(event.eventDate).toLocaleDateString()} • {new Date(event.eventDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      Event Date: {new Date(bid.event?.eventDate || '').toLocaleDateString()}
                     </p>
-                    <p className="text-sm text-gray-500">{event.location}</p>
-                    <p className="text-sm text-gray-700 mt-2 line-clamp-2">{event.description}</p>
+                    <p className="text-sm text-gray-500">{bid.event?.location}</p>
+                    <p className="text-sm text-gray-700 mt-2">Your bid: ${bid.amount}</p>
                   </div>
                   <div className="text-right ml-4">
-                    <p className="font-medium text-gray-900">${event.budget}</p>
                     <Button
                       size="sm"
-                      className="mt-2 bg-primary text-white hover:bg-primary/90"
-                      onClick={() => handleSubmitBid(event.id)}
+                      className="bg-primary text-white hover:bg-primary/90"
+                      onClick={() => window.location.href = `/dashboard/messages?chef=${user?.id}`}
                     >
-                      Place Bid
+                      View Details
                     </Button>
                   </div>
                 </div>
               </div>
             ))}
-            {availableEvents.length === 0 && (
+            {jobsWon.length === 0 && (
               <div className="text-center py-8">
-                <p className="text-gray-500">No available events at the moment. Check back later!</p>
+                <CheckCircle className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                <p className="text-gray-500 mb-2">No jobs won yet</p>
+                <p className="text-sm text-gray-400">Keep bidding on events to win your first job!</p>
+                <Link href="/dashboard/browse-events">
+                  <Button className="mt-4" size="sm">Browse Events</Button>
+                </Link>
               </div>
             )}
           </CardContent>
