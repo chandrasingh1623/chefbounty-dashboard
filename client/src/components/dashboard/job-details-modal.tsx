@@ -59,7 +59,7 @@ export function JobDetailsModal({
   bid,
   onMessageHost,
 }: JobDetailsModalProps) {
-  if (!bid.event) return null;
+  if (!bid || !bid.event) return null;
 
   const eventDate = new Date(bid.event.eventDate);
 

@@ -268,15 +268,17 @@ export function ChefDashboard() {
       </div>
 
       {/* Job Details Modal */}
-      <JobDetailsModal
-        isOpen={!!selectedJobDetails}
-        onClose={() => setSelectedJobDetails(null)}
-        bid={selectedJobDetails}
-        onMessageHost={() => {
-          setSelectedJobDetails(null);
-          window.location.href = `/dashboard/messages?chef=${selectedJobDetails?.host?.id || selectedJobDetails?.event?.hostId}`;
-        }}
-      />
+      {selectedJobDetails && (
+        <JobDetailsModal
+          isOpen={!!selectedJobDetails}
+          onClose={() => setSelectedJobDetails(null)}
+          bid={selectedJobDetails}
+          onMessageHost={() => {
+            setSelectedJobDetails(null);
+            window.location.href = `/dashboard/messages?chef=${selectedJobDetails?.host?.id || selectedJobDetails?.event?.hostId}`;
+          }}
+        />
+      )}
     </div>
   );
 }

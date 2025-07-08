@@ -170,40 +170,39 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getBidsByChefId(chefId: number): Promise<any[]> {
-    const result = await db.select({
-      id: bids.id,
-      eventId: bids.eventId,
-      chefId: bids.chefId,
-      amount: bids.amount,
-      message: bids.message,
-      status: bids.status,
-      createdAt: bids.createdAt,
-      event: {
-        id: events.id,
-        title: events.title,
-        description: events.description,
-        eventDate: events.eventDate,
-        location: events.location,
-        guestCount: events.guestCount,
-        budget: events.budget,
-        cuisinePreferences: events.cuisinePreferences,
-        specialRequests: events.specialRequests,
-        hostId: events.hostId,
-      },
-      host: {
-        id: users.id,
-        name: users.name,
-        email: users.email,
-        profilePhoto: users.profilePhoto,
+    // First get the basic bids
+    const bidResults = await db.select()
+      .from(bids)
+      .where(eq(bids.chefId, chefId))
+      .orderBy(desc(bids.createdAt));
+
+    // Enhance with event and host data
+    const enhancedBids = [];
+    for (const bid of bidResults) {
+      const eventResult = await db.select()
+        .from(events)
+        .where(eq(events.id, bid.eventId))
+        .limit(1);
+      
+      const event = eventResult[0];
+      let host = null;
+      
+      if (event) {
+        const hostResult = await db.select()
+          .from(users)
+          .where(eq(users.id, event.hostId))
+          .limit(1);
+        host = hostResult[0];
       }
-    })
-    .from(bids)
-    .leftJoin(events, eq(bids.eventId, events.id))
-    .leftJoin(users, eq(events.hostId, users.id))
-    .where(eq(bids.chefId, chefId))
-    .orderBy(desc(bids.createdAt));
+
+      enhancedBids.push({
+        ...bid,
+        event: event || null,
+        host: host || null
+      });
+    }
     
-    return result;
+    return enhancedBids;
   }
 
   async getBidsByHostId(hostId: number): Promise<any[]> {
