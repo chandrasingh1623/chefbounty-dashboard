@@ -352,7 +352,7 @@ export default function BrowseChefs() {
                 <div className="flex items-center mb-3">
                   <div className="flex items-center">
                     <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                    <span className="ml-1 text-sm font-medium">{chef.rating.toFixed(1)}</span>
+                    <span className="ml-1 text-sm font-medium">{parseFloat(chef.rating.toString()).toFixed(1)}</span>
                   </div>
                   {chef.reviewCount && (
                     <span className="text-sm text-gray-500 ml-2">
@@ -598,7 +598,7 @@ export default function BrowseChefs() {
                         </h4>
                         <div className="flex items-center">
                           <Star className="w-4 h-4 text-yellow-400 fill-current mr-1" />
-                          <span className="font-medium">{selectedChef.rating.toFixed(1)}</span>
+                          <span className="font-medium">{parseFloat(selectedChef.rating.toString()).toFixed(1)}</span>
                           {selectedChef.reviewCount && (
                             <span className="text-gray-500 ml-2">({selectedChef.reviewCount} reviews)</span>
                           )}
