@@ -19,6 +19,7 @@ import { Link } from "wouter";
 import { getChefPrivacyInfo, shouldShowContactInfo } from "@/lib/chef-privacy";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { DemoDataControls } from "./demo-data-controls";
 
 export function HostDashboard() {
   const { user } = useAuth();
@@ -123,6 +124,9 @@ export function HostDashboard() {
 
   return (
     <div>
+      {/* Demo Data Controls - Development Only */}
+      <DemoDataControls />
+
       {/* Welcome Banner */}
       <Card className="mb-8 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
         <CardContent className="p-6">

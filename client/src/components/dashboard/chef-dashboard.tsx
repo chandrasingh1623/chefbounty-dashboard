@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useState } from "react";
+import { DemoDataControls } from "./demo-data-controls";
 
 export function ChefDashboard() {
   const { user } = useAuth();
@@ -85,6 +86,9 @@ export function ChefDashboard() {
 
   return (
     <div>
+      {/* Demo Data Controls - Development Only */}
+      <DemoDataControls />
+
       {/* Welcome Banner */}
       <Card className="mb-8 bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
         <CardContent className="p-6">

@@ -1,0 +1,73 @@
+Please implement functionality to automatically generate and populate unique example data for the following sections in development mode:
+
+✅ 1. Browse Chefs – Auto-Generated Chef Profiles
+Generate 15–20 realistic, unique chef profiles with randomized but coherent values. Each profile should include:
+
+Name: Generated using a name generator (e.g., faker.js)
+
+Location: Major cities across the U.S.
+
+Profile Photo: Use https://randomuser.me/api/portraits/men/ and /women/ for variety
+
+Bio: Short paragraph on culinary passion, background, and cooking style
+
+Culinary Specialties: Random mix of 2–3 cuisines (e.g., Italian, Cajun, Vegan)
+
+Signature Dishes: 3 dish names using food generator (or predefined list)
+
+Certifications: Random subset (e.g., ServSafe, Le Cordon Bleu)
+
+Years of Experience: 2–20 years
+
+Languages Spoken: English + random 0–2 additional (e.g., Spanish, French)
+
+Portfolio Images: Use royalty-free dish images (Unsplash API or static list)
+
+Availability: Random weekly schedule
+
+Travel Radius: 10–100 miles
+
+Profile Completion: Between 60%–100%
+
+Message Button: Fully functional
+
+Contact Restrictions: Only initials and partial name until bid is accepted
+
+✅ 2. Browse Events – Auto-Generated Host Events
+Generate 10–15 example events with:
+
+Event Title: Short, descriptive (e.g., “Birthday Brunch for 20”)
+
+Event Description: 1–2 sentences outlining expectations
+
+Location: Random U.S. cities
+
+Cuisine Type(s): Randomized (e.g., Mediterranean, BBQ, Asian Fusion)
+
+Meal Type: (e.g., Buffet, Plated Dinner, Passed Appetizers)
+
+Beverage Requirement: Yes/No + Notes
+
+Chef Requirements: Randomly selected (e.g., Attire, Cleanup, Equipment)
+
+Venue Type: (e.g., Backyard, Yacht, Loft)
+
+Event Date: Random date within next 60 days
+
+Budget: $500 – $4,000
+
+Status: Set to "Open"
+
+Host Info: Use initials + default avatar (e.g., "JM", "AA")
+
+Bidding Enabled: Bidding UI active for chef accounts
+
+🔁 Additional Requirements
+Create a utility function like seedDemoData() that auto-generates this info when in development mode
+
+Ensure fake profiles and events are tagged as demo for easy filtering/deletion
+
+Use a library like faker.js or custom logic for generation
+
+Do not interfere with real user data or production environments
+

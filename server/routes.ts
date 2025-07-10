@@ -1014,5 +1014,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Demo data routes (development only)
+  if (process.env.NODE_ENV === 'development') {
+    app.post("/api/demo/seed", async (req, res) => {
+      try {
+        const { seedDemoData } = await import('./seed-demo-data');
+        const result = await seedDemoData();
+        res.json(result);
+      } catch (error) {
+        console.error("Failed to seed demo data:", error);
+        res.status(500).json({ message: "Failed to seed demo data" });
+      }
+    });
+
+    app.delete("/api/demo/clear", async (req, res) => {
+      try {
+        const { clearDemoData } = await import('./seed-demo-data');
+        const result = await clearDemoData();
+        res.json(result);
+      } catch (error) {
+        console.error("Failed to clear demo data:", error);
+        res.status(500).json({ message: "Failed to clear demo data" });
+      }
+    });
+  }
+
   return httpServer;
 }
