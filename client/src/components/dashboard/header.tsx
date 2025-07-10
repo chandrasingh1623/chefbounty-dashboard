@@ -1,7 +1,8 @@
-import { Bell, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 import { useLocation } from "wouter";
+import { NotificationsDropdown } from "./notifications-dropdown";
 
 interface HeaderProps {
   title: string;
@@ -34,14 +35,7 @@ export function Header({ title, subtitle, onQuickAction }: HeaderProps) {
         </div>
         <div className="flex items-center space-x-4">
           {/* Notifications */}
-          <Button
-            variant="ghost"
-            size="sm"
-            className="relative p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg"
-          >
-            <Bell className="w-5 h-5" />
-            <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-          </Button>
+          <NotificationsDropdown />
           
           {/* Quick Action Button */}
           <Button

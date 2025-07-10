@@ -124,6 +124,18 @@ export const messages = pgTable("messages", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const notifications = pgTable("notifications", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  type: text("type").notNull(), // 'bid_accepted', 'new_bid', 'new_message', 'event_update'
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  relatedId: integer("related_id"), // eventId, bidId, messageId, etc.
+  relatedType: text("related_type"), // 'event', 'bid', 'message'
+  isRead: boolean("is_read").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // New tables for enhanced features
 export const chefAvailability = pgTable("chef_availability", {
   id: serial("id").primaryKey(),
@@ -209,6 +221,14 @@ export type InsertBid = z.infer<typeof insertBidSchema>;
 export type Bid = typeof bids.$inferSelect;
 export type InsertMessage = z.infer<typeof insertMessageSchema>;
 export type Message = typeof messages.$inferSelect;
+
+// Notification schemas
+export const insertNotificationSchema = createInsertSchema(notifications).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertNotification = z.infer<typeof insertNotificationSchema>;
+export type Notification = typeof notifications.$inferSelect;
 export type InsertChefAvailability = z.infer<typeof insertChefAvailabilitySchema>;
 export type ChefAvailability = typeof chefAvailability.$inferSelect;
 export type InsertPayment = z.infer<typeof insertPaymentSchema>;

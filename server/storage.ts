@@ -3,6 +3,7 @@ import {
   events, 
   bids, 
   messages, 
+  notifications,
   chefAvailability,
   payments,
   paymentMethods,
@@ -14,6 +15,8 @@ import {
   type InsertBid, 
   type Message, 
   type InsertMessage,
+  type Notification,
+  type InsertNotification,
   type ChefAvailability,
   type InsertChefAvailability,
   type Payment,
@@ -73,6 +76,12 @@ export interface IStorage {
   getPaymentMethodsByUserId(userId: number): Promise<PaymentMethod[]>;
   createPaymentMethod(paymentMethod: InsertPaymentMethod): Promise<PaymentMethod>;
   removePaymentMethod(id: number): Promise<void>;
+
+  // Notification operations
+  getNotificationsByUserId(userId: number, limit?: number): Promise<Notification[]>;
+  createNotification(notification: InsertNotification): Promise<Notification>;
+  markNotificationAsRead(id: number): Promise<Notification | undefined>;
+  markAllNotificationsAsRead(userId: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -541,6 +550,34 @@ export class DatabaseStorage implements IStorage {
 
   async removePaymentMethod(id: number): Promise<void> {
     await db.delete(paymentMethods).where(eq(paymentMethods.id, id));
+  }
+
+  // Notification operations
+  async getNotificationsByUserId(userId: number, limit: number = 8): Promise<Notification[]> {
+    return await db.select()
+      .from(notifications)
+      .where(eq(notifications.userId, userId))
+      .orderBy(desc(notifications.createdAt))
+      .limit(limit);
+  }
+
+  async createNotification(notification: InsertNotification): Promise<Notification> {
+    const result = await db.insert(notifications).values(notification).returning();
+    return result[0];
+  }
+
+  async markNotificationAsRead(id: number): Promise<Notification | undefined> {
+    const result = await db.update(notifications)
+      .set({ isRead: true })
+      .where(eq(notifications.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async markAllNotificationsAsRead(userId: number): Promise<void> {
+    await db.update(notifications)
+      .set({ isRead: true })
+      .where(and(eq(notifications.userId, userId), eq(notifications.isRead, false)));
   }
 }
 

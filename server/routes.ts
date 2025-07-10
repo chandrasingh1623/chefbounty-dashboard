@@ -969,5 +969,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Notification routes
+  app.get("/api/notifications", authenticateToken, async (req: any, res) => {
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit) : 8;
+      const notifications = await storage.getNotificationsByUserId(req.user.id, limit);
+      res.json(notifications);
+    } catch (error) {
+      console.error("Failed to get notifications:", error);
+      res.status(500).json({ message: "Failed to get notifications" });
+    }
+  });
+
+  app.post("/api/notifications", authenticateToken, async (req: any, res) => {
+    try {
+      const notification = await storage.createNotification(req.body);
+      res.json(notification);
+    } catch (error) {
+      console.error("Failed to create notification:", error);
+      res.status(500).json({ message: "Failed to create notification" });
+    }
+  });
+
+  app.put("/api/notifications/mark-as-read/:id", authenticateToken, async (req: any, res) => {
+    try {
+      const notification = await storage.markNotificationAsRead(parseInt(req.params.id));
+      if (!notification) {
+        return res.status(404).json({ message: "Notification not found" });
+      }
+      res.json({ success: true, notification });
+    } catch (error) {
+      console.error("Failed to mark notification as read:", error);
+      res.status(500).json({ message: "Failed to mark notification as read" });
+    }
+  });
+
+  app.put("/api/notifications/mark-all-as-read", authenticateToken, async (req: any, res) => {
+    try {
+      await storage.markAllNotificationsAsRead(req.user.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Failed to mark all notifications as read:", error);
+      res.status(500).json({ message: "Failed to mark all notifications as read" });
+    }
+  });
+
   return httpServer;
 }
