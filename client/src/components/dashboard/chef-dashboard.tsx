@@ -86,8 +86,7 @@ export function ChefDashboard() {
 
   return (
     <div>
-      {/* Demo Data Controls - Development Only */}
-      <DemoDataControls />
+
 
       {/* Welcome Banner */}
       <Card className="mb-8 bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">

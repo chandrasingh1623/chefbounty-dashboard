@@ -8,20 +8,20 @@ export async function seedDemoData() {
   console.log('🌱 Starting demo data generation...');
   
   try {
-    // Check if demo data already exists
-    const existingUsers = await storage.getUsers();
-    const demoUsers = existingUsers.filter(user => 
-      user.email?.includes('@demo.chefbounty.com') || 
-      user.bio?.includes('DEMO_PROFILE')
-    );
+    // Check if demo data already exists (skip check for now to allow regeneration)
+    // const existingUsers = await storage.getUsers();
+    // const demoUsers = existingUsers.filter(user => 
+    //   user.email?.includes('@demo.chefbounty.com') || 
+    //   user.bio?.includes('DEMO_PROFILE')
+    // );
     
-    if (demoUsers.length > 0) {
-      console.log(`✅ Demo data already exists (${demoUsers.length} demo users found). Skipping generation.`);
-      return {
-        message: 'Demo data already exists',
-        existingDemoUsers: demoUsers.length
-      };
-    }
+    // if (demoUsers.length > 0) {
+    //   console.log(`✅ Demo data already exists (${demoUsers.length} demo users found). Skipping generation.`);
+    //   return {
+    //     message: 'Demo data already exists',
+    //     existingDemoUsers: demoUsers.length
+    //   };
+    // }
 
     // Generate demo hosts (5-8 hosts)
     console.log('👥 Generating demo hosts...');

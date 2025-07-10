@@ -124,8 +124,7 @@ export function HostDashboard() {
 
   return (
     <div>
-      {/* Demo Data Controls - Development Only */}
-      <DemoDataControls />
+
 
       {/* Welcome Banner */}
       <Card className="mb-8 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">

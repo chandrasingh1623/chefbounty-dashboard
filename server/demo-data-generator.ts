@@ -77,13 +77,13 @@ export function generateDemoChef(): InsertUser {
     profileLive: faker.datatype.boolean({ probability: 0.8 }),
     
     // Location and availability
-    location: `${faker.location.city()}, ${faker.location.stateAbbr()}`,
+    location: `${faker.location.city()}, ${faker.location.state()}`,
     maxTravelDistance: faker.number.int({ min: 10, max: 100 }),
     availableNow: faker.datatype.boolean({ probability: 0.7 }),
     
     // Professional info
     bio: `Passionate ${specialties[0]} chef with ${yearsExperience} years of experience. I specialize in creating memorable dining experiences that blend traditional techniques with modern innovation. My culinary journey has taken me through top kitchens where I've honed my craft in ${specialties.join(', ')} cuisine.`,
-    experience: `${yearsExperience} years`,
+    experience: yearsExperience,
     specialties,
     signatureDishes: signatureDishes.slice(0, 3),
     formalTraining: faker.helpers.arrayElement([
@@ -127,11 +127,11 @@ export function generateDemoChef(): InsertUser {
     portfolioImages: faker.helpers.arrayElements(portfolioImages, { min: 3, max: 6 }),
     
     // Pricing
-    hourlyRate: faker.number.float({ min: 45, max: 200, fractionDigits: 2 }).toString(),
+    hourlyRate: faker.number.float({ min: 45, max: 200, fractionDigits: 2 }),
     rateUnit: faker.helpers.arrayElement(['hour', 'guest']),
     
     // Rating and reviews
-    rating: faker.number.float({ min: 4.0, max: 5.0, fractionDigits: 1 }).toString(),
+    rating: faker.number.float({ min: 4.0, max: 5.0, fractionDigits: 1 }),
     reviewCount: faker.number.int({ min: 5, max: 150 }),
     
     // Equipment and fees
@@ -161,7 +161,7 @@ export function generateDemoHost(): InsertUser {
     password: '$2b$10$demo.password.hash', // Demo password hash
     role: 'host',
     profilePhoto: `https://randomuser.me/api/portraits/${faker.helpers.arrayElement(['men', 'women'])}/${faker.number.int({ min: 1, max: 99 })}.jpg`,
-    location: `${faker.location.city()}, ${faker.location.stateAbbr()}`,
+    location: `${faker.location.city()}, ${faker.location.state()}`,
     bio: 'DEMO_PROFILE - This is sample data for development',
     emailVerified: true,
   };
@@ -188,7 +188,7 @@ export function generateDemoEvent(hostId: number): InsertEvent {
     cuisineType: cuisineTypes,
     eventDate,
     duration: faker.number.int({ min: 2, max: 8 }), // hours
-    location: `${faker.location.city()}, ${faker.location.stateAbbr()}`,
+    location: `${faker.location.city()}, ${faker.location.state()}`,
     budget: faker.number.float({ min: 500, max: 4000, fractionDigits: 2 }),
     
     // Venue and meal info
