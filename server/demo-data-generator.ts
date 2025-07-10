@@ -49,6 +49,43 @@ const portfolioImages = [
   'https://images.unsplash.com/photo-1589302168068-964664d93dc0?w=400'
 ];
 
+function generateWorkExperience(yearsExperience: number): string {
+  const restaurants = [
+    'Le Bernardin', 'The French Laundry', 'Eleven Madison Park', 'Alinea', 'Per Se',
+    'Daniel', 'Jean-Georges', 'Blue Hill', 'Gramercy Tavern', 'Union Square Cafe',
+    'The River Cafe', 'Nobu', 'Momofuku', 'The Modern', 'Balthazar',
+    'Babbo', 'Osteria Mozza', 'Providence', 'Animal', 'République'
+  ];
+  
+  const positions = [
+    'Executive Chef', 'Sous Chef', 'Chef de Cuisine', 'Pastry Chef', 
+    'Line Cook', 'Station Chef', 'Kitchen Manager', 'Culinary Director'
+  ];
+  
+  const experiences = [];
+  
+  if (yearsExperience >= 8) {
+    experiences.push(`Executive Chef at ${faker.helpers.arrayElement(restaurants)} (3+ years)`);
+    experiences.push(`Sous Chef at ${faker.helpers.arrayElement(restaurants)} (2+ years)`);
+  } else if (yearsExperience >= 5) {
+    experiences.push(`Sous Chef at ${faker.helpers.arrayElement(restaurants)} (2+ years)`);
+    experiences.push(`Chef de Cuisine at ${faker.helpers.arrayElement(restaurants)} (2+ years)`);
+  } else {
+    experiences.push(`${faker.helpers.arrayElement(positions)} at ${faker.helpers.arrayElement(restaurants)} (${yearsExperience} years)`);
+  }
+  
+  // Add culinary school or training
+  if (yearsExperience >= 3) {
+    const culinarySchools = [
+      'Culinary Institute of America', 'Johnson & Wales University', 'Institute of Culinary Education',
+      'Kendall College of Culinary Arts', 'Sullivan University', 'The Art Institute'
+    ];
+    experiences.push(`Graduate of ${faker.helpers.arrayElement(culinarySchools)}`);
+  }
+  
+  return experiences.join(' • ');
+}
+
 export function generateDemoChef(): InsertUser {
   const firstName = faker.person.firstName();
   const lastName = faker.person.lastName();
@@ -145,8 +182,8 @@ export function generateDemoChef(): InsertUser {
     ], { min: 2, max: 5 }),
     travelFees: `$${faker.number.float({ min: 0.50, max: 2.00, fractionDigits: 2 })} per mile over 25 miles`,
     
-    // Demo flag for easy identification
-    workHistory: 'DEMO_PROFILE - This is sample data for development',
+    // Work history and experience
+    workHistory: generateWorkExperience(yearsExperience),
     emailVerified: true,
   };
 }
@@ -162,7 +199,7 @@ export function generateDemoHost(): InsertUser {
     role: 'host',
     profilePhoto: `https://randomuser.me/api/portraits/${faker.helpers.arrayElement(['men', 'women'])}/${faker.number.int({ min: 1, max: 99 })}.jpg`,
     location: `${faker.location.city()}, ${faker.location.state()}`,
-    bio: 'DEMO_PROFILE - This is sample data for development',
+    bio: `Experienced event host passionate about bringing people together through exceptional dining experiences. I believe great food creates lasting memories and love connecting talented chefs with the perfect opportunities.`,
     emailVerified: true,
   };
 }
@@ -189,7 +226,7 @@ export function generateDemoEvent(hostId: number): InsertEvent {
     eventDate,
     duration: faker.number.int({ min: 2, max: 8 }), // hours
     location: `${faker.location.city()}, ${faker.location.state()}`,
-    budget: faker.number.float({ min: 500, max: 4000, fractionDigits: 2 }),
+    budget: faker.helpers.arrayElement([500, 750, 1000, 1250, 1500, 1750, 2000, 2250, 2500, 3000, 3500, 4000]),
     
     // Venue and meal info
     venueType: faker.helpers.arrayElement(venueTypes),
