@@ -164,7 +164,7 @@ export function generateDemoChef(): InsertUser {
     portfolioImages: faker.helpers.arrayElements(portfolioImages, { min: 3, max: 6 }),
     
     // Pricing
-    hourlyRate: faker.number.float({ min: 45, max: 200, fractionDigits: 2 }),
+    hourlyRate: faker.helpers.arrayElement([45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 110, 120, 130, 140, 150, 175, 200]),
     rateUnit: faker.helpers.arrayElement(['hour', 'guest']),
     
     // Rating and reviews
