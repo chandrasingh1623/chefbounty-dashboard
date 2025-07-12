@@ -126,7 +126,8 @@ export default function BrowseEvents() {
                          event.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesLocation = locationFilter === "all" || 
                            event.location.toLowerCase().includes(locationFilter.toLowerCase());
-    const matchesCuisine = cuisineFilter === "all" || event.cuisineType === cuisineFilter;
+    const matchesCuisine = cuisineFilter === "all" || 
+                          (Array.isArray(event.cuisineType) ? event.cuisineType.includes(cuisineFilter) : event.cuisineType === cuisineFilter);
     const matchesBudget = budgetFilter === "all" || 
                          (budgetFilter === "under500" && parseFloat(event.budget) < 500) ||
                          (budgetFilter === "500-1000" && parseFloat(event.budget) >= 500 && parseFloat(event.budget) <= 1000) ||
@@ -171,7 +172,9 @@ export default function BrowseEvents() {
     event.location.split(',')[0].trim()
   ))) as string[];
 
-  const cuisineTypes = Array.from(new Set(events.map((event: any) => event.cuisineType))) as string[];
+  const cuisineTypes = Array.from(new Set(events.flatMap((event: any) => 
+    Array.isArray(event.cuisineType) ? event.cuisineType : [event.cuisineType]
+  ))) as string[];
 
   if (isLoading) {
     return (
@@ -299,7 +302,7 @@ export default function BrowseEvents() {
                   <div className="space-y-2 mb-4">
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-600">Cuisine:</span>
-                      <span className="font-medium">{event.cuisineType}</span>
+                      <span className="font-medium">{Array.isArray(event.cuisineType) ? event.cuisineType.join(', ') : event.cuisineType}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-600">Guests:</span>
@@ -491,7 +494,7 @@ export default function BrowseEvents() {
                         <div className="space-y-2 text-sm">
                           <div className="flex justify-between">
                             <span className="text-gray-600">Cuisine Type:</span>
-                            <span className="font-medium">{selectedEvent.cuisineType}</span>
+                            <span className="font-medium">{Array.isArray(selectedEvent.cuisineType) ? selectedEvent.cuisineType.join(', ') : selectedEvent.cuisineType}</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-gray-600">Dietary Requirements:</span>
