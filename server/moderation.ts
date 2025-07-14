@@ -111,7 +111,7 @@ export async function sendEventModerationEmail(eventData: ModerationEventData) {
   // Send email to all admin addresses
   for (const adminEmail of adminEmails) {
     try {
-      await EmailService.sendEmail(adminEmail, subject, htmlContent);
+      await EmailService.sendRawEmail(adminEmail, subject, htmlContent);
       console.log(`Moderation email sent to: ${adminEmail}`);
     } catch (error) {
       console.error(`Failed to send moderation email to ${adminEmail}:`, error);
@@ -184,7 +184,7 @@ export async function sendEventApprovalEmail(hostEmail: string, eventTitle: stri
   `;
 
   try {
-    await EmailService.sendEmail(hostEmail, subject, htmlContent);
+    await EmailService.sendRawEmail(hostEmail, subject, htmlContent);
     console.log(`Approval email sent to host: ${hostEmail}`);
   } catch (error) {
     console.error(`Failed to send approval email to ${hostEmail}:`, error);
@@ -268,7 +268,7 @@ export async function sendEventRejectionEmail(hostEmail: string, eventTitle: str
   `;
 
   try {
-    await EmailService.sendEmail(hostEmail, subject, htmlContent);
+    await EmailService.sendRawEmail(hostEmail, subject, htmlContent);
     console.log(`Rejection email sent to host: ${hostEmail}`);
   } catch (error) {
     console.error(`Failed to send rejection email to ${hostEmail}:`, error);

@@ -341,4 +341,35 @@ ChefBounty - Connecting Hosts and Professional Chefs
       return false;
     }
   }
+
+  static async sendRawEmail(
+    email: string,
+    subject: string,
+    htmlContent: string
+  ): Promise<boolean> {
+    if (!resend) {
+      console.warn('Resend API key not configured. Email disabled.');
+      return true; // Return true for development to not block functionality
+    }
+    
+    try {
+      const { data, error } = await resend.emails.send({
+        from: 'ChefBounty <noreply@chefbounty.com>',
+        to: [email],
+        subject: subject,
+        html: htmlContent,
+      });
+
+      if (error) {
+        console.error('Resend error:', error);
+        return false;
+      }
+
+      console.log('Raw email sent:', data);
+      return true;
+    } catch (error) {
+      console.error('Failed to send raw email:', error);
+      return false;
+    }
+  }
 }
