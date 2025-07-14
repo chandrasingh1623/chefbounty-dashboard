@@ -73,8 +73,8 @@ export const events = pgTable("events", {
   location: text("location").notNull(),
   budget: decimal("budget", { precision: 10, scale: 2 }).notNull(),
   venueType: text("venue_type").notNull(), // 'home', 'commercial_kitchen', 'yacht', etc.
+  status: text("status").notNull().default("pending"), // 'pending', 'approved', 'rejected', 'open', 'in_progress', 'completed'
   eventImage: text("event_image"),
-  status: text("status").notNull().default("open"), // 'open', 'closed', 'completed'
   
   // 🥘 Cuisine & Meal Info
   allergies: text("allergies").array(),

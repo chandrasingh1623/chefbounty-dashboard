@@ -1,0 +1,85 @@
+Please implement an event moderation system for ChefBounty with the following requirements:
+
+✅ 1. Event Status Logic
+Add a new column status to the events database table:
+
+Default value: pending
+
+Other possible values: approved, rejected
+
+When a host submits a new event, it should not appear immediately in Browse Events.
+
+Only events with status = approved should be visible to chefs.
+
+✅ 2. Email Notification on Event Submission
+When a new event is posted:
+
+Send an email notification to keeanagondy@gmail.com.
+
+Email subject: “New Event Awaiting Approval – [Event Title]”
+
+Email body should include:
+
+Host Name
+
+Event Title
+
+Location
+
+Date
+
+Budget
+
+Buttons/links:
+
+Approve Event → /api/events/approve/:eventId
+
+Reject Event → /api/events/reject/:eventId
+
+Use Resend API (same setup as the verification emails) to send this message.
+
+✅ 3. API Endpoints for Approval
+Create two secure endpoints:
+
+POST /api/events/approve/:id → sets event status = approved
+
+POST /api/events/reject/:id → sets event status = rejected
+
+After approval:
+
+Send confirmation email to the host:
+
+“Your event [Event Title] has been approved and is now live on ChefBounty.”
+
+After rejection (optional):
+
+Send rejection email with a placeholder message:
+
+“Your event [Event Title] was not approved. Please review our posting guidelines and try again.”
+
+✅ 4. Browse Events Filtering
+Update Browse Events queries to show only events where status = approved.
+
+Pending or rejected events must not display to chefs or in public views.
+
+✅ 5. Admin Dashboard (Optional Enhancement)
+Add a "Pending Events" section to the admin dashboard:
+
+Shows all pending events
+
+Buttons to approve or reject directly in the UI
+
+Approvals from here should perform the same action as the email links.
+
+✅ 6. UX Notes
+Host should see their event listed under "My Events" with status Pending Approval until it's approved.
+
+Once approved, status changes to Open and it becomes visible to chefs.
+
+Please make sure:
+
+All emails are sent via Resend using the configured API key.
+
+Emails are formatted professionally with ChefBounty branding.
+
+All endpoints are secure and cannot be triggered without admin privileges.

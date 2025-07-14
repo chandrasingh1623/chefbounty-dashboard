@@ -344,12 +344,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...req.body,
         eventDate: new Date(req.body.eventDate), // Convert ISO string to Date object
         hostId: req.user.id, // Use authenticated user's ID as hostId
+        status: 'pending' // All new events start as pending
       });
       
       console.log('POST /api/events - Parsed event data:', JSON.stringify(eventData, null, 2));
       
       const event = await storage.createEvent(eventData);
       console.log('POST /api/events - Created event:', JSON.stringify(event, null, 2));
+      
+      // Send moderation email for new events
+      const host = await storage.getUser(req.user.id);
+      if (host) {
+        try {
+          const { sendEventModerationEmail } = await import('./moderation');
+          await sendEventModerationEmail({
+            eventId: event.id,
+            eventTitle: event.title,
+            hostName: host.name,
+            location: event.location,
+            eventDate: event.eventDate.toString(),
+            budget: event.budget
+          });
+        } catch (emailError) {
+          console.error('Failed to send moderation email:', emailError);
+          // Don't fail the request if email fails
+        }
+      }
       
       res.json(event);
     } catch (error) {
@@ -1047,6 +1067,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     });
   }
+
+  // Event Moderation Routes
+  app.post("/api/events/approve/:id", async (req, res) => {
+    try {
+      const eventId = parseInt(req.params.id);
+      
+      // Update event status to approved
+      const event = await storage.updateEvent(eventId, { status: 'approved' });
+      if (!event) {
+        return res.status(404).json({ message: "Event not found" });
+      }
+      
+      // Get host information for email
+      const host = await storage.getUser(event.hostId);
+      if (host) {
+        try {
+          const { sendEventApprovalEmail } = await import('./moderation');
+          await sendEventApprovalEmail(host.email, event.title);
+        } catch (emailError) {
+          console.error('Failed to send approval email:', emailError);
+        }
+      }
+      
+      res.json({ 
+        message: "Event approved successfully", 
+        event,
+        redirect: process.env.NODE_ENV === 'production' ? 
+          `https://chefbounty.com/admin` : 
+          `http://localhost:5000/admin`
+      });
+    } catch (error) {
+      console.error('Event approval error:', error);
+      res.status(500).json({ message: "Failed to approve event" });
+    }
+  });
+
+  app.post("/api/events/reject/:id", async (req, res) => {
+    try {
+      const eventId = parseInt(req.params.id);
+      
+      // Update event status to rejected
+      const event = await storage.updateEvent(eventId, { status: 'rejected' });
+      if (!event) {
+        return res.status(404).json({ message: "Event not found" });
+      }
+      
+      // Get host information for email
+      const host = await storage.getUser(event.hostId);
+      if (host) {
+        try {
+          const { sendEventRejectionEmail } = await import('./moderation');
+          await sendEventRejectionEmail(host.email, event.title);
+        } catch (emailError) {
+          console.error('Failed to send rejection email:', emailError);
+        }
+      }
+      
+      res.json({ 
+        message: "Event rejected successfully", 
+        event,
+        redirect: process.env.NODE_ENV === 'production' ? 
+          `https://chefbounty.com/admin` : 
+          `http://localhost:5000/admin`
+      });
+    } catch (error) {
+      console.error('Event rejection error:', error);
+      res.status(500).json({ message: "Failed to reject event" });
+    }
+  });
+
+  // Admin routes for pending events
+  app.get("/api/admin/pending-events", async (req, res) => {
+    try {
+      const pendingEvents = await storage.getEventsByStatus('pending');
+      res.json(pendingEvents);
+    } catch (error) {
+      console.error('Failed to get pending events:', error);
+      res.status(500).json({ message: "Failed to get pending events" });
+    }
+  });
 
   return httpServer;
 }

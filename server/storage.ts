@@ -43,6 +43,7 @@ export interface IStorage {
   getEvents(): Promise<Event[]>;
   getEventById(id: number): Promise<Event | undefined>;
   getEventsByHostId(hostId: number): Promise<Event[]>;
+  getEventsByStatus(status: string): Promise<Event[]>;
   createEvent(event: InsertEvent): Promise<Event>;
   updateEvent(id: number, updates: Partial<InsertEvent>): Promise<Event | undefined>;
 
@@ -123,7 +124,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getEvents(): Promise<Event[]> {
-    return await db.select().from(events).orderBy(desc(events.createdAt));
+    // Only return approved events for public viewing
+    return await db.select().from(events)
+      .where(eq(events.status, 'approved'))
+      .orderBy(desc(events.createdAt));
   }
 
   async getEventById(id: number): Promise<Event | undefined> {
@@ -133,6 +137,10 @@ export class DatabaseStorage implements IStorage {
 
   async getEventsByHostId(hostId: number): Promise<Event[]> {
     return await db.select().from(events).where(eq(events.hostId, hostId)).orderBy(desc(events.createdAt));
+  }
+
+  async getEventsByStatus(status: string): Promise<Event[]> {
+    return await db.select().from(events).where(eq(events.status, status)).orderBy(desc(events.createdAt));
   }
 
   async createEvent(event: InsertEvent): Promise<Event> {

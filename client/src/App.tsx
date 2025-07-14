@@ -20,6 +20,7 @@ import Profile from "@/pages/profile";
 import Messages from "@/pages/messages";
 import Payments from "@/pages/payments";
 import Settings from "@/pages/settings";
+import AdminDashboard from "@/pages/admin-dashboard";
 
 function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState(authService.getUser());
@@ -144,6 +145,11 @@ function Router() {
       <Route path="/dashboard/settings">
         <ProtectedRoute>
           <Settings />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/admin-dashboard">
+        <ProtectedRoute>
+          <AdminDashboard />
         </ProtectedRoute>
       </Route>
       <Route component={NotFound} />
