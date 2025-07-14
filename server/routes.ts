@@ -776,15 +776,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/payment-methods", authenticateToken, async (req, res) => {
     try {
-      const { cardNumber, expiryMonth, expiryYear, cvc } = req.body;
+      const { paymentType, accountIdentifier } = req.body;
       const userId = req.user!.id;
       
-      // In real implementation, this would integrate with Stripe
+      // Validate input
+      if (!paymentType || !accountIdentifier) {
+        return res.status(400).json({ message: "Payment type and account identifier are required" });
+      }
+      
+      // Validate payment type
+      const validTypes = ['Venmo', 'CashApp', 'Zelle', 'PayPal'];
+      if (!validTypes.includes(paymentType)) {
+        return res.status(400).json({ message: "Invalid payment type" });
+      }
+      
       const paymentMethod = await storage.createPaymentMethod({
         userId,
-        stripePaymentMethodId: `pm_${Date.now()}`, // Mock Stripe ID
-        cardBrand: "visa", // Would be determined by Stripe
-        cardLast4: cardNumber.slice(-4),
+        paymentType,
+        accountIdentifier,
         isDefault: false,
       });
       

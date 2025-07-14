@@ -165,9 +165,8 @@ export const payments = pgTable("payments", {
 export const paymentMethods = pgTable("payment_methods", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id).notNull(),
-  stripePaymentMethodId: text("stripe_payment_method_id").notNull(),
-  cardBrand: text("card_brand").notNull(),
-  cardLast4: text("card_last4").notNull(),
+  paymentType: text("payment_type").notNull(), // 'Venmo', 'CashApp', 'Zelle', 'PayPal'
+  accountIdentifier: text("account_identifier").notNull(), // username, email, or phone
   isDefault: boolean("is_default").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 });
