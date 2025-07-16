@@ -382,6 +382,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete("/api/events/:id", authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const eventId = parseInt(req.params.id);
+      
+      // Get the event to verify ownership
+      const event = await storage.getEventById(eventId);
+      if (!event) {
+        return res.status(404).json({ message: "Event not found" });
+      }
+      
+      // Only the host who created the event can delete it
+      if (event.hostId !== req.user.id) {
+        return res.status(403).json({ message: "You can only delete your own events" });
+      }
+      
+      // Delete associated bids first to maintain data integrity
+      // Get all bids for this event
+      const bids = await storage.getBidsByEventId(eventId);
+      
+      // Delete all associated bids
+      for (const bid of bids) {
+        await storage.deleteBid(bid.id);
+      }
+      
+      // Delete the event
+      const deleted = await storage.deleteEvent(eventId);
+      if (!deleted) {
+        return res.status(404).json({ message: "Event not found" });
+      }
+      
+      res.json({ message: "Event deleted successfully" });
+    } catch (error) {
+      console.error('DELETE /api/events/:id - Error:', error);
+      res.status(500).json({ message: "Failed to delete event" });
+    }
+  });
+
   // Bid routes
   app.get("/api/bids/event/:eventId", authenticateToken, async (req, res) => {
     try {

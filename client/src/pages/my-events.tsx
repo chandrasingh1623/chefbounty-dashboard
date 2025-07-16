@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { DashboardLayout } from "@/components/dashboard/layout";
 import { EventCard } from "@/components/dashboard/event-card";
 import { useAuth } from "@/lib/auth";
@@ -10,6 +10,8 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { Plus, Search } from "lucide-react";
 import { EventDetailModal } from "@/components/dashboard/event-detail-modal";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function MyEvents() {
   const { user } = useAuth();
@@ -18,6 +20,8 @@ export default function MyEvents() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { data: events = [], isLoading } = useQuery({
     queryKey: ['/api/events/host', user?.id],
@@ -64,6 +68,38 @@ export default function MyEvents() {
     if (event) {
       setSelectedEvent(event);
       setIsEventModalOpen(true);
+    }
+  };
+
+  const handleEditEvent = (eventId: number) => {
+    setLocation(`/dashboard/post-event?edit=${eventId}`);
+  };
+
+  const deleteEventMutation = useMutation({
+    mutationFn: async (eventId: number) => {
+      return apiRequest(`/api/events/${eventId}`, {
+        method: 'DELETE',
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/events/host', user?.id] });
+      toast({
+        title: "Event deleted",
+        description: "Your event has been successfully deleted.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error deleting event",
+        description: error.message || "Failed to delete event. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleDeleteEvent = (eventId: number) => {
+    if (window.confirm('Are you sure you want to delete this event? This action cannot be undone.')) {
+      deleteEventMutation.mutate(eventId);
     }
   };
 
@@ -121,9 +157,12 @@ export default function MyEvents() {
               <EventCard
                 key={event.id}
                 event={event}
+                showHostActions={true}
                 bidCount={getBidCount(event.id)}
                 onBid={() => handleViewBids(event.id)}
                 onViewDetails={() => handleViewFullListing(event.id)}
+                onEdit={() => handleEditEvent(event.id)}
+                onDelete={() => handleDeleteEvent(event.id)}
               />
             ))}
           </div>

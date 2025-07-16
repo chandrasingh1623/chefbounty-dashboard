@@ -7,7 +7,9 @@ import {
   Users, 
   DollarSign, 
   Clock,
-  UtensilsCrossed 
+  UtensilsCrossed,
+  Edit,
+  Trash2
 } from "lucide-react";
 
 interface EventCardProps {
@@ -25,12 +27,15 @@ interface EventCardProps {
     createdAt: string;
   };
   showBidButton?: boolean;
+  showHostActions?: boolean;
   onBid?: (eventId: number) => void;
   onViewDetails?: (eventId: number) => void;
+  onEdit?: (eventId: number) => void;
+  onDelete?: (eventId: number) => void;
   bidCount?: number;
 }
 
-export function EventCard({ event, showBidButton = false, onBid, onViewDetails, bidCount }: EventCardProps) {
+export function EventCard({ event, showBidButton = false, showHostActions = false, onBid, onViewDetails, onEdit, onDelete, bidCount }: EventCardProps) {
   const eventDate = new Date(event.eventDate);
   const isUpcoming = eventDate > new Date();
 
@@ -125,21 +130,47 @@ export function EventCard({ event, showBidButton = false, onBid, onViewDetails, 
           </div>
         </div>
 
-        <div className="flex items-center justify-between">
+        <div className="space-y-3">
           <div className="flex items-center space-x-4 text-sm text-gray-500">
             <span className="capitalize">{event.venueType} venue</span>
             <span>{event.duration} hours</span>
           </div>
           
-          <div className="flex items-center space-x-2">
-            <Button
-              size="sm"
-              variant="outline"
-              className="text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-              onClick={() => onViewDetails?.(event.id)}
-            >
-              View Full Listing
-            </Button>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Button
+                size="sm"
+                variant="outline"
+                className="text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                onClick={() => onViewDetails?.(event.id)}
+              >
+                View Full Listing
+              </Button>
+              
+              {showHostActions && (
+                <>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200"
+                    onClick={() => onEdit?.(event.id)}
+                  >
+                    <Edit className="w-4 h-4 mr-1" />
+                    Edit
+                  </Button>
+                  
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                    onClick={() => onDelete?.(event.id)}
+                  >
+                    <Trash2 className="w-4 h-4 mr-1" />
+                    Delete
+                  </Button>
+                </>
+              )}
+            </div>
             
             {showBidButton && event.status === 'open' && isUpcoming && (
               <Button

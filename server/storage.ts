@@ -587,6 +587,18 @@ export class DatabaseStorage implements IStorage {
       .set({ isRead: true })
       .where(and(eq(notifications.userId, userId), eq(notifications.isRead, false)));
   }
+
+  // Event deletion
+  async deleteEvent(id: number): Promise<boolean> {
+    const result = await db.delete(events).where(eq(events.id, id)).returning();
+    return result.length > 0;
+  }
+
+  // Bid deletion
+  async deleteBid(id: number): Promise<boolean> {
+    const result = await db.delete(bids).where(eq(bids.id, id)).returning();
+    return result.length > 0;
+  }
 }
 
 export const storage = new DatabaseStorage();
