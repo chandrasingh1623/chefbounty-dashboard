@@ -11,7 +11,7 @@ interface ModerationEventData {
 
 export async function sendEventModerationEmail(eventData: ModerationEventData) {
   const adminEmails = [
-    'admin@chefbounty.com',
+    'keeanagondy@gmail.com',
     // Add more admin emails as needed
   ];
 
