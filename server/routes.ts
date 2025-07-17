@@ -1142,8 +1142,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   }
 
-  // Event Moderation Routes
-  app.post("/api/events/approve/:id", async (req, res) => {
+  // Event Moderation Routes (GET for email links)
+  app.get("/api/events/approve/:id", async (req, res) => {
+    try {
+      const eventId = parseInt(req.params.id);
+      
+      // Update event status to approved
+      const event = await storage.updateEvent(eventId, { status: 'approved' });
+      if (!event) {
+        return res.status(404).json({ message: "Event not found" });
+      }
+      
+      // Get host information for email
+      const host = await storage.getUser(event.hostId);
+      if (host) {
+        try {
+          const { sendEventApprovalEmail } = await import('./moderation');
+          await sendEventApprovalEmail(host.email, event.title);
+        } catch (emailError) {
+          console.error('Failed to send approval email:', emailError);
+        }
+      }
+      
+      // For email clicks, redirect to admin with success message
+      const redirectUrl = process.env.NODE_ENV === 'production' ? 
+        `https://chefbounty.com/admin-dashboard?message=approved&event=${encodeURIComponent(event.title)}` : 
+        `http://localhost:5000/admin-dashboard?message=approved&event=${encodeURIComponent(event.title)}`;
+      
+      res.redirect(redirectUrl);
+    } catch (error) {
+      console.error('Event approval error:', error);
+      res.status(500).json({ message: "Failed to approve event" });
+    }
+  });
+
+  app.get("/api/events/reject/:id", async (req, res) => {
+    try {
+      const eventId = parseInt(req.params.id);
+      
+      // Update event status to rejected
+      const event = await storage.updateEvent(eventId, { status: 'rejected' });
+      if (!event) {
+        return res.status(404).json({ message: "Event not found" });
+      }
+      
+      // Get host information for email
+      const host = await storage.getUser(event.hostId);
+      if (host) {
+        try {
+          const { sendEventRejectionEmail } = await import('./moderation');
+          await sendEventRejectionEmail(host.email, event.title);
+        } catch (emailError) {
+          console.error('Failed to send rejection email:', emailError);
+        }
+      }
+      
+      // For email clicks, redirect to admin with success message
+      const redirectUrl = process.env.NODE_ENV === 'production' ? 
+        `https://chefbounty.com/admin-dashboard?message=rejected&event=${encodeURIComponent(event.title)}` : 
+        `http://localhost:5000/admin-dashboard?message=rejected&event=${encodeURIComponent(event.title)}`;
+      
+      res.redirect(redirectUrl);
+    } catch (error) {
+      console.error('Event rejection error:', error);
+      res.status(500).json({ message: "Failed to reject event" });
+    }
+  });
+
+  // Event Moderation Routes (POST for admin dashboard)
+  app.post("/api/events/approve/:id", authenticateToken, async (req: AuthenticatedRequest, res) => {
     try {
       const eventId = parseInt(req.params.id);
       
@@ -1166,10 +1233,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json({ 
         message: "Event approved successfully", 
-        event,
-        redirect: process.env.NODE_ENV === 'production' ? 
-          `https://chefbounty.com/admin` : 
-          `http://localhost:5000/admin`
+        event
       });
     } catch (error) {
       console.error('Event approval error:', error);
@@ -1177,7 +1241,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/events/reject/:id", async (req, res) => {
+  app.post("/api/events/reject/:id", authenticateToken, async (req: AuthenticatedRequest, res) => {
     try {
       const eventId = parseInt(req.params.id);
       
@@ -1200,10 +1264,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json({ 
         message: "Event rejected successfully", 
-        event,
-        redirect: process.env.NODE_ENV === 'production' ? 
-          `https://chefbounty.com/admin` : 
-          `http://localhost:5000/admin`
+        event
       });
     } catch (error) {
       console.error('Event rejection error:', error);
