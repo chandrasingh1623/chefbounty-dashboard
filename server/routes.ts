@@ -382,6 +382,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put("/api/events/:id", authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const eventId = parseInt(req.params.id);
+      
+      // Get the event to verify ownership
+      const existingEvent = await storage.getEventById(eventId);
+      if (!existingEvent) {
+        return res.status(404).json({ message: "Event not found" });
+      }
+      
+      // Only the host who created the event can edit it
+      if (existingEvent.hostId !== req.user.id) {
+        return res.status(403).json({ message: "You can only edit your own events" });
+      }
+      
+      const eventData = insertEventSchema.parse({
+        ...req.body,
+        eventDate: new Date(req.body.eventDate),
+        hostId: req.user.id,
+      });
+      
+      const updatedEvent = await storage.updateEvent(eventId, eventData);
+      if (!updatedEvent) {
+        return res.status(404).json({ message: "Event not found" });
+      }
+      
+      res.json(updatedEvent);
+    } catch (error) {
+      console.error('PUT /api/events/:id - Error:', error);
+      if (error instanceof Error) {
+        res.status(400).json({ message: `Invalid event data: ${error.message}` });
+      } else {
+        res.status(400).json({ message: "Invalid event data" });
+      }
+    }
+  });
+
   app.delete("/api/events/:id", authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
     try {
       const eventId = parseInt(req.params.id);

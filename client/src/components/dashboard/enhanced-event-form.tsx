@@ -72,9 +72,12 @@ type EventFormData = z.infer<typeof eventFormSchema>;
 interface EnhancedEventFormProps {
   onSuccess: () => void;
   onCancel: () => void;
+  initialData?: any;
+  isEditing?: boolean;
+  eventId?: number;
 }
 
-export function EnhancedEventForm({ onSuccess, onCancel }: EnhancedEventFormProps) {
+export function EnhancedEventForm({ onSuccess, onCancel, initialData, isEditing = false, eventId }: EnhancedEventFormProps) {
   const [sectionsOpen, setSectionsOpen] = useState({
     cuisine: true,
     chef: true,
@@ -88,7 +91,31 @@ export function EnhancedEventForm({ onSuccess, onCancel }: EnhancedEventFormProp
 
   const form = useForm<EventFormData>({
     resolver: zodResolver(eventFormSchema),
-    defaultValues: {
+    defaultValues: initialData ? {
+      title: initialData.title || "",
+      description: initialData.description || "",
+      location: initialData.location || "",
+      duration: initialData.duration || 3,
+      budget: parseFloat(initialData.budget) || 500,
+      cuisineType: initialData.cuisineType || [],
+      allergies: initialData.allergies || [],
+      mealType: initialData.mealType || "dinner",
+      beverageService: initialData.beverageService || false,
+      alcoholIncluded: initialData.alcoholIncluded || false,
+      chefAttire: initialData.chefAttire || "casual",
+      onsiteCooking: initialData.onsiteCooking !== undefined ? initialData.onsiteCooking : true,
+      servingStaff: initialData.servingStaff || false,
+      setupCleanup: initialData.setupCleanup !== undefined ? initialData.setupCleanup : true,
+      specialEquipment: initialData.specialEquipment || [],
+      venueType: initialData.venueType || "home",
+      kitchenAvailability: initialData.kitchenAvailability || "full",
+      parkingAccessibility: initialData.parkingAccessibility || "",
+      indoorOutdoor: initialData.indoorOutdoor || "indoor",
+      eventTheme: initialData.eventTheme || "",
+      liveCooking: initialData.liveCooking || false,
+      guestDressCode: initialData.guestDressCode || "",
+      eventDate: initialData.eventDate ? new Date(initialData.eventDate) : undefined,
+    } : {
       title: "",
       description: "",
       location: "",
@@ -96,18 +123,18 @@ export function EnhancedEventForm({ onSuccess, onCancel }: EnhancedEventFormProp
       budget: 500,
       cuisineType: [],
       allergies: [],
-      mealType: "dinner", // Set default value
+      mealType: "dinner",
       beverageService: false,
       alcoholIncluded: false,
-      chefAttire: "casual", // Set default value
+      chefAttire: "casual",
       onsiteCooking: true,
       servingStaff: false,
       setupCleanup: true,
       specialEquipment: [],
-      venueType: "home", // Set default value
-      kitchenAvailability: "full", // Set default value
+      venueType: "home",
+      kitchenAvailability: "full",
       parkingAccessibility: "",
-      indoorOutdoor: "indoor", // Set default value
+      indoorOutdoor: "indoor",
       eventTheme: "",
       liveCooking: false,
       guestDressCode: "",
@@ -118,10 +145,12 @@ export function EnhancedEventForm({ onSuccess, onCancel }: EnhancedEventFormProp
     mutationFn: async (data: EventFormData & { hostId: number }) => {
       console.log('Mutation starting with data:', data);
       try {
-        const result = await apiRequest('POST', '/api/events', {
+        const method = isEditing ? 'PUT' : 'POST';
+        const url = isEditing ? `/api/events/${eventId}` : '/api/events';
+        const result = await apiRequest(method as any, url, {
           ...data,
-          eventDate: data.eventDate.toISOString(), // Send as ISO string for JSON serialization
-          budget: data.budget.toString(), // Convert number to string for decimal field
+          eventDate: data.eventDate.toISOString(),
+          budget: data.budget.toString(),
         });
         console.log('Mutation success:', result);
         return result;
@@ -132,12 +161,13 @@ export function EnhancedEventForm({ onSuccess, onCancel }: EnhancedEventFormProp
     },
     onSuccess: () => {
       console.log('onSuccess called');
-      // Invalidate multiple relevant queries to refresh all event lists
       queryClient.invalidateQueries({ queryKey: ['/api/events'] });
       queryClient.invalidateQueries({ queryKey: ['/api/events/host'] });
       toast({
-        title: "Event Created",
-        description: "Your event has been posted successfully. Chefs can now submit bids!",
+        title: isEditing ? "Event Updated" : "Event Created",
+        description: isEditing 
+          ? "Your event has been updated successfully!"
+          : "Your event has been posted successfully. Chefs can now submit bids!",
       });
       onSuccess();
     },
