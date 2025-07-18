@@ -88,14 +88,14 @@ export async function sendEventModerationEmail(eventData: ModerationEventData) {
           </div>
           
           <div class="actions">
-            <a href="${process.env.NODE_ENV === 'production' ? 'https://chefbounty.com' : 'http://localhost:5000'}/api/events/approve/${eventData.eventId}" 
+            <a href="http://localhost:5000/api/events/approve/${eventData.eventId}" 
                class="btn btn-approve">✅ Approve Event</a>
-            <a href="${process.env.NODE_ENV === 'production' ? 'https://chefbounty.com' : 'http://localhost:5000'}/api/events/reject/${eventData.eventId}" 
+            <a href="http://localhost:5000/api/events/reject/${eventData.eventId}" 
                class="btn btn-reject">❌ Reject Event</a>
           </div>
           
           <p style="color: #64748b; font-size: 14px; text-align: center;">
-            You can also review this event in the <a href="${process.env.NODE_ENV === 'production' ? 'https://chefbounty.com' : 'http://localhost:5000'}/admin-dashboard" style="color: #0a51be;">Admin Dashboard</a>.
+            You can also review this event in the <a href="http://localhost:5000/admin-dashboard" style="color: #0a51be;">Admin Dashboard</a>.
           </p>
         </div>
         
