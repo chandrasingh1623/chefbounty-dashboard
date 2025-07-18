@@ -95,7 +95,7 @@ export async function sendEventModerationEmail(eventData: ModerationEventData) {
           </div>
           
           <p style="color: #64748b; font-size: 14px; text-align: center;">
-            You can also review this event in the <a href="http://localhost:5000/admin-dashboard" style="color: #0a51be;">Admin Dashboard</a>.
+            You can also review this event in the <a href="https://dashboard.chefbounty.com" style="color: #0a51be;">Admin Dashboard</a>.
           </p>
         </div>
         

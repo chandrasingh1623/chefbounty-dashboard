@@ -1164,12 +1164,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // For email clicks, redirect to admin with success message
-      const redirectUrl = process.env.NODE_ENV === 'production' ? 
-        `https://chefbounty.com/admin-dashboard?message=approved&event=${encodeURIComponent(event.title)}` : 
-        `http://localhost:5000/admin-dashboard?message=approved&event=${encodeURIComponent(event.title)}`;
-      
-      res.redirect(redirectUrl);
+      // Redirect to external dashboard
+      res.redirect(`https://dashboard.chefbounty.com?message=approved&event=${encodeURIComponent(event.title)}`);
     } catch (error) {
       console.error('Event approval error:', error);
       res.status(500).json({ message: "Failed to approve event" });
@@ -1197,12 +1193,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // For email clicks, redirect to admin with success message
-      const redirectUrl = process.env.NODE_ENV === 'production' ? 
-        `https://chefbounty.com/admin-dashboard?message=rejected&event=${encodeURIComponent(event.title)}` : 
-        `http://localhost:5000/admin-dashboard?message=rejected&event=${encodeURIComponent(event.title)}`;
-      
-      res.redirect(redirectUrl);
+      // Redirect to external dashboard
+      res.redirect(`https://dashboard.chefbounty.com?message=rejected&event=${encodeURIComponent(event.title)}`);
     } catch (error) {
       console.error('Event rejection error:', error);
       res.status(500).json({ message: "Failed to reject event" });
