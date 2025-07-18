@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { DashboardLayout } from "@/components/dashboard/layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { 
   CheckCircle, 
   XCircle, 
@@ -12,9 +14,12 @@ import {
   MapPin, 
   DollarSign,
   Clock,
-  User
+  User,
+  Check,
+  X
 } from "lucide-react";
 import { format } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
 
 interface Event {
   id: number;
@@ -107,6 +112,35 @@ function PendingEventCard({ event, onApprove, onReject, isLoading }: PendingEven
 
 export default function AdminDashboard() {
   const queryClient = useQueryClient();
+  const [location] = useLocation();
+  const { toast } = useToast();
+  
+  // Handle success messages from email redirects
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const message = urlParams.get('message');
+    const eventTitle = urlParams.get('event');
+    
+    if (message && eventTitle) {
+      if (message === 'approved') {
+        toast({
+          title: "Event Approved Successfully",
+          description: `"${decodeURIComponent(eventTitle)}" has been approved and the host has been notified.`,
+          duration: 5000,
+        });
+      } else if (message === 'rejected') {
+        toast({
+          title: "Event Rejected",
+          description: `"${decodeURIComponent(eventTitle)}" has been rejected and the host has been notified.`,
+          duration: 5000,
+        });
+      }
+      
+      // Clean up URL parameters after showing the message
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, document.title, newUrl);
+    }
+  }, [toast]);
 
   // Fetch pending events
   const { data: pendingEvents = [], isLoading } = useQuery({
