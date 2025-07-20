@@ -153,7 +153,9 @@ Preferred communication style: Simple, everyday language.
   - Quality assurance process ensuring platform standards and chef safety
 - **Fixed Email Verification Links**: Resolved 403 authentication errors in moderation emails
   - Added GET routes for email-based approve/reject actions without authentication
-  - Updated redirect URLs to use dashboard.chefbounty.com instead of local frontend
+  - Updated all email URLs to use dashboard.chefbounty.com consistently
+  - Fixed moderation email template URLs (admin dashboard, approve/reject redirects)
+  - Fixed host notification email URLs (view events, create event buttons)
   - Email links now properly update event status and send host notifications
   - Eliminates 404 frontend routing issues by bypassing local router entirely
   - Maintained POST routes for authenticated admin dashboard actions

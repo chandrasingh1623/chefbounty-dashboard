@@ -164,7 +164,7 @@ export async function sendEventApprovalEmail(hostEmail: string, eventTitle: stri
           </ul>
           
           <div style="text-align: center;">
-            <a href="${process.env.NODE_ENV === 'production' ? 'https://chefbounty.com' : 'http://localhost:5000'}/dashboard/my-events" class="cta-button">
+            <a href="https://dashboard.chefbounty.com/my-events" class="cta-button">
               View My Events
             </a>
           </div>
@@ -248,7 +248,7 @@ export async function sendEventRejectionEmail(hostEmail: string, eventTitle: str
           </ol>
           
           <div style="text-align: center;">
-            <a href="${process.env.NODE_ENV === 'production' ? 'https://chefbounty.com' : 'http://localhost:5000'}/dashboard/post-event" class="cta-button">
+            <a href="https://dashboard.chefbounty.com/post-event" class="cta-button">
               Create New Event
             </a>
           </div>
