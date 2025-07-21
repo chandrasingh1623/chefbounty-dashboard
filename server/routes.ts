@@ -1164,8 +1164,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // Redirect to external dashboard
-      res.redirect(`https://dashboard.chefbounty.com?message=approved&event=${encodeURIComponent(event.title)}`);
+      // Return simple success page instead of redirect
+      res.send(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Event Approved</title>
+          <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8fafc; margin: 0; padding: 40px; }
+            .container { max-width: 500px; margin: 0 auto; background: white; border-radius: 12px; padding: 40px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+            .success { color: #059669; font-size: 48px; margin-bottom: 20px; }
+            h1 { color: #1e293b; margin-bottom: 10px; }
+            p { color: #64748b; line-height: 1.5; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="success">✅</div>
+            <h1>Event Approved Successfully</h1>
+            <p><strong>"${event.title}"</strong> has been approved and is now live on ChefBounty.</p>
+            <p>The host has been notified via email.</p>
+          </div>
+        </body>
+        </html>
+      `);
     } catch (error) {
       console.error('Event approval error:', error);
       res.status(500).json({ message: "Failed to approve event" });
@@ -1193,8 +1215,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // Redirect to external dashboard
-      res.redirect(`https://dashboard.chefbounty.com?message=rejected&event=${encodeURIComponent(event.title)}`);
+      // Return simple success page instead of redirect
+      res.send(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Event Rejected</title>
+          <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8fafc; margin: 0; padding: 40px; }
+            .container { max-width: 500px; margin: 0 auto; background: white; border-radius: 12px; padding: 40px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+            .warning { color: #dc2626; font-size: 48px; margin-bottom: 20px; }
+            h1 { color: #1e293b; margin-bottom: 10px; }
+            p { color: #64748b; line-height: 1.5; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="warning">❌</div>
+            <h1>Event Rejected</h1>
+            <p><strong>"${event.title}"</strong> has been rejected and will not appear on ChefBounty.</p>
+            <p>The host has been notified via email with feedback.</p>
+          </div>
+        </body>
+        </html>
+      `);
     } catch (error) {
       console.error('Event rejection error:', error);
       res.status(500).json({ message: "Failed to reject event" });
