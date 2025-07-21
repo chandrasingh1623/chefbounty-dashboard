@@ -51,12 +51,12 @@ export default function BrowseEvents() {
   });
 
   const { data: events = [], isLoading } = useQuery({
-    queryKey: ['/api/events'],
+    queryKey: ['/api/events/browse'],
     queryFn: async () => {
-      const response = await fetch('/api/events', {
+      const response = await fetch('/api/events/browse', {
         headers: authService.getAuthHeaders(),
       });
-      if (!response.ok) throw new Error('Failed to fetch events');
+      if (!response.ok) throw new Error('Failed to fetch browse events');
       return response.json();
     },
   });
@@ -108,17 +108,17 @@ export default function BrowseEvents() {
   });
 
   // Filter events based on user role and bidding status
+  // Events from /api/events/browse are already approved and ready for display
   const availableEvents = events.filter((event: any) => {
-    const isEventOpen = event.status === 'open';
     const isUpcoming = new Date(event.eventDate) > new Date();
     
     if (user?.role === 'chef') {
       const hasAlreadyBid = myBids.some((bid: any) => bid.eventId === event.id);
-      return !hasAlreadyBid && isEventOpen && isUpcoming;
+      return !hasAlreadyBid && isUpcoming;
     }
     
-    // For hosts, show all open upcoming events (they can't bid anyway)
-    return isEventOpen && isUpcoming;
+    // For hosts, show all approved upcoming events
+    return isUpcoming;
   });
 
   const filteredEvents = availableEvents.filter((event: any) => {
