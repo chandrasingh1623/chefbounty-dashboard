@@ -314,15 +314,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/events/:id", authenticateToken, async (req, res) => {
+  // Browse events endpoint - shows only approved events for public browsing
+  // Must come BEFORE /api/events/:id to avoid route conflicts
+  app.get("/api/events/browse", authenticateToken, async (req, res) => {
     try {
-      const event = await storage.getEventById(parseInt(req.params.id));
-      if (!event) {
-        return res.status(404).json({ message: "Event not found" });
-      }
-      res.json(event);
+      const events = await storage.getEvents();
+      
+      // Filter to only show approved events
+      const approvedEvents = events.filter(event => event.status === 'approved');
+      
+      res.json(approvedEvents);
     } catch (error) {
-      res.status(500).json({ message: "Failed to get event" });
+      console.error('Browse events error:', error);
+      res.status(500).json({ message: "Failed to get browse events" });
     }
   });
 
@@ -332,6 +336,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(events);
     } catch (error) {
       res.status(500).json({ message: "Failed to get host events" });
+    }
+  });
+
+  app.get("/api/events/:id", authenticateToken, async (req, res) => {
+    try {
+      const event = await storage.getEventById(parseInt(req.params.id));
+      if (!event) {
+        return res.status(404).json({ message: "Event not found" });
+      }
+      res.json(event);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get event" });
     }
   });
 
