@@ -99,6 +99,11 @@ export const events = pgTable("events", {
   liveCooking: boolean("live_cooking").default(false),
   guestDressCode: text("guest_dress_code"),
   
+  // 👥 Event Details
+  guestCount: integer("guest_count"),
+  dietaryRequirements: text("dietary_requirements"),
+  serviceStyle: text("service_style"),
+  
   createdAt: timestamp("created_at").defaultNow(),
 });
 

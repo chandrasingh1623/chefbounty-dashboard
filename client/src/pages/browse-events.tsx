@@ -306,7 +306,11 @@ export default function BrowseEvents() {
                     </div>
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-600">Guests:</span>
-                      <span className="font-medium">{event.guestCount}</span>
+                      <span className="font-medium">{event.guestCount} {event.guestCount === 1 ? 'person' : 'people'}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">Duration:</span>
+                      <span className="font-medium">{event.duration} {event.duration === 1 ? 'hour' : 'hours'}</span>
                     </div>
                   </div>
 
