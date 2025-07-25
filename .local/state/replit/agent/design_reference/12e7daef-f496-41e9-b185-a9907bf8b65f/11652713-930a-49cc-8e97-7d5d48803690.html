@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChefBounty Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#0a51be',
+                        'primary-dark': '#1e40af',
+                        'gray-50': '#f8fafc',
+                        'gray-100': '#f1f5f9',
+                        'gray-200': '#e2e8f0',
+                        'gray-500': '#64748b',
+                        'gray-700': '#334155',
+                        'gray-900': '#0f172a',
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        };
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 font-sans">
+    
+    <!-- @COMPONENT: DashboardLayout -->
+    <div class="flex h-screen bg-gray-50">
+        
+        <!-- @COMPONENT: Sidebar -->
+        <div class="w-64 bg-white shadow-sm border-r border-gray-200 flex flex-col">
+            <!-- Logo -->
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                        <i class="fas fa-utensils text-white text-sm"></i>
+                    </div>
+                    <span class="text-xl font-bold text-gray-900">ChefBounty</span>
+                </div>
+            </div>
+
+            <!-- Role Toggle (for demo) -->
+            <div class="p-4 border-b border-gray-200">
+                <div class="flex items-center space-x-2 mb-2">
+                    <span class="text-sm font-medium text-gray-700">Demo Mode:</span>
+                </div>
+                <div class="flex space-x-2">
+                    <button id="hostBtn" class="px-3 py-1 text-xs font-medium bg-primary text-white rounded-full">Host</button>
+                    <button id="chefBtn" class="px-3 py-1 text-xs font-medium bg-gray-200 text-gray-700 rounded-full">Chef</button>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <nav class="flex-1 px-4 py-4 space-y-1">
+                <!-- @STATE: currentRole:string = 'host' -->
+                
+                <!-- Host Navigation -->
+                <div id="hostNav" class="space-y-1">
+                    <a href="#" class="flex items-center space-x-3 px-3 py-2 text-sm font-medium text-primary bg-blue-50 rounded-lg">
+                        <i class="fas fa-chart-line w-5"></i>
+                        <span>Dashboard Overview</span>
+                    </a>
+                    <a href="#" class="flex items-center space-x-3 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+                        <i class="fas fa-plus w-5"></i>
+                        <span>Post New Event</span>
+                    </a>
+                    <a href="#" class="flex items-center space-x-3 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+                        <i class="fas fa-calendar-alt w-5"></i>
+                        <span>My Events</span>
+                    </a>
+                    <a href="#" class="flex items-center space-x-3 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+                        <i class="fas fa-gavel w-5"></i>
+                        <span>View Bids</span>
+                    </a>
+                    <a href="#" class="flex items-center space-x-3 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+                        <i class="fas fa-comments w-5"></i>
+                        <span>Messages</span>
+                    </a>
+                </div>
+
+                <!-- Chef Navigation -->
+                <div id="chefNav" class="space-y-1 hidden">
+                    <a href="#" class="flex items-center space-x-3 px-3 py-2 text-sm font-medium text-primary bg-blue-50 rounded-lg">
+                        <i class="fas fa-chart-line w-5"></i>
+                        <span>Dashboard Overview</span>
+                    </a>
+                    <a href="#" class="flex items-center space-x-3 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+                        <i class="fas fa-user w-5"></i>
+                        <span>My Profile</span>
+                    </a>
+                    <a href="#" class="flex items-center space-x-3 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+                        <i class="fas fa-search w-5"></i>
+                        <span>Browse Events</span>
+                    </a>
+                    <a href="#" class="flex items-center space-x-3 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+                        <i class="fas fa-hand-paper w-5"></i>
+                        <span>My Bids</span>
+                    </a>
+                    <a href="#" class="flex items-center space-x-3 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+                        <i class="fas fa-comments w-5"></i>
+                        <span>Messages</span>
+                    </a>
+                </div>
+
+                <!-- Shared Navigation -->
+                <div class="pt-4 border-t border-gray-200 mt-4 space-y-1">
+                    <a href="#" class="flex items-center space-x-3 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+                        <i class="fas fa-credit-card w-5"></i>
+                        <span>Payments</span>
+                    </a>
+                    <a href="#" class="flex items-center space-x-3 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+                        <i class="fas fa-cog w-5"></i>
+                        <span>Settings</span>
+                    </a>
+                </div>
+            </nav>
+
+            <!-- User Profile & Logout -->
+            <div class="p-4 border-t border-gray-200">
+                <div class="flex items-center space-x-3 mb-3">
+                    <!-- Profile photo placeholder showing a professional headshot -->
+                    <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=100&h=100" alt="User profile" class="w-10 h-10 rounded-full object-cover">
+                    <div>
+                        <p class="text-sm font-medium text-gray-900" data-bind="user.name">John Smith</p>
+                        <p class="text-xs text-gray-500" id="userRole">Host</p>
+                    </div>
+                </div>
+                <button class="w-full flex items-center justify-center space-x-2 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </div>
+        <!-- @END_COMPONENT: Sidebar -->
+
+        <!-- @COMPONENT: MainContent -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            
+            <!-- @COMPONENT: TopHeader -->
+            <header class="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900" id="pageTitle">Dashboard Overview</h1>
+                        <p class="text-sm text-gray-500" id="pageSubtitle">Welcome back! Here's what's happening with your events.</p>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <!-- Notifications -->
+                        <button class="relative p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+                            <i class="fas fa-bell text-lg"></i>
+                            <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                        </button>
+                        
+                        <!-- Quick Action Button -->
+                        <button id="quickActionBtn" class="px-4 py-2 bg-primary text-white font-medium rounded-lg hover:bg-primary-dark transition-colors">
+                            <i class="fas fa-plus mr-2"></i>
+                            <span id="quickActionText">Post Event</span>
+                        </button>
+                    </div>
+                </div>
+            </header>
+            <!-- @END_COMPONENT: TopHeader -->
+
+            <!-- @COMPONENT: DashboardContent -->
+            <main class="flex-1 overflow-auto p-6">
+                
+                <!-- Host Dashboard Content -->
+                <div id="hostDashboard">
+                    <!-- Stats Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                            <div class="flex items-center">
+                                <div class="p-2 bg-blue-100 rounded-lg">
+                                    <i class="fas fa-calendar-alt text-primary"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <p class="text-sm font-medium text-gray-500">Active Events</p>
+                                    <p class="text-2xl font-bold text-gray-900" data-bind="stats.activeEvents">8</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                            <div class="flex items-center">
+                                <div class="p-2 bg-green-100 rounded-lg">
+                                    <i class="fas fa-hand-paper text-green-600"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <p class="text-sm font-medium text-gray-500">Total Bids</p>
+                                    <p class="text-2xl font-bold text-gray-900" data-bind="stats.totalBids">24</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                            <div class="flex items-center">
+                                <div class="p-2 bg-yellow-100 rounded-lg">
+                                    <i class="fas fa-check-circle text-yellow-600"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <p class="text-sm font-medium text-gray-500">Completed</p>
+                                    <p class="text-2xl font-bold text-gray-900" data-bind="stats.completed">12</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                            <div class="flex items-center">
+                                <div class="p-2 bg-purple-100 rounded-lg">
+                                    <i class="fas fa-dollar-sign text-purple-600"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <p class="text-sm font-medium text-gray-500">Total Spent</p>
+                                    <p class="text-2xl font-bold text-gray-900" data-bind="stats.totalSpent">$4,250</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Events & Bids -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <!-- Recent Events -->
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+                            <div class="p-6 border-b border-gray-200">
+                                <div class="flex items-center justify-between">
+                                    <h3 class="text-lg font-semibold text-gray-900">Recent Events</h3>
+                                    <a href="#" class="text-sm text-primary hover:text-primary-dark font-medium">View All</a>
+                                </div>
+                            </div>
+                            <div class="p-6 space-y-4">
+                                <!-- @MAP: events.map(event => ( -->
+                                <div class="flex items-center space-x-4 p-4 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors" data-mock="true">
+                                    <div class="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-utensils text-gray-500"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="font-medium text-gray-900" data-bind="event.title">Italian Dinner Party</p>
+                                        <p class="text-sm text-gray-500" data-bind="event.date">March 15, 2024 • 7:00 PM</p>
+                                        <p class="text-sm text-gray-500" data-bind="event.location">Manhattan, NY</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            5 Bids
+                                        </span>
+                                        <p class="text-sm font-medium text-gray-900 mt-1" data-bind="event.budget">$350</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center space-x-4 p-4 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors" data-mock="true">
+                                    <div class="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-birthday-cake text-gray-500"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="font-medium text-gray-900" data-bind="event.title">Birthday Celebration</p>
+                                        <p class="text-sm text-gray-500" data-bind="event.date">March 20, 2024 • 2:00 PM</p>
+                                        <p class="text-sm text-gray-500" data-bind="event.location">Brooklyn, NY</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                            2 Bids
+                                        </span>
+                                        <p class="text-sm font-medium text-gray-900 mt-1" data-bind="event.budget">$500</p>
+                                    </div>
+                                </div>
+                                <!-- @END_MAP )) -->
+                            </div>
+                        </div>
+
+                        <!-- Recent Bids -->
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+                            <div class="p-6 border-b border-gray-200">
+                                <div class="flex items-center justify-between">
+                                    <h3 class="text-lg font-semibold text-gray-900">Recent Bids</h3>
+                                    <a href="#" class="text-sm text-primary hover:text-primary-dark font-medium">View All</a>
+                                </div>
+                            </div>
+                            <div class="p-6 space-y-4">
+                                <!-- @MAP: bids.map(bid => ( -->
+                                <div class="flex items-center space-x-4" data-mock="true">
+                                    <!-- Chef profile photo showing a professional cook -->
+                                    <img src="https://pixabay.com/get/gee3a0e01f2f819a665fae37fabfa3aed88121629f605382cfbcefb5658306820ecd93b385c80c8b69ae9d15a3751128f3744b695e1554c9c24e2f6560e3935b0_1280.jpg" alt="Chef Maria Garcia" class="w-12 h-12 rounded-full object-cover">
+                                    <div class="flex-1">
+                                        <p class="font-medium text-gray-900" data-bind="chef.name">Chef Maria Garcia</p>
+                                        <p class="text-sm text-gray-500" data-bind="bid.eventTitle">Italian Dinner Party</p>
+                                        <p class="text-sm text-gray-500" data-bind="bid.timeAgo">2 hours ago</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="font-medium text-gray-900" data-bind="bid.amount">$325</p>
+                                        <div class="flex space-x-2 mt-2">
+                                            <button class="px-3 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full hover:bg-green-200 transition-colors" data-event="click:handleAcceptBid">Accept</button>
+                                            <button class="px-3 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full hover:bg-red-200 transition-colors" data-event="click:handleRejectBid">Reject</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center space-x-4" data-mock="true">
+                                    <!-- Chef profile photo showing another professional cook -->
+                                    <img src="https://images.unsplash.com/photo-1607631568010-a87245c0daf8?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=64&h=64" alt="Chef David Kim" class="w-12 h-12 rounded-full object-cover">
+                                    <div class="flex-1">
+                                        <p class="font-medium text-gray-900" data-bind="chef.name">Chef David Kim</p>
+                                        <p class="text-sm text-gray-500" data-bind="bid.eventTitle">Birthday Celebration</p>
+                                        <p class="text-sm text-gray-500" data-bind="bid.timeAgo">4 hours ago</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="font-medium text-gray-900" data-bind="bid.amount">$450</p>
+                                        <div class="flex space-x-2 mt-2">
+                                            <button class="px-3 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full hover:bg-green-200 transition-colors" data-event="click:handleAcceptBid">Accept</button>
+                                            <button class="px-3 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full hover:bg-red-200 transition-colors" data-event="click:handleRejectBid">Reject</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- @END_MAP )) -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chef Dashboard Content -->
+                <div id="chefDashboard" class="hidden">
+                    <!-- Stats Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                            <div class="flex items-center">
+                                <div class="p-2 bg-blue-100 rounded-lg">
+                                    <i class="fas fa-hand-paper text-primary"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <p class="text-sm font-medium text-gray-500">Active Bids</p>
+                                    <p class="text-2xl font-bold text-gray-900" data-bind="stats.activeBids">6</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                            <div class="flex items-center">
+                                <div class="p-2 bg-green-100 rounded-lg">
+                                    <i class="fas fa-check-circle text-green-600"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <p class="text-sm font-medium text-gray-500">Jobs Won</p>
+                                    <p class="text-2xl font-bold text-gray-900" data-bind="stats.jobsWon">15</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                            <div class="flex items-center">
+                                <div class="p-2 bg-yellow-100 rounded-lg">
+                                    <i class="fas fa-star text-yellow-600"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <p class="text-sm font-medium text-gray-500">Rating</p>
+                                    <p class="text-2xl font-bold text-gray-900" data-bind="stats.rating">4.9</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                            <div class="flex items-center">
+                                <div class="p-2 bg-purple-100 rounded-lg">
+                                    <i class="fas fa-dollar-sign text-purple-600"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <p class="text-sm font-medium text-gray-500">Earnings</p>
+                                    <p class="text-2xl font-bold text-gray-900" data-bind="stats.earnings">$8,950</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Available Events & My Bids -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <!-- Available Events -->
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+                            <div class="p-6 border-b border-gray-200">
+                                <div class="flex items-center justify-between">
+                                    <h3 class="text-lg font-semibold text-gray-900">Available Events</h3>
+                                    <a href="#" class="text-sm text-primary hover:text-primary-dark font-medium">Browse All</a>
+                                </div>
+                            </div>
+                            <div class="p-6 space-y-4">
+                                <!-- @MAP: availableEvents.map(event => ( -->
+                                <div class="p-4 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors" data-mock="true">
+                                    <div class="flex items-start justify-between">
+                                        <div class="flex-1">
+                                            <h4 class="font-medium text-gray-900" data-bind="event.title">Corporate Lunch Event</h4>
+                                            <p class="text-sm text-gray-500 mt-1" data-bind="event.date">March 25, 2024 • 12:00 PM</p>
+                                            <p class="text-sm text-gray-500" data-bind="event.location">Midtown Manhattan</p>
+                                            <p class="text-sm text-gray-700 mt-2" data-bind="event.description">Looking for a chef to prepare lunch for 25 people. American cuisine preferred.</p>
+                                        </div>
+                                        <div class="text-right ml-4">
+                                            <p class="font-medium text-gray-900" data-bind="event.budget">$600</p>
+                                            <button class="mt-2 px-3 py-1 text-xs font-medium bg-primary text-white rounded-full hover:bg-primary-dark transition-colors" data-event="click:handleSubmitBid">
+                                                Place Bid
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="p-4 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors" data-mock="true">
+                                    <div class="flex items-start justify-between">
+                                        <div class="flex-1">
+                                            <h4 class="font-medium text-gray-900" data-bind="event.title">Wedding Reception</h4>
+                                            <p class="text-sm text-gray-500 mt-1" data-bind="event.date">April 2, 2024 • 6:00 PM</p>
+                                            <p class="text-sm text-gray-500" data-bind="event.location">Long Island, NY</p>
+                                            <p class="text-sm text-gray-700 mt-2" data-bind="event.description">Elegant wedding dinner for 80 guests. French cuisine experience required.</p>
+                                        </div>
+                                        <div class="text-right ml-4">
+                                            <p class="font-medium text-gray-900" data-bind="event.budget">$1,200</p>
+                                            <button class="mt-2 px-3 py-1 text-xs font-medium bg-primary text-white rounded-full hover:bg-primary-dark transition-colors" data-event="click:handleSubmitBid">
+                                                Place Bid
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- @END_MAP )) -->
+                            </div>
+                        </div>
+
+                        <!-- My Bids -->
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+                            <div class="p-6 border-b border-gray-200">
+                                <div class="flex items-center justify-between">
+                                    <h3 class="text-lg font-semibold text-gray-900">My Bids</h3>
+                                    <a href="#" class="text-sm text-primary hover:text-primary-dark font-medium">View All</a>
+                                </div>
+                            </div>
+                            <div class="p-6 space-y-4">
+                                <!-- @MAP: myBids.map(bid => ( -->
+                                <div class="p-4 border border-gray-100 rounded-lg" data-mock="true">
+                                    <div class="flex items-start justify-between">
+                                        <div class="flex-1">
+                                            <h4 class="font-medium text-gray-900" data-bind="bid.eventTitle">Anniversary Dinner</h4>
+                                            <p class="text-sm text-gray-500 mt-1" data-bind="bid.submittedAt">Submitted 1 day ago</p>
+                                            <p class="text-sm text-gray-700 mt-2" data-bind="bid.message">"I'd love to create an intimate dinner experience..."</p>
+                                        </div>
+                                        <div class="text-right ml-4">
+                                            <p class="font-medium text-gray-900" data-bind="bid.amount">$400</p>
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 mt-2">
+                                                Pending
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="p-4 border border-gray-100 rounded-lg" data-mock="true">
+                                    <div class="flex items-start justify-between">
+                                        <div class="flex-1">
+                                            <h4 class="font-medium text-gray-900" data-bind="bid.eventTitle">Family Reunion BBQ</h4>
+                                            <p class="text-sm text-gray-500 mt-1" data-bind="bid.submittedAt">Submitted 3 days ago</p>
+                                            <p class="text-sm text-gray-700 mt-2" data-bind="bid.message">"Experienced in outdoor catering with full BBQ setup..."</p>
+                                        </div>
+                                        <div class="text-right ml-4">
+                                            <p class="font-medium text-gray-900" data-bind="bid.amount">$750</p>
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 mt-2">
+                                                Accepted
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- @END_MAP )) -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Event Posting Modal -->
+                <div id="eventModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden items-center justify-center z-50">
+                    <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full mx-4 max-h-screen overflow-y-auto">
+                        <div class="p-6 border-b border-gray-200">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-lg font-semibold text-gray-900">Post New Event</h3>
+                                <button id="closeModal" class="text-gray-400 hover:text-gray-600">
+                                    <i class="fas fa-times text-xl"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <form class="p-6 space-y-6" data-implementation="Should validate form before submission">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label for="eventTitle" class="block text-sm font-medium text-gray-700 mb-2">Event Title</label>
+                                    <input type="text" id="eventTitle" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" placeholder="e.g., Italian Dinner Party" data-mock="true">
+                                </div>
+                                
+                                <div>
+                                    <label for="cuisine" class="block text-sm font-medium text-gray-700 mb-2">Cuisine Type</label>
+                                    <select id="cuisine" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" data-mock="true">
+                                        <option>Italian</option>
+                                        <option>French</option>
+                                        <option>American</option>
+                                        <option>Asian</option>
+                                        <option>Mediterranean</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label for="description" class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                                <textarea id="description" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" placeholder="Describe your event, guest count, special requirements..." data-mock="true"></textarea>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div>
+                                    <label for="eventDate" class="block text-sm font-medium text-gray-700 mb-2">Date</label>
+                                    <input type="date" id="eventDate" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" data-mock="true">
+                                </div>
+                                
+                                <div>
+                                    <label for="eventTime" class="block text-sm font-medium text-gray-700 mb-2">Time</label>
+                                    <input type="time" id="eventTime" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" data-mock="true">
+                                </div>
+                                
+                                <div>
+                                    <label for="duration" class="block text-sm font-medium text-gray-700 mb-2">Duration (hours)</label>
+                                    <input type="number" id="duration" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" placeholder="4" data-mock="true">
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label for="location" class="block text-sm font-medium text-gray-700 mb-2">Location</label>
+                                    <input type="text" id="location" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" placeholder="Manhattan, NY" data-mock="true">
+                                </div>
+                                
+                                <div>
+                                    <label for="budget" class="block text-sm font-medium text-gray-700 mb-2">Budget ($)</label>
+                                    <input type="number" id="budget" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" placeholder="500" data-mock="true">
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label for="venueType" class="block text-sm font-medium text-gray-700 mb-2">Venue Type</label>
+                                <div class="flex space-x-4">
+                                    <label class="flex items-center">
+                                        <input type="radio" name="venueType" value="indoor" class="mr-2" data-mock="true">
+                                        <span class="text-sm text-gray-700">Indoor</span>
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="radio" name="venueType" value="outdoor" class="mr-2" data-mock="true">
+                                        <span class="text-sm text-gray-700">Outdoor</span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label for="eventImage" class="block text-sm font-medium text-gray-700 mb-2">Event Image (Optional)</label>
+                                <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                                    <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-2"></i>
+                                    <p class="text-sm text-gray-500">Click to upload or drag and drop</p>
+                                    <input type="file" class="hidden" accept="image/*" data-mock-image="true" data-implementation="Use FileUpload component here">
+                                </div>
+                            </div>
+                            
+                            <div class="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+                                <button type="button" id="cancelEvent" class="px-4 py-2 text-gray-700 font-medium hover:bg-gray-100 rounded-lg transition-colors">
+                                    Cancel
+                                </button>
+                                <button type="submit" class="px-6 py-2 bg-primary text-white font-medium rounded-lg hover:bg-primary-dark transition-colors" data-event="click:handleSubmitEvent">
+                                    Post Event
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+            </main>
+            <!-- @END_COMPONENT: DashboardContent -->
+        </div>
+        <!-- @END_COMPONENT: MainContent -->
+    </div>
+    <!-- @END_COMPONENT: DashboardLayout -->
+
+    <script>
+        (function() {
+            // Role switching functionality for demo
+            const hostBtn = document.getElementById('hostBtn');
+            const chefBtn = document.getElementById('chefBtn');
+            const hostNav = document.getElementById('hostNav');
+            const chefNav = document.getElementById('chefNav');
+            const hostDashboard = document.getElementById('hostDashboard');
+            const chefDashboard = document.getElementById('chefDashboard');
+            const userRole = document.getElementById('userRole');
+            const pageTitle = document.getElementById('pageTitle');
+            const pageSubtitle = document.getElementById('pageSubtitle');
+            const quickActionBtn = document.getElementById('quickActionBtn');
+            const quickActionText = document.getElementById('quickActionText');
+
+            function switchToHost() {
+                hostBtn.classList.add('bg-primary', 'text-white');
+                hostBtn.classList.remove('bg-gray-200', 'text-gray-700');
+                chefBtn.classList.remove('bg-primary', 'text-white');
+                chefBtn.classList.add('bg-gray-200', 'text-gray-700');
+                
+                hostNav.classList.remove('hidden');
+                chefNav.classList.add('hidden');
+                hostDashboard.classList.remove('hidden');
+                chefDashboard.classList.add('hidden');
+                
+                userRole.textContent = 'Host';
+                pageSubtitle.textContent = "Welcome back! Here's what's happening with your events.";
+                quickActionText.textContent = 'Post Event';
+            }
+
+            function switchToChef() {
+                chefBtn.classList.add('bg-primary', 'text-white');
+                chefBtn.classList.remove('bg-gray-200', 'text-gray-700');
+                hostBtn.classList.remove('bg-primary', 'text-white');
+                hostBtn.classList.add('bg-gray-200', 'text-gray-700');
+                
+                chefNav.classList.remove('hidden');
+                hostNav.classList.add('hidden');
+                chefDashboard.classList.remove('hidden');
+                hostDashboard.classList.add('hidden');
+                
+                userRole.textContent = 'Chef';
+                pageSubtitle.textContent = "Welcome back! Here are the latest opportunities.";
+                quickActionText.textContent = 'Browse Events';
+            }
+
+            hostBtn.addEventListener('click', switchToHost);
+            chefBtn.addEventListener('click', switchToChef);
+
+            // Modal functionality
+            const eventModal = document.getElementById('eventModal');
+            const closeModal = document.getElementById('closeModal');
+            const cancelEvent = document.getElementById('cancelEvent');
+
+            quickActionBtn.addEventListener('click', function() {
+                if (quickActionText.textContent === 'Post Event') {
+                    eventModal.classList.remove('hidden');
+                    eventModal.classList.add('flex');
+                }
+                // TODO: Implement browse events functionality for chefs
+            });
+
+            closeModal.addEventListener('click', function() {
+                eventModal.classList.add('hidden');
+                eventModal.classList.remove('flex');
+            });
+
+            cancelEvent.addEventListener('click', function() {
+                eventModal.classList.add('hidden');
+                eventModal.classList.remove('flex');
+            });
+
+            // Close modal on backdrop click
+            eventModal.addEventListener('click', function(e) {
+                if (e.target === eventModal) {
+                    eventModal.classList.add('hidden');
+                    eventModal.classList.remove('flex');
+                }
+            });
+
+            // TODO: Implement business logic for:
+            // - Supabase authentication and role management
+            // - Real-time bid notifications
+            // - Event CRUD operations
+            // - File upload functionality
+            // - Payment processing
+            // - Messaging system
+            // - Profile management
+            // - Search and filtering
+        })();
+    </script>
+</body>
+</html>
