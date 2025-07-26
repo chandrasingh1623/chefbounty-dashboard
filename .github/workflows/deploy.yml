@@ -77,8 +77,8 @@ NODE_ENV=production
 PORT=3000
 HOST=0.0.0.0
 FRONTEND_URL=https://chefbounty.com
-DATABASE_URL=${DATABASE_URL}
-RESEND_API_KEY=${RESEND_API_KEY}
+DATABASE_URL=\${DATABASE_URL}
+RESEND_API_KEY=\${RESEND_API_KEY}
 EOF
           
           # Install dependencies
@@ -95,8 +95,8 @@ module.exports = {
       PORT: 3000,
       HOST: '0.0.0.0',
       FRONTEND_URL: 'https://chefbounty.com',
-      DATABASE_URL: '${DATABASE_URL}',
-      RESEND_API_KEY: '${RESEND_API_KEY}'
+      DATABASE_URL: '\${DATABASE_URL}',
+      RESEND_API_KEY: '\${RESEND_API_KEY}'
     }
   }]
 };
