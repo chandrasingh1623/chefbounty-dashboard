@@ -49,10 +49,28 @@ jobs:
         DATABASE_URL: ${{ secrets.DATABASE_URL }}
         RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
       run: |
-        echo "$PRIVATE_KEY" > private_key
+        # Write private key with proper line endings
+        echo "$PRIVATE_KEY" | tr -d '\r' > private_key
         chmod 600 private_key
         
+        # Debug: Show key info (safe - just metadata)
+        echo "Key file created, size: $(wc -c < private_key) bytes"
+        echo "First line of key: $(head -1 private_key)"
+        echo "Last line of key: $(tail -1 private_key)"
+        
+        # Test SSH connection first
+        echo "Testing SSH connection to ${USER}@${HOST}..."
+        ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -i private_key ${USER}@${HOST} "echo 'SSH connection successful'" || {
+          echo "SSH connection failed. Please check:"
+          echo "1. EC2_SSH_KEY secret contains the full PEM file content"
+          echo "2. EC2_HOST is correct: ${HOST}"
+          echo "3. EC2_USER is correct: ${USER}"
+          echo "4. Security group allows SSH from GitHub Actions"
+          exit 1
+        }
+        
         # Copy deployment package
+        echo "Copying deployment package..."
         scp -o StrictHostKeyChecking=no -i private_key dashboard-deploy.tar.gz ${USER}@${HOST}:/tmp/
         
         # Deploy on server
