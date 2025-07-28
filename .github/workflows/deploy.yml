@@ -56,7 +56,7 @@ jobs:
         scp -o StrictHostKeyChecking=no -i private_key dashboard-deploy.tar.gz ${USER}@${HOST}:/tmp/
         
         # Deploy on server
-        ssh -o StrictHostKeyChecking=no -i private_key ${USER}@${HOST} << ENDSSH
+        ssh -o StrictHostKeyChecking=no -i private_key ${USER}@${HOST} DATABASE_URL="$DATABASE_URL" RESEND_API_KEY="$RESEND_API_KEY" bash << 'ENDSSH'
           # Navigate to app directory
           cd /home/ec2-user/chefbounty-dashboard
           
@@ -72,35 +72,31 @@ jobs:
           tar -xzf /tmp/dashboard-deploy.tar.gz
           
           # Create .env file
-          cat > .env << EOF
-NODE_ENV=production
-PORT=3000
-HOST=0.0.0.0
-FRONTEND_URL=https://chefbounty.com
-DATABASE_URL=\${DATABASE_URL}
-RESEND_API_KEY=\${RESEND_API_KEY}
-EOF
+          echo "NODE_ENV=production" > .env
+          echo "PORT=3000" >> .env
+          echo "HOST=0.0.0.0" >> .env
+          echo "FRONTEND_URL=https://chefbounty.com" >> .env
+          echo "DATABASE_URL=$DATABASE_URL" >> .env
+          echo "RESEND_API_KEY=$RESEND_API_KEY" >> .env
           
           # Install dependencies
           npm ci --production
           
           # Update PM2 ecosystem config
-          cat > ecosystem.config.cjs << 'EOF'
-module.exports = {
-  apps: [{
-    name: 'chefbounty-dashboard',
-    script: './dist/index.js',
-    env: {
-      NODE_ENV: 'production',
-      PORT: 3000,
-      HOST: '0.0.0.0',
-      FRONTEND_URL: 'https://chefbounty.com',
-      DATABASE_URL: '\${DATABASE_URL}',
-      RESEND_API_KEY: '\${RESEND_API_KEY}'
-    }
-  }]
-};
-EOF
+          echo "module.exports = {" > ecosystem.config.cjs
+          echo "  apps: [{" >> ecosystem.config.cjs
+          echo "    name: 'chefbounty-dashboard'," >> ecosystem.config.cjs
+          echo "    script: './dist/index.js'," >> ecosystem.config.cjs
+          echo "    env: {" >> ecosystem.config.cjs
+          echo "      NODE_ENV: 'production'," >> ecosystem.config.cjs
+          echo "      PORT: 3000," >> ecosystem.config.cjs
+          echo "      HOST: '0.0.0.0'," >> ecosystem.config.cjs
+          echo "      FRONTEND_URL: 'https://chefbounty.com'," >> ecosystem.config.cjs
+          echo "      DATABASE_URL: '$DATABASE_URL'," >> ecosystem.config.cjs
+          echo "      RESEND_API_KEY: '$RESEND_API_KEY'" >> ecosystem.config.cjs
+          echo "    }" >> ecosystem.config.cjs
+          echo "  }]" >> ecosystem.config.cjs
+          echo "};" >> ecosystem.config.cjs
           
           # Restart PM2
           pm2 restart chefbounty-dashboard || pm2 start ecosystem.config.cjs
