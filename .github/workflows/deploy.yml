@@ -32,6 +32,8 @@ jobs:
           client \
           server \
           shared \
+          scripts \
+          migrations \
           package*.json \
           ecosystem.config.js \
           tsconfig.json \
@@ -99,6 +101,11 @@ jobs:
           
           # Install dependencies
           npm ci --production
+          
+          # Run database migrations for events and chefs
+          echo "Running database migrations..."
+          export DATABASE_URL="$DATABASE_URL"
+          npx tsx scripts/deploy-events-update.ts || echo "Migration script failed, but continuing..."
           
           # Update PM2 ecosystem config
           echo "module.exports = {" > ecosystem.config.cjs
