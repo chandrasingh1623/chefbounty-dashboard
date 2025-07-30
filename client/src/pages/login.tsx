@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
-import { Mail, CheckCircle } from "lucide-react";
+import { Mail, CheckCircle, Facebook, Linkedin } from "lucide-react";
 import logoImage from "@assets/ChefBounty Lg (2)_1753288571802.png";
 import { EmailVerificationBanner, VerificationStatus } from "@/components/auth/email-verification-banner";
 
@@ -48,9 +48,92 @@ export default function Login() {
   const { toast } = useToast();
   const [location, setLocation] = useLocation();
 
-  // Check for verification status from URL params
+  // Check for OAuth callback
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash) {
+      const params = new URLSearchParams(hash.substring(1));
+      const token = params.get('token');
+      const provider = params.get('provider');
+      const newUser = params.get('newUser') === 'true';
+      
+      if (token) {
+        // Store token temporarily
+        localStorage.setItem('chefbounty_token', token);
+        
+        // Fetch user data with the token
+        fetch('/api/auth/profile', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.user) {
+            // Store user data
+            localStorage.setItem('chefbounty_user', JSON.stringify(data.user));
+            
+            toast({
+              title: "Login successful",
+              description: `Welcome back! You've signed in with ${provider}.`,
+            });
+            
+            // Clear hash from URL
+            window.location.hash = '';
+            
+            // Redirect based on user state
+            window.location.href = window.location.pathname === '/onboarding' ? '/onboarding' : '/dashboard';
+          }
+        })
+        .catch(err => {
+          console.error('Failed to fetch user profile:', err);
+          localStorage.removeItem('chefbounty_token');
+          toast({
+            variant: "destructive",
+            title: "Authentication Error",
+            description: "Failed to complete login. Please try again.",
+          });
+        });
+      }
+    }
+  }, []);
+
+  // Check for verification status and errors from URL params
   const urlParams = new URLSearchParams(window.location.search);
   const verificationMessage = urlParams.get('message');
+  const errorParam = urlParams.get('error');
+  
+  // Show OAuth error messages
+  useEffect(() => {
+    if (errorParam) {
+      let errorMessage = 'Authentication failed';
+      switch (errorParam) {
+        case 'oauth_denied':
+          errorMessage = 'OAuth authorization was denied';
+          break;
+        case 'invalid_state':
+          errorMessage = 'Invalid authentication state. Please try again.';
+          break;
+        case 'token_exchange_failed':
+          errorMessage = 'Failed to complete authentication. Please try again.';
+          break;
+        case 'profile_fetch_failed':
+          errorMessage = 'Failed to fetch user profile. Please try again.';
+          break;
+        case 'auth_failed':
+          errorMessage = 'Authentication failed. Please try again.';
+          break;
+      }
+      toast({
+        variant: "destructive",
+        title: "Authentication Error",
+        description: errorMessage,
+      });
+      
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [errorParam, toast]);
   
   const getVerificationStatus = (): 'verified' | 'already-verified' | 'invalid' | 'expired' | null => {
     switch (verificationMessage) {
@@ -142,6 +225,11 @@ export default function Login() {
     }
   };
 
+  const handleOAuthLogin = (provider: 'facebook' | 'linkedin') => {
+    // Redirect to OAuth endpoint
+    window.location.href = `/api/auth/${provider}`;
+  };
+
   const resendVerificationEmail = async () => {
     setIsLoading(true);
     try {
@@ -209,6 +297,7 @@ export default function Login() {
               src={logoImage} 
               alt="ChefBounty" 
               className="h-20 w-auto object-contain"
+              style={{ maxHeight: '80px', width: 'auto' }}
             />
           </div>
           <CardTitle>Welcome</CardTitle>
@@ -330,8 +419,33 @@ export default function Login() {
               </TabsList>
               
               <TabsContent value="login">
-              <Form {...loginForm}>
-                <form onSubmit={loginForm.handleSubmit(onLogin)} className="space-y-4">
+                <div className="space-y-4">
+                  {/* SSO Buttons */}
+                  <div className="space-y-3">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full relative hover:bg-blue-50 hover:border-blue-300"
+                      onClick={() => handleOAuthLogin('linkedin')}
+                    >
+                      <Linkedin className="h-5 w-5 text-[#0077B5] absolute left-4" />
+                      Continue with LinkedIn
+                    </Button>
+                  </div>
+
+                  {/* Divider */}
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-white px-2 text-gray-500">Or continue with email</span>
+                    </div>
+                  </div>
+
+                  {/* Email/Password Form */}
+                  <Form {...loginForm}>
+                    <form onSubmit={loginForm.handleSubmit(onLogin)} className="space-y-4">
                   <FormField
                     control={loginForm.control}
                     name="email"
@@ -383,9 +497,10 @@ export default function Login() {
                       Forgot your password?
                     </button>
                   </div>
-                </form>
-              </Form>
-            </TabsContent>
+                    </form>
+                  </Form>
+                </div>
+              </TabsContent>
             
             <TabsContent value="signup">
               {emailSent ? (
@@ -429,8 +544,33 @@ export default function Login() {
                   </Button>
                 </div>
               ) : (
-                <Form {...signupForm}>
-                  <form onSubmit={signupForm.handleSubmit(onSignup)} className="space-y-4">
+                <div className="space-y-4">
+                  {/* SSO Buttons */}
+                  <div className="space-y-3">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full relative hover:bg-blue-50 hover:border-blue-300"
+                      onClick={() => handleOAuthLogin('linkedin')}
+                    >
+                      <Linkedin className="h-5 w-5 text-[#0077B5] absolute left-4" />
+                      Continue with LinkedIn
+                    </Button>
+                  </div>
+
+                  {/* Divider */}
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-white px-2 text-gray-500">Or sign up with email</span>
+                    </div>
+                  </div>
+
+                  {/* Signup Form */}
+                  <Form {...signupForm}>
+                    <form onSubmit={signupForm.handleSubmit(onSignup)} className="space-y-4">
                   <FormField
                     control={signupForm.control}
                     name="name"
@@ -514,8 +654,9 @@ export default function Login() {
                     >
                       {isLoading ? "Creating account..." : "Create Account"}
                     </Button>
-                  </form>
-                </Form>
+                    </form>
+                  </Form>
+                </div>
               )}
             </TabsContent>
           </Tabs>

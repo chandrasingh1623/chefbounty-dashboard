@@ -69,6 +69,7 @@ export function Sidebar({ className }: SidebarProps) {
             src={logoImage} 
             alt="ChefBounty" 
             className="h-16 w-auto object-contain"
+            style={{ maxHeight: '64px', width: 'auto' }}
           />
         </div>
       </div>

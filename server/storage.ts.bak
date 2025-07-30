@@ -30,9 +30,42 @@ import {
 import { eq, desc, and, between, or, not } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
+import { ssoStorage } from "./storage-sso";
+export type { Account, InsertAccount, SSOUserFields } from "./storage-sso";
 
-const sql = process.env.DATABASE_URL ? neon(process.env.DATABASE_URL) : null;
-const db = sql ? drizzle(sql) : null;
+// Lazy initialization to ensure environment variables are loaded
+let sql: any = null;
+let db: any = null;
+let initialized = false;
+
+function initializeDatabase() {
+  if (initialized) return;
+  
+  console.log('Initializing database connection...');
+  console.log('DATABASE_URL exists:', !!process.env.DATABASE_URL);
+  
+  try {
+    if (process.env.DATABASE_URL) {
+      sql = neon(process.env.DATABASE_URL);
+      db = drizzle(sql);
+      console.log('Database connection initialized successfully');
+    } else {
+      console.error('DATABASE_URL not found in environment variables');
+    }
+  } catch (error) {
+    console.error('Failed to initialize database connection:', error);
+  }
+  
+  initialized = true;
+}
+
+// Initialize on first use
+function getDb() {
+  if (!initialized) {
+    initializeDatabase();
+  }
+  return db;
+}
 
 export interface IStorage {
   // User operations
@@ -90,21 +123,32 @@ export interface IStorage {
 
 export class DatabaseStorage implements IStorage {
   async getUser(id: number): Promise<User | undefined> {
-    const result = await db.select().from(users).where(eq(users.id, id)).limit(1);
+    const db = getDb();
+    if (!db) {
+      console.error('Database not initialized');
+      return undefined;
+    }
+    const result = const db = getDb(); if (!db) throw new Error("Database not initialized"); await db.select().from(users).where(eq(users.id, id)).limit(1);
     return result[0];
   }
 
   async getUsers(): Promise<User[]> {
-    return await db.select().from(users);
+    const db = getDb();
+    if (!db) return [];
+    return const db = getDb(); if (!db) throw new Error("Database not initialized"); await db.select().from(users);
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
-    const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
+    const db = getDb();
+    if (!db) return undefined;
+    const result = const db = getDb(); if (!db) throw new Error("Database not initialized"); await db.select().from(users).where(eq(users.email, email)).limit(1);
     return result[0];
   }
 
   async createUser(user: InsertUser): Promise<User> {
-    const result = await db.insert(users).values(user).returning();
+    const db = getDb();
+    if (!db) throw new Error('Database not initialized');
+    const result = const db = getDb(); if (!db) throw new Error("Database not initialized"); await db.insert(users).values(user).returning();
     return result[0];
   }
 
@@ -122,43 +166,43 @@ export class DatabaseStorage implements IStorage {
     
     console.log("Storage updateUser - sanitized updates:", JSON.stringify(sanitizedUpdates, null, 2));
     
-    const result = await db.update(users).set(sanitizedUpdates).where(eq(users.id, id)).returning();
+    const result = const db = getDb(); if (!db) throw new Error("Database not initialized"); await db.update(users).set(sanitizedUpdates).where(eq(users.id, id)).returning();
     return result[0];
   }
 
   async getEvents(): Promise<Event[]> {
     // Only return approved events for public viewing
-    return await db.select().from(events)
+    return const db = getDb(); if (!db) throw new Error("Database not initialized"); await db.select().from(events)
       .where(eq(events.status, 'approved'))
       .orderBy(desc(events.createdAt));
   }
 
   async getEventById(id: number): Promise<Event | undefined> {
-    const result = await db.select().from(events).where(eq(events.id, id)).limit(1);
+    const result = const db = getDb(); if (!db) throw new Error("Database not initialized"); await db.select().from(events).where(eq(events.id, id)).limit(1);
     return result[0];
   }
 
   async getEventsByHostId(hostId: number): Promise<Event[]> {
-    return await db.select().from(events).where(eq(events.hostId, hostId)).orderBy(desc(events.createdAt));
+    return const db = getDb(); if (!db) throw new Error("Database not initialized"); await db.select().from(events).where(eq(events.hostId, hostId)).orderBy(desc(events.createdAt));
   }
 
   async getEventsByStatus(status: string): Promise<Event[]> {
-    return await db.select().from(events).where(eq(events.status, status)).orderBy(desc(events.createdAt));
+    return const db = getDb(); if (!db) throw new Error("Database not initialized"); await db.select().from(events).where(eq(events.status, status)).orderBy(desc(events.createdAt));
   }
 
   async createEvent(event: InsertEvent): Promise<Event> {
-    const result = await db.insert(events).values(event).returning();
+    const result = const db = getDb(); if (!db) throw new Error("Database not initialized"); await db.insert(events).values(event).returning();
     return result[0];
   }
 
   async updateEvent(id: number, updates: Partial<InsertEvent>): Promise<Event | undefined> {
-    const result = await db.update(events).set(updates).where(eq(events.id, id)).returning();
+    const result = const db = getDb(); if (!db) throw new Error("Database not initialized"); await db.update(events).set(updates).where(eq(events.id, id)).returning();
     return result[0];
   }
 
   async getBidsByEventId(eventId: number): Promise<any[]> {
     // Include chef qualifications for bids on specific events
-    return await db.select({
+    return const db = getDb(); if (!db) throw new Error("Database not initialized"); await db.select({
       id: bids.id,
       eventId: bids.eventId,
       chefId: bids.chefId,
@@ -191,7 +235,7 @@ export class DatabaseStorage implements IStorage {
 
   async getBidsByChefId(chefId: number): Promise<any[]> {
     // First get the basic bids
-    const bidResults = await db.select()
+    const bidResults = const db = getDb(); if (!db) throw new Error("Database not initialized"); await db.select()
       .from(bids)
       .where(eq(bids.chefId, chefId))
       .orderBy(desc(bids.createdAt));
@@ -199,7 +243,7 @@ export class DatabaseStorage implements IStorage {
     // Enhance with event and host data
     const enhancedBids = [];
     for (const bid of bidResults) {
-      const eventResult = await db.select()
+      const eventResult = const db = getDb(); if (!db) throw new Error("Database not initialized"); await db.select()
         .from(events)
         .where(eq(events.id, bid.eventId))
         .limit(1);
@@ -208,7 +252,7 @@ export class DatabaseStorage implements IStorage {
       let host = null;
       
       if (event) {
-        const hostResult = await db.select()
+        const hostResult = const db = getDb(); if (!db) throw new Error("Database not initialized"); await db.select()
           .from(users)
           .where(eq(users.id, event.hostId))
           .limit(1);
@@ -227,7 +271,7 @@ export class DatabaseStorage implements IStorage {
 
   async getBidsByHostId(hostId: number): Promise<any[]> {
     // Get all bids for events owned by this host with chef qualifications and event information
-    return await db.select({
+    return const db = getDb(); if (!db) throw new Error("Database not initialized"); await db.select({
       id: bids.id,
       eventId: bids.eventId,
       chefId: bids.chefId,
@@ -264,23 +308,23 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getBidById(id: number): Promise<Bid | undefined> {
-    const result = await db.select().from(bids).where(eq(bids.id, id)).limit(1);
+    const result = const db = getDb(); if (!db) throw new Error("Database not initialized"); await db.select().from(bids).where(eq(bids.id, id)).limit(1);
     return result[0];
   }
 
   async createBid(bid: InsertBid): Promise<Bid> {
-    const result = await db.insert(bids).values(bid).returning();
+    const result = const db = getDb(); if (!db) throw new Error("Database not initialized"); await db.insert(bids).values(bid).returning();
     return result[0];
   }
 
   async updateBidStatus(id: number, status: string): Promise<Bid | undefined> {
-    const result = await db.update(bids).set({ status }).where(eq(bids.id, id)).returning();
+    const result = const db = getDb(); if (!db) throw new Error("Database not initialized"); await db.update(bids).set({ status }).where(eq(bids.id, id)).returning();
     return result[0];
   }
 
   async rejectOtherBidsForEvent(eventId: number, acceptedBidId: number): Promise<void> {
     // Reject all other pending bids for this event
-    await db.update(bids)
+    const db = getDb(); if (!db) throw new Error("Database not initialized"); await db.update(bids)
       .set({ status: 'rejected' })
       .where(
         and(
@@ -292,12 +336,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getEventById(id: number): Promise<Event | undefined> {
-    const result = await db.select().from(events).where(eq(events.id, id)).limit(1);
+    const result = const db = getDb(); if (!db) throw new Error("Database not initialized"); await db.select().from(events).where(eq(events.id, id)).limit(1);
     return result[0];
   }
 
   async getMessagesForUser(userId: number): Promise<Message[]> {
-    return await db.select().from(messages)
+    return const db = getDb(); if (!db) throw new Error("Database not initialized"); await db.select().from(messages)
       .where(
         or(
           eq(messages.senderId, userId),
@@ -308,7 +352,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getMessagesBetweenUsers(userId1: number, userId2: number): Promise<Message[]> {
-    return await db.select().from(messages)
+    return const db = getDb(); if (!db) throw new Error("Database not initialized"); await db.select().from(messages)
       .where(
         or(
           and(
@@ -325,18 +369,18 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createMessage(message: InsertMessage): Promise<Message> {
-    const result = await db.insert(messages).values(message).returning();
+    const result = const db = getDb(); if (!db) throw new Error("Database not initialized"); await db.insert(messages).values(message).returning();
     return result[0];
   }
 
   async markMessageAsRead(id: number): Promise<Message | undefined> {
-    const result = await db.update(messages).set({ isRead: true }).where(eq(messages.id, id)).returning();
+    const result = const db = getDb(); if (!db) throw new Error("Database not initialized"); await db.update(messages).set({ isRead: true }).where(eq(messages.id, id)).returning();
     return result[0];
   }
 
   async getConversationsForUser(userId: number): Promise<any[]> {
     // Get unique conversations by finding users who have exchanged messages with the current user
-    const userMessages = await db.select({
+    const userMessages = const db = getDb(); if (!db) throw new Error("Database not initialized"); await db.select({
       id: messages.id,
       senderId: messages.senderId,
       receiverId: messages.receiverId,
@@ -398,7 +442,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async markConversationAsRead(userId: number, otherUserId: number): Promise<void> {
-    await db.update(messages)
+    const db = getDb(); if (!db) throw new Error("Database not initialized"); await db.update(messages)
       .set({ isRead: true })
       .where(
         and(
@@ -410,7 +454,7 @@ export class DatabaseStorage implements IStorage {
 
   async getSentConversationsForUser(userId: number): Promise<any[]> {
     // Get all messages where user is the sender
-    const sentMessages = await db.select({
+    const sentMessages = const db = getDb(); if (!db) throw new Error("Database not initialized"); await db.select({
       id: messages.id,
       senderId: messages.senderId,
       receiverId: messages.receiverId,
@@ -470,9 +514,9 @@ export class DatabaseStorage implements IStorage {
   }
 
   async toggleMessageStar(id: number): Promise<Message | undefined> {
-    const message = await db.select().from(messages).where(eq(messages.id, id)).limit(1);
+    const message = const db = getDb(); if (!db) throw new Error("Database not initialized"); await db.select().from(messages).where(eq(messages.id, id)).limit(1);
     if (message[0]) {
-      const result = await db.update(messages)
+      const result = const db = getDb(); if (!db) throw new Error("Database not initialized"); await db.update(messages)
         .set({ isStarred: !message[0].isStarred })
         .where(eq(messages.id, id))
         .returning();
@@ -483,7 +527,7 @@ export class DatabaseStorage implements IStorage {
 
   // Chef Availability operations
   async getChefAvailability(chefId: number, startDate: string, endDate: string): Promise<ChefAvailability[]> {
-    return await db.select()
+    return const db = getDb(); if (!db) throw new Error("Database not initialized"); await db.select()
       .from(chefAvailability)
       .where(
         and(
@@ -495,7 +539,7 @@ export class DatabaseStorage implements IStorage {
 
   async createOrUpdateAvailability(availability: InsertChefAvailability): Promise<ChefAvailability> {
     // Try to find existing availability for this date
-    const existing = await db.select()
+    const existing = const db = getDb(); if (!db) throw new Error("Database not initialized"); await db.select()
       .from(chefAvailability)
       .where(
         and(
@@ -507,7 +551,7 @@ export class DatabaseStorage implements IStorage {
 
     if (existing[0]) {
       // Update existing
-      const result = await db.update(chefAvailability)
+      const result = const db = getDb(); if (!db) throw new Error("Database not initialized"); await db.update(chefAvailability)
         .set({
           isAvailable: availability.isAvailable,
           isBooked: availability.isBooked,
@@ -518,14 +562,14 @@ export class DatabaseStorage implements IStorage {
       return result[0];
     } else {
       // Create new
-      const result = await db.insert(chefAvailability).values(availability).returning();
+      const result = const db = getDb(); if (!db) throw new Error("Database not initialized"); await db.insert(chefAvailability).values(availability).returning();
       return result[0];
     }
   }
 
   // Payment operations
   async getPaymentsByUserId(userId: number): Promise<Payment[]> {
-    return await db.select()
+    return const db = getDb(); if (!db) throw new Error("Database not initialized"); await db.select()
       .from(payments)
       .where(
         or(
@@ -537,35 +581,35 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createPayment(payment: InsertPayment): Promise<Payment> {
-    const result = await db.insert(payments).values(payment).returning();
+    const result = const db = getDb(); if (!db) throw new Error("Database not initialized"); await db.insert(payments).values(payment).returning();
     return result[0];
   }
 
   async updatePayment(id: number, updates: Partial<InsertPayment>): Promise<Payment | undefined> {
-    const result = await db.update(payments).set(updates).where(eq(payments.id, id)).returning();
+    const result = const db = getDb(); if (!db) throw new Error("Database not initialized"); await db.update(payments).set(updates).where(eq(payments.id, id)).returning();
     return result[0];
   }
 
   // Payment Method operations
   async getPaymentMethodsByUserId(userId: number): Promise<PaymentMethod[]> {
-    return await db.select()
+    return const db = getDb(); if (!db) throw new Error("Database not initialized"); await db.select()
       .from(paymentMethods)
       .where(eq(paymentMethods.userId, userId))
       .orderBy(desc(paymentMethods.createdAt));
   }
 
   async createPaymentMethod(paymentMethod: InsertPaymentMethod): Promise<PaymentMethod> {
-    const result = await db.insert(paymentMethods).values(paymentMethod).returning();
+    const result = const db = getDb(); if (!db) throw new Error("Database not initialized"); await db.insert(paymentMethods).values(paymentMethod).returning();
     return result[0];
   }
 
   async removePaymentMethod(id: number): Promise<void> {
-    await db.delete(paymentMethods).where(eq(paymentMethods.id, id));
+    const db = getDb(); if (!db) throw new Error("Database not initialized"); await db.delete(paymentMethods).where(eq(paymentMethods.id, id));
   }
 
   // Notification operations
   async getNotificationsByUserId(userId: number, limit: number = 8): Promise<Notification[]> {
-    return await db.select()
+    return const db = getDb(); if (!db) throw new Error("Database not initialized"); await db.select()
       .from(notifications)
       .where(eq(notifications.userId, userId))
       .orderBy(desc(notifications.createdAt))
@@ -573,12 +617,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createNotification(notification: InsertNotification): Promise<Notification> {
-    const result = await db.insert(notifications).values(notification).returning();
+    const result = const db = getDb(); if (!db) throw new Error("Database not initialized"); await db.insert(notifications).values(notification).returning();
     return result[0];
   }
 
   async markNotificationAsRead(id: number): Promise<Notification | undefined> {
-    const result = await db.update(notifications)
+    const result = const db = getDb(); if (!db) throw new Error("Database not initialized"); await db.update(notifications)
       .set({ isRead: true })
       .where(eq(notifications.id, id))
       .returning();
@@ -586,22 +630,25 @@ export class DatabaseStorage implements IStorage {
   }
 
   async markAllNotificationsAsRead(userId: number): Promise<void> {
-    await db.update(notifications)
+    const db = getDb(); if (!db) throw new Error("Database not initialized"); await db.update(notifications)
       .set({ isRead: true })
       .where(and(eq(notifications.userId, userId), eq(notifications.isRead, false)));
   }
 
   // Event deletion
   async deleteEvent(id: number): Promise<boolean> {
-    const result = await db.delete(events).where(eq(events.id, id)).returning();
+    const result = const db = getDb(); if (!db) throw new Error("Database not initialized"); await db.delete(events).where(eq(events.id, id)).returning();
     return result.length > 0;
   }
 
   // Bid deletion
   async deleteBid(id: number): Promise<boolean> {
-    const result = await db.delete(bids).where(eq(bids.id, id)).returning();
+    const result = const db = getDb(); if (!db) throw new Error("Database not initialized"); await db.delete(bids).where(eq(bids.id, id)).returning();
     return result.length > 0;
   }
 }
 
-export const storage = new DatabaseStorage();
+// Extend storage with SSO methods
+const extendedStorage = Object.assign(new DatabaseStorage(), ssoStorage);
+
+export const storage = extendedStorage;

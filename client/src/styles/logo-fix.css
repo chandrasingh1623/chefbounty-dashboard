@@ -1,0 +1,19 @@
+/* Prevent logo flash on initial load */
+img[alt="ChefBounty"] {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Specific logo size constraints */
+.h-16 img[alt="ChefBounty"] {
+  max-height: 64px;
+}
+
+.h-20 img[alt="ChefBounty"] {
+  max-height: 80px;
+}
+
+.h-24 img[alt="ChefBounty"] {
+  max-height: 96px;
+}

@@ -24,6 +24,7 @@ const slides = [
             src={logoImage} 
             alt="ChefBounty" 
             className="h-24 w-auto object-contain"
+            style={{ maxHeight: '96px', width: 'auto' }}
           />
         </div>
         <p className="text-lg text-gray-600 max-w-md mx-auto">

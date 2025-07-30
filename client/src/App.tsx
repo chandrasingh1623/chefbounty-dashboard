@@ -21,6 +21,7 @@ import Messages from "@/pages/messages";
 import Payments from "@/pages/payments";
 import Settings from "@/pages/settings";
 import AdminDashboard from "@/pages/admin-dashboard";
+import Onboarding from "@/pages/onboarding";
 
 function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState(authService.getUser());
@@ -87,6 +88,11 @@ function Router() {
     <Switch>
       <Route path="/" component={() => <Login />} />
       <Route path="/login" component={() => <Login />} />
+      <Route path="/onboarding">
+        <ProtectedRoute>
+          <Onboarding />
+        </ProtectedRoute>
+      </Route>
       <Route path="/dashboard">
         <ProtectedRoute>
           <Dashboard />
