@@ -1,0 +1,135 @@
+name: Deploy Dashboard to EC2
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Build application
+      run: npm run build
+
+    - name: Create deployment package
+      run: |
+        tar -czf dashboard-deploy.tar.gz \
+          dist \
+          client \
+          server \
+          shared \
+          scripts \
+          migrations \
+          package*.json \
+          ecosystem.config.js \
+          tsconfig.json \
+          vite.config.ts \
+          tailwind.config.ts \
+          postcss.config.js \
+          components.json \
+          drizzle.config.ts
+
+    - name: Deploy to EC2
+      env:
+        PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
+        HOST: ${{ secrets.EC2_HOST }}
+        USER: ${{ secrets.EC2_USER }}
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+      run: |
+        # Write private key with proper line endings
+        echo "$PRIVATE_KEY" | tr -d '\r' > private_key
+        chmod 600 private_key
+        
+        # Debug: Show key info (safe - just metadata)
+        echo "Key file created, size: $(wc -c < private_key) bytes"
+        echo "First line of key: $(head -1 private_key)"
+        echo "Last line of key: $(tail -1 private_key)"
+        
+        # Test SSH connection first
+        echo "Testing SSH connection to ${USER}@${HOST}..."
+        ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -i private_key ${USER}@${HOST} "echo 'SSH connection successful'" || {
+          echo "SSH connection failed. Please check:"
+          echo "1. EC2_SSH_KEY secret contains the full PEM file content"
+          echo "2. EC2_HOST is correct: ${HOST}"
+          echo "3. EC2_USER is correct: ${USER}"
+          echo "4. Security group allows SSH from GitHub Actions"
+          exit 1
+        }
+        
+        # Copy deployment package
+        echo "Copying deployment package..."
+        scp -o StrictHostKeyChecking=no -i private_key dashboard-deploy.tar.gz ${USER}@${HOST}:/tmp/
+        
+        # Deploy on server
+        ssh -o StrictHostKeyChecking=no -i private_key ${USER}@${HOST} DATABASE_URL="$DATABASE_URL" RESEND_API_KEY="$RESEND_API_KEY" bash << 'ENDSSH'
+          # Navigate to app directory
+          cd /home/ec2-user/chefbounty-dashboard
+          
+          # Create backup
+          if [ -d "current" ]; then
+            rm -rf previous
+            mv current previous
+          fi
+          
+          # Extract new deployment
+          mkdir current
+          cd current
+          tar -xzf /tmp/dashboard-deploy.tar.gz
+          
+          # Create .env file
+          echo "NODE_ENV=production" > .env
+          echo "PORT=3000" >> .env
+          echo "HOST=0.0.0.0" >> .env
+          echo "FRONTEND_URL=https://chefbounty.com" >> .env
+          echo "DATABASE_URL=$DATABASE_URL" >> .env
+          echo "RESEND_API_KEY=$RESEND_API_KEY" >> .env
+          
+          # Install dependencies
+          npm ci --production
+          
+          # Run database migrations for events and chefs
+          echo "Running database migrations..."
+          export DATABASE_URL="$DATABASE_URL"
+          npx tsx scripts/deploy-events-update.ts || echo "Migration script failed, but continuing..."
+          
+          # Update PM2 ecosystem config
+          echo "module.exports = {" > ecosystem.config.cjs
+          echo "  apps: [{" >> ecosystem.config.cjs
+          echo "    name: 'chefbounty-dashboard'," >> ecosystem.config.cjs
+          echo "    script: './dist/index.js'," >> ecosystem.config.cjs
+          echo "    env: {" >> ecosystem.config.cjs
+          echo "      NODE_ENV: 'production'," >> ecosystem.config.cjs
+          echo "      PORT: 3000," >> ecosystem.config.cjs
+          echo "      HOST: '0.0.0.0'," >> ecosystem.config.cjs
+          echo "      FRONTEND_URL: 'https://chefbounty.com'," >> ecosystem.config.cjs
+          echo "      DATABASE_URL: '$DATABASE_URL'," >> ecosystem.config.cjs
+          echo "      RESEND_API_KEY: '$RESEND_API_KEY'" >> ecosystem.config.cjs
+          echo "    }" >> ecosystem.config.cjs
+          echo "  }]" >> ecosystem.config.cjs
+          echo "};" >> ecosystem.config.cjs
+          
+          # Restart PM2
+          pm2 restart chefbounty-dashboard || pm2 start ecosystem.config.cjs
+          pm2 save
+          
+          # Clean up
+          rm /tmp/dashboard-deploy.tar.gz
+        ENDSSH
+        
+        # Clean up
+        rm private_key
